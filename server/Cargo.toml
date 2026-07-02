@@ -1,0 +1,13 @@
+[workspace]
+members = ["bins/*", "sdks/*"]
+resolver = "2"
+
+[workspace.dependencies]
+spacetimedb = { version = "2.2.0", features = ["unstable"] }
+log = "^0.4"
+thiserror = "^2.0"
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Progression Server"
+  short_description: "Implement RocknRolla progression in SpacetimeDB"
+  default_prompt: "Use $build-progression-server to implement this progression change."

@@ -1,0 +1,59 @@
+version: '3'
+
+tasks:
+  check:
+    desc: Format and check all targets
+    cmds:
+      - cargo fmt
+      - cargo check --all-targets
+
+  sdk-ts:
+    desc: Generate TypeScript module bindings for the client
+    deps: [check]
+    cmds:
+      - spacetime generate --lang typescript --out-dir client_module_bindings --module-path bins/rocknrolladb
+      - rm -rf ../client/src/module_bindings
+      - mkdir -p ../client/src/module_bindings
+      - mv client_module_bindings/* ../client/src/module_bindings/
+      - rm -rf client_module_bindings
+
+  clippy:
+    desc: Format and lint all targets
+    deps: [check]
+    cmds:
+      - cargo clippy --all-targets
+
+  test:
+    desc: Format, lint, and test
+    deps: [clippy]
+    cmds:
+      - cargo test
+
+  build:
+    desc: Generate bindings and build the WASM module
+    deps: [sdk-ts, clippy]
+    cmds:
+      - cargo build -p rocknrolladb --target wasm32-unknown-unknown
+
+  login:
+    desc: Login to SpacetimeDB using .env token
+    cmds:
+      - bash tools/spacetime_login.sh
+
+  publish:
+    desc: Publish rocknrolladb-dev to Maincloud
+    deps: [login, build]
+    cmds:
+      - spacetime publish -p bins/rocknrolladb -s maincloud -y rocknrolladb-dev
+
+  publish-prod:
+    desc: Publish rocknrolladb to Maincloud
+    deps: [login, build]
+    cmds:
+      - spacetime publish -p bins/rocknrolladb -s maincloud -y rocknrolladb
+
+  unsafe-overwrite:
+    desc: Publish rocknrolladb-dev and delete existing data
+    deps: [login, build]
+    cmds:
+      - spacetime publish -p bins/rocknrolladb -s maincloud -y rocknrolladb-dev --delete-data

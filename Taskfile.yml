@@ -1,0 +1,48 @@
+version: '3'
+
+includes:
+  server:
+    taskfile: server/Taskfile.yml
+    dir: server
+  client:
+    taskfile: client/Taskfile.yml
+    dir: client
+
+tasks:
+  check:
+    desc: Check all projects
+    cmds:
+      - task server:check
+      - task client:build
+
+  test:
+    desc: Run all tests
+    deps: [check]
+    cmds:
+      - task server:test
+
+  build:
+    desc: Build all projects
+    cmds:
+      - task server:build
+      - task client:build
+
+  login:
+    desc: Login to SpacetimeDB using server/.env
+    cmds:
+      - task server:login
+
+  publish:
+    desc: Publish rocknrolladb-dev to Maincloud
+    cmds:
+      - task server:publish
+
+  publish-prod:
+    desc: Publish rocknrolladb to Maincloud
+    cmds:
+      - task server:publish-prod
+
+  unsafe-overwrite:
+    desc: Publish rocknrolladb-dev and delete existing data
+    cmds:
+      - task server:unsafe-overwrite

@@ -1,0 +1,35 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install npm dependencies
+    cmds:
+      - npm install
+
+  dev:
+    desc: Start Vite dev server
+    cmds:
+      - npm run dev
+
+  build:
+    desc: Build for production
+    cmds:
+      - npm run build
+
+  sync:
+    desc: Build and sync to native platforms
+    deps: [build]
+    cmds:
+      - npx cap sync
+
+  ios:
+    desc: Build, sync, and open Xcode
+    deps: [sync]
+    cmds:
+      - npx cap open ios
+
+  android:
+    desc: Build, sync, and open Android Studio
+    deps: [sync]
+    cmds:
+      - npx cap open android
