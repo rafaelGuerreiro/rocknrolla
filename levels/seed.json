@@ -1,0 +1,48 @@
+{
+  "characters": [
+    {
+      "id": "stone",
+      "name": "Stone",
+      "style": "#9aa3ad",
+      "rarity_weight": 100,
+      "density": 0.004,
+      "jump_speed": 11.0,
+      "flight_time_ms": 500,
+      "buoyancy": 0.4,
+      "fire_resistance": 0.9,
+      "starter": true
+    },
+    {
+      "id": "paper-ball",
+      "name": "Paper Ball",
+      "style": "#f2e6c8",
+      "rarity_weight": 40,
+      "density": 0.0009,
+      "jump_speed": 9.0,
+      "flight_time_ms": 1200,
+      "buoyancy": 1.6,
+      "fire_resistance": 0.1,
+      "starter": false
+    }
+  ],
+  "pieces": [
+    { "id": "stone-chip-a", "name": "Stone Chip A", "character_id": "stone" },
+    { "id": "stone-chip-b", "name": "Stone Chip B", "character_id": "stone" },
+    { "id": "paper-scrap-a", "name": "Paper Scrap A", "character_id": "paper-ball" },
+    { "id": "paper-scrap-b", "name": "Paper Scrap B", "character_id": "paper-ball" },
+    { "id": "paper-scrap-c", "name": "Paper Scrap C", "character_id": "paper-ball" }
+  ],
+  "lootboxes": [
+    {
+      "id": "trail-cache",
+      "name": "Trail Cache",
+      "drops": [
+        { "piece_id": "stone-chip-a", "weight": 10 },
+        { "piece_id": "stone-chip-b", "weight": 10 },
+        { "piece_id": "paper-scrap-a", "weight": 30 },
+        { "piece_id": "paper-scrap-b", "weight": 30 },
+        { "piece_id": "paper-scrap-c", "weight": 30 }
+      ]
+    }
+  ]
+}

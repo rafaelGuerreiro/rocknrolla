@@ -34,19 +34,220 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
+import CompleteLevelReducer from "./complete_level_reducer";
+import ImportCharacterReducer from "./import_character_reducer";
+import ImportLevelReducer from "./import_level_reducer";
+import ImportLootboxReducer from "./import_lootbox_reducer";
+import ImportPieceReducer from "./import_piece_reducer";
+import OpenLootboxReducer from "./open_lootbox_reducer";
+import SelectCharacterReducer from "./select_character_reducer";
 
 // Import all procedure arg schemas
 
 // Import all table schema definitions
+import CharacterDefRow from "./character_def_table";
+import LevelRow from "./level_table";
+import LevelLayerRow from "./level_layer_table";
+import LevelSuccessorRow from "./level_successor_table";
+import LootboxDefRow from "./lootbox_def_table";
+import LootboxDropRow from "./lootbox_drop_table";
+import PieceDefRow from "./piece_def_table";
+import PlayerRow from "./player_table";
+import PlayerCompletedLevelRow from "./player_completed_level_table";
+import PlayerEnabledLevelRow from "./player_enabled_level_table";
+import PlayerLootboxRow from "./player_lootbox_table";
+import PlayerPieceRow from "./player_piece_table";
+import PlayerUnlockedCharacterRow from "./player_unlocked_character_table";
 
 /** Type-only namespace exports for generated type groups. */
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
+  character_def: __table({
+    name: 'character_def',
+    indexes: [
+      { accessor: 'id', name: 'character_def_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'character_def_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, CharacterDefRow),
+  level: __table({
+    name: 'level',
+    indexes: [
+      { accessor: 'id', name: 'level_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'level_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, LevelRow),
+  level_layer: __table({
+    name: 'level_layer',
+    indexes: [
+      { accessor: 'id', name: 'level_layer_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'level_id', name: 'level_layer_level_id_idx_btree', algorithm: 'btree', columns: [
+        'levelId',
+      ] },
+    ],
+    constraints: [
+      { name: 'level_layer_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, LevelLayerRow),
+  level_successor: __table({
+    name: 'level_successor',
+    indexes: [
+      { accessor: 'id', name: 'level_successor_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'level_id', name: 'level_successor_level_id_idx_btree', algorithm: 'btree', columns: [
+        'levelId',
+      ] },
+    ],
+    constraints: [
+      { name: 'level_successor_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, LevelSuccessorRow),
+  lootbox_def: __table({
+    name: 'lootbox_def',
+    indexes: [
+      { accessor: 'id', name: 'lootbox_def_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'lootbox_def_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, LootboxDefRow),
+  lootbox_drop: __table({
+    name: 'lootbox_drop',
+    indexes: [
+      { accessor: 'id', name: 'lootbox_drop_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'lootbox_id', name: 'lootbox_drop_lootbox_id_idx_btree', algorithm: 'btree', columns: [
+        'lootboxId',
+      ] },
+    ],
+    constraints: [
+      { name: 'lootbox_drop_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, LootboxDropRow),
+  piece_def: __table({
+    name: 'piece_def',
+    indexes: [
+      { accessor: 'character_id', name: 'piece_def_character_id_idx_btree', algorithm: 'btree', columns: [
+        'characterId',
+      ] },
+      { accessor: 'id', name: 'piece_def_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'piece_def_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, PieceDefRow),
+  player: __table({
+    name: 'player',
+    indexes: [
+      { accessor: 'identity', name: 'player_identity_idx_btree', algorithm: 'btree', columns: [
+        'identity',
+      ] },
+    ],
+    constraints: [
+      { name: 'player_identity_key', constraint: 'unique', columns: ['identity'] },
+    ],
+  }, PlayerRow),
+  player_completed_level: __table({
+    name: 'player_completed_level',
+    indexes: [
+      { accessor: 'id', name: 'player_completed_level_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'by_owner_level', name: 'player_completed_level_owner_level_id_idx_btree', algorithm: 'btree', columns: [
+        'owner',
+        'levelId',
+      ] },
+    ],
+    constraints: [
+      { name: 'player_completed_level_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, PlayerCompletedLevelRow),
+  player_enabled_level: __table({
+    name: 'player_enabled_level',
+    indexes: [
+      { accessor: 'id', name: 'player_enabled_level_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'by_owner_level', name: 'player_enabled_level_owner_level_id_idx_btree', algorithm: 'btree', columns: [
+        'owner',
+        'levelId',
+      ] },
+    ],
+    constraints: [
+      { name: 'player_enabled_level_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, PlayerEnabledLevelRow),
+  player_lootbox: __table({
+    name: 'player_lootbox',
+    indexes: [
+      { accessor: 'id', name: 'player_lootbox_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'owner', name: 'player_lootbox_owner_idx_btree', algorithm: 'btree', columns: [
+        'owner',
+      ] },
+    ],
+    constraints: [
+      { name: 'player_lootbox_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, PlayerLootboxRow),
+  player_piece: __table({
+    name: 'player_piece',
+    indexes: [
+      { accessor: 'id', name: 'player_piece_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'by_owner_piece', name: 'player_piece_owner_piece_id_idx_btree', algorithm: 'btree', columns: [
+        'owner',
+        'pieceId',
+      ] },
+    ],
+    constraints: [
+      { name: 'player_piece_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, PlayerPieceRow),
+  player_unlocked_character: __table({
+    name: 'player_unlocked_character',
+    indexes: [
+      { accessor: 'id', name: 'player_unlocked_character_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'by_owner_character', name: 'player_unlocked_character_owner_character_id_idx_btree', algorithm: 'btree', columns: [
+        'owner',
+        'characterId',
+      ] },
+    ],
+    constraints: [
+      { name: 'player_unlocked_character_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, PlayerUnlockedCharacterRow),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
+  __reducerSchema("complete_level", CompleteLevelReducer),
+  __reducerSchema("import_character", ImportCharacterReducer),
+  __reducerSchema("import_level", ImportLevelReducer),
+  __reducerSchema("import_lootbox", ImportLootboxReducer),
+  __reducerSchema("import_piece", ImportPieceReducer),
+  __reducerSchema("open_lootbox", OpenLootboxReducer),
+  __reducerSchema("select_character", SelectCharacterReducer),
 );
 
 /** The schema information for all procedures in this module. This is defined the same way as the procedures would have been defined in the server. */
