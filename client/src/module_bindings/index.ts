@@ -45,198 +45,91 @@ import SelectCharacterReducer from "./select_character_reducer";
 // Import all procedure arg schemas
 
 // Import all table schema definitions
-import CharacterDefRow from "./character_def_table";
-import LevelRow from "./level_table";
-import LevelLayerRow from "./level_layer_table";
-import LevelSuccessorRow from "./level_successor_table";
-import LootboxDefRow from "./lootbox_def_table";
-import LootboxDropRow from "./lootbox_drop_table";
-import PieceDefRow from "./piece_def_table";
-import PlayerRow from "./player_table";
-import PlayerCompletedLevelRow from "./player_completed_level_table";
-import PlayerEnabledLevelRow from "./player_enabled_level_table";
-import PlayerLootboxRow from "./player_lootbox_table";
-import PlayerPieceRow from "./player_piece_table";
-import PlayerUnlockedCharacterRow from "./player_unlocked_character_table";
+import VwCharacterRow from "./vw_character_table";
+import VwLevelRow from "./vw_level_table";
+import VwLevelLayerRow from "./vw_level_layer_table";
+import VwMeRow from "./vw_me_table";
+import VwMyCompletedLevelRow from "./vw_my_completed_level_table";
+import VwMyEnabledLevelRow from "./vw_my_enabled_level_table";
+import VwMyLootboxRow from "./vw_my_lootbox_table";
+import VwMyPieceRow from "./vw_my_piece_table";
+import VwMyUnlockedCharacterRow from "./vw_my_unlocked_character_table";
+import VwPieceRow from "./vw_piece_table";
 
 /** Type-only namespace exports for generated type groups. */
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
-  character_def: __table({
-    name: 'character_def',
+  vw_character: __table({
+    name: 'vw_character',
     indexes: [
-      { accessor: 'id', name: 'character_def_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
     ],
     constraints: [
-      { name: 'character_def_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, CharacterDefRow),
-  level: __table({
-    name: 'level',
+  }, VwCharacterRow),
+  vw_level: __table({
+    name: 'vw_level',
     indexes: [
-      { accessor: 'id', name: 'level_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
     ],
     constraints: [
-      { name: 'level_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, LevelRow),
-  level_layer: __table({
-    name: 'level_layer',
+  }, VwLevelRow),
+  vw_level_layer: __table({
+    name: 'vw_level_layer',
     indexes: [
-      { accessor: 'id', name: 'level_layer_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'level_id', name: 'level_layer_level_id_idx_btree', algorithm: 'btree', columns: [
-        'levelId',
-      ] },
     ],
     constraints: [
-      { name: 'level_layer_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, LevelLayerRow),
-  level_successor: __table({
-    name: 'level_successor',
+  }, VwLevelLayerRow),
+  vw_me: __table({
+    name: 'vw_me',
     indexes: [
-      { accessor: 'id', name: 'level_successor_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'level_id', name: 'level_successor_level_id_idx_btree', algorithm: 'btree', columns: [
-        'levelId',
-      ] },
     ],
     constraints: [
-      { name: 'level_successor_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, LevelSuccessorRow),
-  lootbox_def: __table({
-    name: 'lootbox_def',
+  }, VwMeRow),
+  vw_my_completed_level: __table({
+    name: 'vw_my_completed_level',
     indexes: [
-      { accessor: 'id', name: 'lootbox_def_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
     ],
     constraints: [
-      { name: 'lootbox_def_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, LootboxDefRow),
-  lootbox_drop: __table({
-    name: 'lootbox_drop',
+  }, VwMyCompletedLevelRow),
+  vw_my_enabled_level: __table({
+    name: 'vw_my_enabled_level',
     indexes: [
-      { accessor: 'id', name: 'lootbox_drop_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'lootbox_id', name: 'lootbox_drop_lootbox_id_idx_btree', algorithm: 'btree', columns: [
-        'lootboxId',
-      ] },
     ],
     constraints: [
-      { name: 'lootbox_drop_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, LootboxDropRow),
-  piece_def: __table({
-    name: 'piece_def',
+  }, VwMyEnabledLevelRow),
+  vw_my_lootbox: __table({
+    name: 'vw_my_lootbox',
     indexes: [
-      { accessor: 'character_id', name: 'piece_def_character_id_idx_btree', algorithm: 'btree', columns: [
-        'characterId',
-      ] },
-      { accessor: 'id', name: 'piece_def_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
     ],
     constraints: [
-      { name: 'piece_def_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, PieceDefRow),
-  player: __table({
-    name: 'player',
+  }, VwMyLootboxRow),
+  vw_my_piece: __table({
+    name: 'vw_my_piece',
     indexes: [
-      { accessor: 'identity', name: 'player_identity_idx_btree', algorithm: 'btree', columns: [
-        'identity',
-      ] },
     ],
     constraints: [
-      { name: 'player_identity_key', constraint: 'unique', columns: ['identity'] },
     ],
-  }, PlayerRow),
-  player_completed_level: __table({
-    name: 'player_completed_level',
+  }, VwMyPieceRow),
+  vw_my_unlocked_character: __table({
+    name: 'vw_my_unlocked_character',
     indexes: [
-      { accessor: 'id', name: 'player_completed_level_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'by_owner_level', name: 'player_completed_level_owner_level_id_idx_btree', algorithm: 'btree', columns: [
-        'owner',
-        'levelId',
-      ] },
     ],
     constraints: [
-      { name: 'player_completed_level_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, PlayerCompletedLevelRow),
-  player_enabled_level: __table({
-    name: 'player_enabled_level',
+  }, VwMyUnlockedCharacterRow),
+  vw_piece: __table({
+    name: 'vw_piece',
     indexes: [
-      { accessor: 'id', name: 'player_enabled_level_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'by_owner_level', name: 'player_enabled_level_owner_level_id_idx_btree', algorithm: 'btree', columns: [
-        'owner',
-        'levelId',
-      ] },
     ],
     constraints: [
-      { name: 'player_enabled_level_id_key', constraint: 'unique', columns: ['id'] },
     ],
-  }, PlayerEnabledLevelRow),
-  player_lootbox: __table({
-    name: 'player_lootbox',
-    indexes: [
-      { accessor: 'id', name: 'player_lootbox_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'owner', name: 'player_lootbox_owner_idx_btree', algorithm: 'btree', columns: [
-        'owner',
-      ] },
-    ],
-    constraints: [
-      { name: 'player_lootbox_id_key', constraint: 'unique', columns: ['id'] },
-    ],
-  }, PlayerLootboxRow),
-  player_piece: __table({
-    name: 'player_piece',
-    indexes: [
-      { accessor: 'id', name: 'player_piece_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'by_owner_piece', name: 'player_piece_owner_piece_id_idx_btree', algorithm: 'btree', columns: [
-        'owner',
-        'pieceId',
-      ] },
-    ],
-    constraints: [
-      { name: 'player_piece_id_key', constraint: 'unique', columns: ['id'] },
-    ],
-  }, PlayerPieceRow),
-  player_unlocked_character: __table({
-    name: 'player_unlocked_character',
-    indexes: [
-      { accessor: 'id', name: 'player_unlocked_character_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-      { accessor: 'by_owner_character', name: 'player_unlocked_character_owner_character_id_idx_btree', algorithm: 'btree', columns: [
-        'owner',
-        'characterId',
-      ] },
-    ],
-    constraints: [
-      { name: 'player_unlocked_character_id_key', constraint: 'unique', columns: ['id'] },
-    ],
-  }, PlayerUnlockedCharacterRow),
+  }, VwPieceRow),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */

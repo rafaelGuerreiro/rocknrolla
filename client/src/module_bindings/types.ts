@@ -11,7 +11,7 @@ import {
 } from "spacetimedb";
 
 export const CharacterDef = __t.object("CharacterDef", {
-  id: __t.string(),
+  id: __t.uuid(),
   name: __t.string(),
   style: __t.string(),
   rarityWeight: __t.u32(),
@@ -24,8 +24,20 @@ export const CharacterDef = __t.object("CharacterDef", {
 });
 export type CharacterDef = __Infer<typeof CharacterDef>;
 
+export const CharacterView = __t.object("CharacterView", {
+  id: __t.uuid(),
+  name: __t.string(),
+  style: __t.string(),
+  density: __t.f32(),
+  jumpSpeed: __t.f32(),
+  flightTimeMs: __t.u32(),
+  buoyancy: __t.f32(),
+  fireResistance: __t.f32(),
+});
+export type CharacterView = __Infer<typeof CharacterView>;
+
 export const DropImport = __t.object("DropImport", {
-  pieceId: __t.string(),
+  pieceId: __t.uuid(),
   weight: __t.u32(),
 });
 export type DropImport = __Infer<typeof DropImport>;
@@ -45,17 +57,18 @@ export const LayerImport = __t.object("LayerImport", {
 export type LayerImport = __Infer<typeof LayerImport>;
 
 export const Level = __t.object("Level", {
-  id: __t.string(),
+  id: __t.uuid(),
+  slug: __t.string(),
   name: __t.string(),
   isStarting: __t.bool(),
   active: __t.bool(),
-  rewardLootboxId: __t.string(),
+  rewardLootboxId: __t.option(__t.uuid()),
 });
 export type Level = __Infer<typeof Level>;
 
 export const LevelLayer = __t.object("LevelLayer", {
-  id: __t.u64(),
-  levelId: __t.string(),
+  id: __t.uuid(),
+  levelId: __t.uuid(),
   z: __t.u8(),
   width: __t.u16(),
   height: __t.u16(),
@@ -69,23 +82,45 @@ export const LevelLayer = __t.object("LevelLayer", {
 });
 export type LevelLayer = __Infer<typeof LevelLayer>;
 
+export const LevelLayerView = __t.object("LevelLayerView", {
+  levelId: __t.uuid(),
+  z: __t.u8(),
+  width: __t.u16(),
+  height: __t.u16(),
+  cellWidth: __t.u16(),
+  cellHeight: __t.u16(),
+  parallaxX: __t.f32(),
+  parallaxY: __t.f32(),
+  encoding: __t.string(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type LevelLayerView = __Infer<typeof LevelLayerView>;
+
 export const LevelSuccessor = __t.object("LevelSuccessor", {
-  id: __t.u64(),
-  levelId: __t.string(),
-  successorId: __t.string(),
+  id: __t.uuid(),
+  levelId: __t.uuid(),
+  successorId: __t.uuid(),
 });
 export type LevelSuccessor = __Infer<typeof LevelSuccessor>;
 
+export const LevelView = __t.object("LevelView", {
+  id: __t.uuid(),
+  slug: __t.string(),
+  name: __t.string(),
+});
+export type LevelView = __Infer<typeof LevelView>;
+
 export const LootboxDef = __t.object("LootboxDef", {
-  id: __t.string(),
+  id: __t.uuid(),
   name: __t.string(),
 });
 export type LootboxDef = __Infer<typeof LootboxDef>;
 
 export const LootboxDrop = __t.object("LootboxDrop", {
-  id: __t.u64(),
-  lootboxId: __t.string(),
-  pieceId: __t.string(),
+  id: __t.uuid(),
+  lootboxId: __t.uuid(),
+  pieceId: __t.uuid(),
   weight: __t.u32(),
 });
 export type LootboxDrop = __Infer<typeof LootboxDrop>;
@@ -96,56 +131,94 @@ export const ModuleOwner = __t.object("ModuleOwner", {
 });
 export type ModuleOwner = __Infer<typeof ModuleOwner>;
 
-export const PieceDef = __t.object("PieceDef", {
-  id: __t.string(),
+export const MyCompletedLevelView = __t.object("MyCompletedLevelView", {
+  levelId: __t.uuid(),
+  completedAt: __t.timestamp(),
+});
+export type MyCompletedLevelView = __Infer<typeof MyCompletedLevelView>;
+
+export const MyEnabledLevelView = __t.object("MyEnabledLevelView", {
+  levelId: __t.uuid(),
+});
+export type MyEnabledLevelView = __Infer<typeof MyEnabledLevelView>;
+
+export const MyLootboxView = __t.object("MyLootboxView", {
+  id: __t.uuid(),
+  lootboxId: __t.uuid(),
   name: __t.string(),
-  characterId: __t.string(),
+  opened: __t.bool(),
+  awardedPieceId: __t.option(__t.uuid()),
+});
+export type MyLootboxView = __Infer<typeof MyLootboxView>;
+
+export const MyPieceView = __t.object("MyPieceView", {
+  pieceId: __t.uuid(),
+  count: __t.u32(),
+});
+export type MyPieceView = __Infer<typeof MyPieceView>;
+
+export const MyUnlockedCharacterView = __t.object("MyUnlockedCharacterView", {
+  characterId: __t.uuid(),
+});
+export type MyUnlockedCharacterView = __Infer<typeof MyUnlockedCharacterView>;
+
+export const PieceDef = __t.object("PieceDef", {
+  id: __t.uuid(),
+  name: __t.string(),
+  characterId: __t.uuid(),
 });
 export type PieceDef = __Infer<typeof PieceDef>;
 
+export const PieceView = __t.object("PieceView", {
+  id: __t.uuid(),
+  name: __t.string(),
+  characterId: __t.uuid(),
+});
+export type PieceView = __Infer<typeof PieceView>;
+
 export const Player = __t.object("Player", {
   identity: __t.identity(),
-  selectedCharacterId: __t.string(),
+  selectedCharacterId: __t.option(__t.uuid()),
 });
 export type Player = __Infer<typeof Player>;
 
 export const PlayerCompletedLevel = __t.object("PlayerCompletedLevel", {
-  id: __t.u64(),
+  id: __t.uuid(),
   owner: __t.identity(),
-  levelId: __t.string(),
+  levelId: __t.uuid(),
   completedAt: __t.timestamp(),
 });
 export type PlayerCompletedLevel = __Infer<typeof PlayerCompletedLevel>;
 
 export const PlayerEnabledLevel = __t.object("PlayerEnabledLevel", {
-  id: __t.u64(),
+  id: __t.uuid(),
   owner: __t.identity(),
-  levelId: __t.string(),
+  levelId: __t.uuid(),
 });
 export type PlayerEnabledLevel = __Infer<typeof PlayerEnabledLevel>;
 
 export const PlayerLootbox = __t.object("PlayerLootbox", {
-  id: __t.u64(),
+  id: __t.uuid(),
   owner: __t.identity(),
-  lootboxId: __t.string(),
+  lootboxId: __t.uuid(),
   grantedAt: __t.timestamp(),
   opened: __t.bool(),
-  awardedPieceId: __t.option(__t.string()),
+  awardedPieceId: __t.option(__t.uuid()),
 });
 export type PlayerLootbox = __Infer<typeof PlayerLootbox>;
 
 export const PlayerPiece = __t.object("PlayerPiece", {
-  id: __t.u64(),
+  id: __t.uuid(),
   owner: __t.identity(),
-  pieceId: __t.string(),
+  pieceId: __t.uuid(),
   count: __t.u32(),
 });
 export type PlayerPiece = __Infer<typeof PlayerPiece>;
 
 export const PlayerUnlockedCharacter = __t.object("PlayerUnlockedCharacter", {
-  id: __t.u64(),
+  id: __t.uuid(),
   owner: __t.identity(),
-  characterId: __t.string(),
+  characterId: __t.uuid(),
 });
 export type PlayerUnlockedCharacter = __Infer<typeof PlayerUnlockedCharacter>;
 

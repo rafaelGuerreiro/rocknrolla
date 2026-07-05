@@ -1,7 +1,7 @@
 import type { DbConnection } from './module_bindings';
 
-/** Gameplay layer logical cell size in pixels. */
-export const CELL = 32;
+/** Gameplay layer logical cell size in pixels (Kenney Default tile size). */
+export const CELL = 64;
 export const GAMEPLAY_Z = 127;
 /** Fire hazards burn characters below this fire resistance. */
 export const FIRE_RESISTANCE_THRESHOLD = 0.5;
@@ -36,7 +36,6 @@ export interface DecodedLayer {
 export interface DecodedLevel {
   id: string;
   name: string;
-  rewardLootboxId: string;
   layers: DecodedLayer[];
   gameplay: DecodedLayer;
   widthPx: number;
@@ -86,9 +85,11 @@ const cache = new Map<string, { key: string; level: DecodedLevel }>();
  * next load.
  */
 export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
-  const meta = [...conn.db.level.iter()].find((row) => row.id === levelId);
+  const meta = [...conn.db.vw_level.iter()].find((row) => row.id.toString() === levelId);
   if (!meta) throw new Error(`level '${levelId}' is not available`);
-  const rows = [...conn.db.level_layer.iter()].filter((row) => row.levelId === levelId);
+  const rows = [...conn.db.vw_level_layer.iter()].filter(
+    (row) => row.levelId.toString() === levelId,
+  );
   if (rows.length === 0) throw new Error(`level '${levelId}' has no layers`);
 
   const key = rows
@@ -125,9 +126,8 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
   if (!gameplay) throw new Error(`level '${levelId}' has no gameplay layer`);
 
   const level: DecodedLevel = {
-    id: meta.id,
+    id: meta.id.toString(),
     name: meta.name,
-    rewardLootboxId: meta.rewardLootboxId,
     layers,
     gameplay,
     widthPx: gameplay.width * CELL,

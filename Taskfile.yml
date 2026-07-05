@@ -27,6 +27,11 @@ tasks:
       - task server:build
       - task client:build
 
+  dev:
+    desc: Start the client dev server to play in the browser
+    cmds:
+      - task client:dev
+
   login:
     desc: Login to SpacetimeDB using server/.env
     cmds:

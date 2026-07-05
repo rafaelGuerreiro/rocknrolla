@@ -2,7 +2,8 @@ import { DbConnection, tables } from './module_bindings';
 
 const URI = import.meta.env.VITE_SPACETIMEDB_URI ?? 'ws://localhost:3000';
 const DATABASE = import.meta.env.VITE_SPACETIMEDB_DB ?? 'rocknrolladb-dev';
-const TOKEN_KEY = 'rocknrolla_token';
+// Namespaced by target so a token from one server (e.g. local) is never sent to another (e.g. Maincloud).
+const TOKEN_KEY = `rocknrolla_token:${URI}:${DATABASE}`;
 
 let conn: DbConnection | null = null;
 
@@ -46,17 +47,16 @@ export function connect(): Promise<DbConnection> {
           .onApplied(() => resolve(connection))
           .onError((ctx) => fail(ctx.event))
           .subscribe([
-            tables.level,
-            tables.level_layer,
-            tables.character_def,
-            tables.piece_def,
-            tables.lootbox_def,
-            tables.player,
-            tables.player_enabled_level,
-            tables.player_completed_level,
-            tables.player_lootbox,
-            tables.player_piece,
-            tables.player_unlocked_character,
+            tables.vw_level,
+            tables.vw_level_layer,
+            tables.vw_character,
+            tables.vw_piece,
+            tables.vw_me,
+            tables.vw_my_enabled_level,
+            tables.vw_my_completed_level,
+            tables.vw_my_lootbox,
+            tables.vw_my_piece,
+            tables.vw_my_unlocked_character,
           ]);
       })
       .onConnectError((_ctx, error) => fail(error))

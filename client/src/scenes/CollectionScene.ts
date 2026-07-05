@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Uuid } from 'spacetimedb';
 import { db } from '../db';
 import { UI_FONT, button, note, title } from '../ui';
 
@@ -15,10 +16,9 @@ export class CollectionScene extends Phaser.Scene {
     const conn = db();
     title(this, 'Rewards');
 
-    const unopened = [...conn.db.player_lootbox.iter()]
+    const unopened = [...conn.db.vw_my_lootbox.iter()]
       .filter((row) => !row.opened)
-      .sort((a, b) => (a.id < b.id ? -1 : 1));
-    const lootboxNames = new Map([...conn.db.lootbox_def.iter()].map((row) => [row.id, row.name]));
+      .sort((a, b) => a.id.compareTo(b.id));
 
     if (unopened.length === 0) {
       note(this, 130, 'No unopened lootboxes. Complete levels to earn more.');
@@ -28,7 +28,7 @@ export class CollectionScene extends Phaser.Scene {
         this,
         this.scale.width / 2,
         140,
-        `Open ${lootboxNames.get(box.lootboxId) ?? box.lootboxId} (${unopened.length} left)`,
+        `Open ${box.name} (${unopened.length} left)`,
         () => this.openLootbox(box.id),
         { width: 460 },
       );
@@ -41,42 +41,42 @@ export class CollectionScene extends Phaser.Scene {
     });
   }
 
-  private openLootbox(playerLootboxId: bigint): void {
+  private openLootbox(playerLootboxId: Uuid): void {
     if (this.opening) return;
     this.opening = true;
     const conn = db();
 
     const timeout = this.time.delayedCall(6000, () => {
-      conn.db.player_lootbox.removeOnUpdate(onUpdate);
+      conn.db.vw_my_lootbox.removeOnUpdate(onUpdate);
       this.opening = false;
       note(this, 200, 'The server did not answer. Check the connection and try again.');
     });
     const failed = (error: unknown) => {
-      conn.db.player_lootbox.removeOnUpdate(onUpdate);
+      conn.db.vw_my_lootbox.removeOnUpdate(onUpdate);
       timeout.remove();
       this.opening = false;
       note(this, 200, `Could not open the lootbox: ${error instanceof Error ? error.message : error}`);
     };
     const onUpdate = (
       _ctx: unknown,
-      _old: { id: bigint },
-      row: { id: bigint; opened: boolean; awardedPieceId?: string },
+      _old: { id: Uuid },
+      row: { id: Uuid; opened: boolean; awardedPieceId?: Uuid },
     ) => {
-      if (row.id !== playerLootboxId || !row.opened || !row.awardedPieceId) return;
-      conn.db.player_lootbox.removeOnUpdate(onUpdate);
+      if (row.id.compareTo(playerLootboxId) !== 0 || !row.opened || !row.awardedPieceId) return;
+      conn.db.vw_my_lootbox.removeOnUpdate(onUpdate);
       timeout.remove();
       this.reveal(row.awardedPieceId);
     };
-    conn.db.player_lootbox.onUpdate(onUpdate);
+    conn.db.vw_my_lootbox.onUpdate(onUpdate);
     conn.reducers.openLootbox({ playerLootboxId }).catch(failed);
   }
 
   /** Animate the server-decided award; the client never chooses the piece. */
-  private reveal(pieceId: string): void {
+  private reveal(pieceId: Uuid): void {
     const conn = db();
-    const piece = [...conn.db.piece_def.iter()].find((row) => row.id === pieceId);
+    const piece = [...conn.db.vw_piece.iter()].find((row) => row.id.compareTo(pieceId) === 0);
     const character = piece
-      ? [...conn.db.character_def.iter()].find((row) => row.id === piece.characterId)
+      ? [...conn.db.vw_character.iter()].find((row) => row.id.compareTo(piece.characterId) === 0)
       : undefined;
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
@@ -86,7 +86,7 @@ export class CollectionScene extends Phaser.Scene {
       .setDepth(10)
       .setInteractive();
     const label = this.add
-      .text(centerX, centerY - 20, piece?.name ?? pieceId, {
+      .text(centerX, centerY - 20, piece?.name ?? pieceId.toString(), {
         fontFamily: UI_FONT,
         fontSize: '40px',
         color: '#f5c451',
@@ -111,27 +111,27 @@ export class CollectionScene extends Phaser.Scene {
   private drawCollection(): void {
     const conn = db();
     const counts = new Map(
-      [...conn.db.player_piece.iter()].map((row) => [row.pieceId, row.count]),
+      [...conn.db.vw_my_piece.iter()].map((row) => [row.pieceId.toString(), row.count]),
     );
     const unlocked = new Set(
-      [...conn.db.player_unlocked_character.iter()].map((row) => row.characterId),
+      [...conn.db.vw_my_unlocked_character.iter()].map((row) => row.characterId.toString()),
     );
-    const pieces = [...conn.db.piece_def.iter()];
-    const characters = [...conn.db.character_def.iter()].sort((a, b) => a.id.localeCompare(b.id));
+    const pieces = [...conn.db.vw_piece.iter()];
+    const characters = [...conn.db.vw_character.iter()].sort((a, b) => a.id.compareTo(b.id));
 
     let y = 220;
     for (const character of characters) {
-      const state = unlocked.has(character.id) ? 'unlocked' : 'locked';
+      const isUnlocked = unlocked.has(character.id.toString());
       this.add
-        .text(150, y, `${character.name} (${state})`, {
+        .text(150, y, `${character.name} (${isUnlocked ? 'unlocked' : 'locked'})`, {
           fontFamily: UI_FONT,
           fontSize: '22px',
-          color: unlocked.has(character.id) ? '#e8ecf5' : '#6b7280',
+          color: isUnlocked ? '#e8ecf5' : '#6b7280',
         })
         .setOrigin(0, 0.5);
       const line = pieces
-        .filter((piece) => piece.characterId === character.id)
-        .map((piece) => `${piece.name} ×${counts.get(piece.id) ?? 0}`)
+        .filter((piece) => piece.characterId.compareTo(character.id) === 0)
+        .map((piece) => `${piece.name} ×${counts.get(piece.id.toString()) ?? 0}`)
         .join('   ');
       this.add
         .text(150, y + 28, line || 'No pieces defined', {

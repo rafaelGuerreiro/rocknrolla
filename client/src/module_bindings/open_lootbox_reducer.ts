@@ -11,5 +11,5 @@ import {
 } from "spacetimedb";
 
 export default {
-  playerLootboxId: __t.u64(),
+  playerLootboxId: __t.uuid(),
 };

@@ -15,7 +15,7 @@ import {
 } from "./types";
 
 export default {
-  id: __t.string(),
+  id: __t.uuid(),
   name: __t.string(),
   get drops() {
     return __t.array(DropImport);

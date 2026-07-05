@@ -11,7 +11,7 @@ import {
 } from "spacetimedb";
 
 export default {
-  id: __t.string(),
+  id: __t.uuid(),
   name: __t.string(),
-  characterId: __t.string(),
+  characterId: __t.uuid(),
 };

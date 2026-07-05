@@ -15,12 +15,13 @@ import {
 } from "./types";
 
 export default {
-  id: __t.string(),
+  id: __t.uuid(),
+  slug: __t.string(),
   name: __t.string(),
   isStarting: __t.bool(),
   active: __t.bool(),
-  rewardLootboxId: __t.string(),
-  successors: __t.array(__t.string()),
+  rewardLootboxId: __t.option(__t.uuid()),
+  successors: __t.array(__t.uuid()),
   get layers() {
     return __t.array(LayerImport);
   },

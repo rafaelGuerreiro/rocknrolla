@@ -1,47 +1,43 @@
 {
   "characters": [
     {
-      "id": "stone",
-      "name": "Stone",
-      "style": "#9aa3ad",
+      "id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0",
+      "name": "Frog",
+      "style": "frog",
       "rarity_weight": 100,
       "density": 0.004,
       "jump_speed": 11.0,
-      "flight_time_ms": 500,
-      "buoyancy": 0.4,
-      "fire_resistance": 0.9,
+      "flight_time_ms": 700,
+      "buoyancy": 1.2,
+      "fire_resistance": 0.6,
       "starter": true
-    },
-    {
-      "id": "paper-ball",
-      "name": "Paper Ball",
-      "style": "#f2e6c8",
-      "rarity_weight": 40,
-      "density": 0.0009,
-      "jump_speed": 9.0,
-      "flight_time_ms": 1200,
-      "buoyancy": 1.6,
-      "fire_resistance": 0.1,
-      "starter": false
     }
   ],
   "pieces": [
-    { "id": "stone-chip-a", "name": "Stone Chip A", "character_id": "stone" },
-    { "id": "stone-chip-b", "name": "Stone Chip B", "character_id": "stone" },
-    { "id": "paper-scrap-a", "name": "Paper Scrap A", "character_id": "paper-ball" },
-    { "id": "paper-scrap-b", "name": "Paper Scrap B", "character_id": "paper-ball" },
-    { "id": "paper-scrap-c", "name": "Paper Scrap C", "character_id": "paper-ball" }
+    {
+      "id": "070ec167-621c-4509-a398-885a8a5a43d2",
+      "name": "Frog Charm A",
+      "character_id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0"
+    },
+    {
+      "id": "561c3006-8454-4bd9-a8b3-653fc96b699c",
+      "name": "Frog Charm B",
+      "character_id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0"
+    },
+    {
+      "id": "af3f81da-4179-46fa-a8b2-4bde4dec2473",
+      "name": "Frog Charm C",
+      "character_id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0"
+    }
   ],
   "lootboxes": [
     {
-      "id": "trail-cache",
+      "id": "122789c5-1e95-429e-bd29-442219cf3c8c",
       "name": "Trail Cache",
       "drops": [
-        { "piece_id": "stone-chip-a", "weight": 10 },
-        { "piece_id": "stone-chip-b", "weight": 10 },
-        { "piece_id": "paper-scrap-a", "weight": 30 },
-        { "piece_id": "paper-scrap-b", "weight": 30 },
-        { "piece_id": "paper-scrap-c", "weight": 30 }
+        { "piece_id": "070ec167-621c-4509-a398-885a8a5a43d2", "weight": 34 },
+        { "piece_id": "561c3006-8454-4bd9-a8b3-653fc96b699c", "weight": 33 },
+        { "piece_id": "af3f81da-4179-46fa-a8b2-4bde4dec2473", "weight": 33 }
       ]
     }
   ]

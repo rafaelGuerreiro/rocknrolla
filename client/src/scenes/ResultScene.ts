@@ -19,7 +19,7 @@ export class ResultScene extends Phaser.Scene {
     const conn = db();
     title(this, `${this.levelName} complete!`);
 
-    const unopened = [...conn.db.player_lootbox.iter()].filter((row) => !row.opened).length;
+    const unopened = [...conn.db.vw_my_lootbox.iter()].filter((row) => !row.opened).length;
     note(
       this,
       160,

@@ -11,5 +11,5 @@ import {
 } from "spacetimedb";
 
 export default {
-  levelId: __t.string(),
+  levelId: __t.uuid(),
 };

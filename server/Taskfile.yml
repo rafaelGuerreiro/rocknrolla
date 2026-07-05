@@ -1,9 +1,5 @@
 version: '3'
 
-vars:
-  LEVELS_DB: '{{.LEVELS_DB | default "rocknrolladb-dev"}}'
-  LEVELS_SERVER: '{{.LEVELS_SERVER | default "maincloud"}}'
-
 tasks:
   check:
     desc: Format and check all targets
@@ -44,18 +40,11 @@ tasks:
     cmds:
       - bash tools/spacetime_login.sh
 
-  levels-validate:
-    desc: Dry-run validation of committed levels and seed content
+  admin:
+    desc: Open the interactive content administration shell
+    interactive: true
     cmds:
-      - cargo run -q -p rocknrolla-admin -- levels --dry-run ../levels/generated
-      - cargo run -q -p rocknrolla-admin -- seed --dry-run ../levels/seed.json
-
-  levels-import:
-    desc: Import seed content and levels (LEVELS_DB defaults to rocknrolladb-dev)
-    deps: [login]
-    cmds:
-      - cargo run -q -p rocknrolla-admin -- seed --database {{.LEVELS_DB}} --server {{.LEVELS_SERVER}} ../levels/seed.json
-      - cargo run -q -p rocknrolla-admin -- levels --database {{.LEVELS_DB}} --server {{.LEVELS_SERVER}} ../levels/generated
+      - cargo run -q -p admin
 
   publish:
     desc: Publish rocknrolladb-dev to Maincloud
