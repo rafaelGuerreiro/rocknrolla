@@ -1,33 +1,146 @@
 {
   "characters": [
     {
-      "id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0",
-      "name": "Frog",
-      "style": "frog",
+      "id": "570ede0a-1c7b-4d04-946d-446947e33fd5",
+      "name": "Rock",
+      "style": "rock",
       "rarity_weight": 100,
-      "density": 0.004,
-      "jump_speed": 11.0,
-      "flight_time_ms": 700,
-      "buoyancy": 1.2,
+      "density": 0.0045,
+      "jump_speed": 9.0,
+      "flight_time_ms": 260,
+      "buoyancy": 0.15,
       "fire_resistance": 0.6,
       "starter": true
+    },
+    {
+      "id": "ef15c3a2-c568-42ce-974f-181a04e039bb",
+      "name": "Coconut",
+      "style": "coco",
+      "rarity_weight": 80,
+      "density": 0.0034,
+      "jump_speed": 11.0,
+      "flight_time_ms": 300,
+      "buoyancy": 0.35,
+      "fire_resistance": 0.6,
+      "starter": false
+    },
+    {
+      "id": "1a8efdcb-443b-470d-8ce3-39354179648b",
+      "name": "Egg",
+      "style": "egg",
+      "rarity_weight": 70,
+      "density": 0.0016,
+      "jump_speed": 10.0,
+      "flight_time_ms": 300,
+      "buoyancy": 0.8,
+      "fire_resistance": 0.4,
+      "starter": false
+    },
+    {
+      "id": "3ba46ff7-4da5-4e4f-94fd-29c092293674",
+      "name": "Paper Ball",
+      "style": "paper",
+      "rarity_weight": 60,
+      "density": 0.0009,
+      "jump_speed": 8.0,
+      "flight_time_ms": 240,
+      "buoyancy": 0.9,
+      "fire_resistance": 0.15,
+      "starter": false
+    },
+    {
+      "id": "1e77278b-c7c8-4dfe-9d04-7913e0d6bfe6",
+      "name": "Gem Shard",
+      "style": "gem",
+      "rarity_weight": 40,
+      "density": 0.0028,
+      "jump_speed": 15.0,
+      "flight_time_ms": 380,
+      "buoyancy": 0.55,
+      "fire_resistance": 0.8,
+      "starter": false
     }
   ],
   "pieces": [
     {
-      "id": "070ec167-621c-4509-a398-885a8a5a43d2",
-      "name": "Frog Charm A",
-      "character_id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0"
+      "id": "64571a90-008b-45a1-9b1f-bf64d4840cef",
+      "name": "Coconut Piece A",
+      "character_id": "ef15c3a2-c568-42ce-974f-181a04e039bb"
     },
     {
-      "id": "561c3006-8454-4bd9-a8b3-653fc96b699c",
-      "name": "Frog Charm B",
-      "character_id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0"
+      "id": "770760c0-791d-4336-b0ee-8427185b2a12",
+      "name": "Coconut Piece B",
+      "character_id": "ef15c3a2-c568-42ce-974f-181a04e039bb"
     },
     {
-      "id": "af3f81da-4179-46fa-a8b2-4bde4dec2473",
-      "name": "Frog Charm C",
-      "character_id": "fce40ba8-cab8-42d1-acd5-be8aed7b53e0"
+      "id": "00849616-f99b-464c-a71f-c732e5e44465",
+      "name": "Coconut Piece C",
+      "character_id": "ef15c3a2-c568-42ce-974f-181a04e039bb"
+    },
+    {
+      "id": "e50625f5-df9b-4298-b565-57e8cd635ce8",
+      "name": "Coconut Piece D",
+      "character_id": "ef15c3a2-c568-42ce-974f-181a04e039bb"
+    },
+    {
+      "id": "0a308760-85f5-4561-8668-8fb88bc33654",
+      "name": "Egg Piece A",
+      "character_id": "1a8efdcb-443b-470d-8ce3-39354179648b"
+    },
+    {
+      "id": "ca0ae2e5-acaf-4984-b8d0-ebf3271b84ce",
+      "name": "Egg Piece B",
+      "character_id": "1a8efdcb-443b-470d-8ce3-39354179648b"
+    },
+    {
+      "id": "8b7f4191-7018-42e7-835f-74ad9bee2822",
+      "name": "Egg Piece C",
+      "character_id": "1a8efdcb-443b-470d-8ce3-39354179648b"
+    },
+    {
+      "id": "231c3af6-27eb-4010-9d85-0a985c6680ad",
+      "name": "Egg Piece D",
+      "character_id": "1a8efdcb-443b-470d-8ce3-39354179648b"
+    },
+    {
+      "id": "b7afcb0c-ac42-402f-b328-bfa03d775afc",
+      "name": "Paper Ball Piece A",
+      "character_id": "3ba46ff7-4da5-4e4f-94fd-29c092293674"
+    },
+    {
+      "id": "3410170e-7057-4939-9b88-1346d1030adc",
+      "name": "Paper Ball Piece B",
+      "character_id": "3ba46ff7-4da5-4e4f-94fd-29c092293674"
+    },
+    {
+      "id": "8e4b43a9-d7e5-4d73-985f-03f755acd47b",
+      "name": "Paper Ball Piece C",
+      "character_id": "3ba46ff7-4da5-4e4f-94fd-29c092293674"
+    },
+    {
+      "id": "4783369f-fc81-4166-bf85-97dd5db535e5",
+      "name": "Paper Ball Piece D",
+      "character_id": "3ba46ff7-4da5-4e4f-94fd-29c092293674"
+    },
+    {
+      "id": "03b827ce-52cd-4d4b-a758-0d97c01a2ddc",
+      "name": "Gem Shard Piece A",
+      "character_id": "1e77278b-c7c8-4dfe-9d04-7913e0d6bfe6"
+    },
+    {
+      "id": "c6b53f64-519b-4673-8780-04b69f898689",
+      "name": "Gem Shard Piece B",
+      "character_id": "1e77278b-c7c8-4dfe-9d04-7913e0d6bfe6"
+    },
+    {
+      "id": "69190e72-ae38-499e-a29f-e4a1ff52b952",
+      "name": "Gem Shard Piece C",
+      "character_id": "1e77278b-c7c8-4dfe-9d04-7913e0d6bfe6"
+    },
+    {
+      "id": "29e24c5d-3b59-4d31-82ea-5c0bb01ac599",
+      "name": "Gem Shard Piece D",
+      "character_id": "1e77278b-c7c8-4dfe-9d04-7913e0d6bfe6"
     }
   ],
   "lootboxes": [
@@ -35,9 +148,70 @@
       "id": "122789c5-1e95-429e-bd29-442219cf3c8c",
       "name": "Trail Cache",
       "drops": [
-        { "piece_id": "070ec167-621c-4509-a398-885a8a5a43d2", "weight": 34 },
-        { "piece_id": "561c3006-8454-4bd9-a8b3-653fc96b699c", "weight": 33 },
-        { "piece_id": "af3f81da-4179-46fa-a8b2-4bde4dec2473", "weight": 33 }
+        {
+          "piece_id": "64571a90-008b-45a1-9b1f-bf64d4840cef",
+          "weight": 6
+        },
+        {
+          "piece_id": "770760c0-791d-4336-b0ee-8427185b2a12",
+          "weight": 6
+        },
+        {
+          "piece_id": "00849616-f99b-464c-a71f-c732e5e44465",
+          "weight": 6
+        },
+        {
+          "piece_id": "e50625f5-df9b-4298-b565-57e8cd635ce8",
+          "weight": 6
+        },
+        {
+          "piece_id": "0a308760-85f5-4561-8668-8fb88bc33654",
+          "weight": 6
+        },
+        {
+          "piece_id": "ca0ae2e5-acaf-4984-b8d0-ebf3271b84ce",
+          "weight": 6
+        },
+        {
+          "piece_id": "8b7f4191-7018-42e7-835f-74ad9bee2822",
+          "weight": 6
+        },
+        {
+          "piece_id": "231c3af6-27eb-4010-9d85-0a985c6680ad",
+          "weight": 6
+        },
+        {
+          "piece_id": "b7afcb0c-ac42-402f-b328-bfa03d775afc",
+          "weight": 6
+        },
+        {
+          "piece_id": "3410170e-7057-4939-9b88-1346d1030adc",
+          "weight": 6
+        },
+        {
+          "piece_id": "8e4b43a9-d7e5-4d73-985f-03f755acd47b",
+          "weight": 6
+        },
+        {
+          "piece_id": "4783369f-fc81-4166-bf85-97dd5db535e5",
+          "weight": 6
+        },
+        {
+          "piece_id": "03b827ce-52cd-4d4b-a758-0d97c01a2ddc",
+          "weight": 6
+        },
+        {
+          "piece_id": "c6b53f64-519b-4673-8780-04b69f898689",
+          "weight": 6
+        },
+        {
+          "piece_id": "69190e72-ae38-499e-a29f-e4a1ff52b952",
+          "weight": 6
+        },
+        {
+          "piece_id": "29e24c5d-3b59-4d31-82ea-5c0bb01ac599",
+          "weight": 6
+        }
       ]
     }
   ]

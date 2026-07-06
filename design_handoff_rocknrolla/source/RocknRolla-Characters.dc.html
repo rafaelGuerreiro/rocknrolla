@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:#1c1219;}
+  @keyframes roll{to{transform:rotate(360deg)}}
+  @keyframes rollccw{to{transform:rotate(-360deg)}}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+</style>
+</helmet>
+
+<!-- ============ SPRITE SHEET · faceless bodies + swappable faces ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="c-rock" cx="36%" cy="28%"><stop offset="0" stop-color="#bcb1a1"/><stop offset=".6" stop-color="#736a5c"/><stop offset="1" stop-color="#463f36"/></radialGradient>
+    <linearGradient id="c-gem" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#8ff0f0"/><stop offset=".5" stop-color="#3fb6bd"/><stop offset="1" stop-color="#237580"/></linearGradient>
+    <radialGradient id="c-egg" cx="40%" cy="30%"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#e9d6ba"/></radialGradient>
+    <radialGradient id="c-coco" cx="38%" cy="30%"><stop offset="0" stop-color="#b07c50"/><stop offset=".55" stop-color="#7d4e2c"/><stop offset="1" stop-color="#4e2f1a"/></radialGradient>
+    <radialGradient id="c-paper" cx="40%" cy="32%"><stop offset="0" stop-color="#fbf6ea"/><stop offset="1" stop-color="#d8cdb8"/></radialGradient>
+  </defs>
+
+  <!-- ============ BODIES (no face) ============ -->
+  <symbol id="b-rock" viewBox="0 0 120 120">
+    <polygon points="58,9 86,17 109,43 106,73 90,100 60,113 33,104 11,77 17,44 33,19" fill="url(#c-rock)"/>
+    <polygon points="58,9 33,19 17,44 33,52 60,30" fill="#ffffff" opacity=".14"/>
+    <polygon points="106,73 90,100 60,113 60,72" fill="#000000" opacity=".16"/>
+    <path d="M26 62 l14 -5 l9 6" fill="none" stroke="#40382f" stroke-width="2.4" stroke-linecap="round" opacity=".5"/>
+    <path d="M78 34 l-10 8" fill="none" stroke="#40382f" stroke-width="2" stroke-linecap="round" opacity=".4"/>
+  </symbol>
+  <symbol id="b-gem" viewBox="0 0 120 120">
+    <polygon points="66,4 90,40 78,88 58,116 42,80 38,40 52,16" fill="url(#c-gem)"/>
+    <polygon points="66,4 52,16 38,40 58,44" fill="#c6fbfb" opacity=".55"/>
+    <polygon points="66,4 90,40 58,44" fill="#ffffff" opacity=".28"/>
+    <path d="M38 40 L78 44 M58 44 L58 116 M58 44 L42 80 M58 44 L78 88" stroke="#ffffff" stroke-width="1.4" opacity=".4" fill="none"/>
+    <polygon points="78,88 58,116 58,72" fill="#12525a" opacity=".35"/>
+  </symbol>
+  <symbol id="b-egg" viewBox="0 0 120 120">
+    <path d="M60 8 C42 8 31 36 31 62 C31 92 44 114 60 114 C76 114 89 92 89 62 C89 36 78 8 60 8 Z" fill="url(#c-egg)"/>
+    <ellipse cx="47" cy="38" rx="12" ry="17" fill="#ffffff" opacity=".5"/>
+    <circle cx="76" cy="70" r="4" fill="#f6b8c4" opacity=".55"/><circle cx="42" cy="74" r="4" fill="#f6b8c4" opacity=".55"/>
+  </symbol>
+  <symbol id="b-coco" viewBox="0 0 120 120">
+    <path d="M60 8 C84 6 104 24 106 48 C108 62 112 76 100 92 C88 108 70 114 56 112 C40 110 22 100 16 82 C10 66 10 46 20 32 C30 16 42 10 60 8 Z" fill="url(#c-coco)"/>
+    <path d="M34 30 C44 24 52 26 58 20 M78 34 C86 40 90 50 88 58 M30 74 C36 82 46 86 54 84 M84 78 C78 88 68 92 60 90" fill="none" stroke="#3a2214" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+    <ellipse cx="43" cy="30" rx="13" ry="8" fill="#ffffff" opacity=".14"/>
+    <circle cx="86" cy="86" r="2.6" fill="#33200f" opacity=".6"/><circle cx="96" cy="74" r="2.4" fill="#33200f" opacity=".5"/><circle cx="90" cy="96" r="2.2" fill="#33200f" opacity=".5"/>
+  </symbol>
+  <symbol id="b-paper" viewBox="0 0 120 120">
+    <polygon points="60,8 74,15 87,10 93,26 107,33 100,49 110,62 97,74 102,92 85,93 74,106 60,99 45,107 37,92 20,91 27,73 12,60 25,49 17,33 33,28 39,13 53,19" fill="url(#c-paper)"/>
+    <path d="M60 20 L62 58 L50 84 M92 30 L62 58 L100 66 M22 58 L62 58 L34 90 M78 96 L62 58" fill="none" stroke="#b7ac94" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
+    <path d="M40 32 L62 58 M84 78 L62 58" fill="none" stroke="#fffdf7" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>
+    <polygon points="60,8 53,19 39,13 60,20" fill="#ffffff" opacity=".3"/>
+    <polygon points="85,93 74,106 60,99 78,88" fill="#b7ac94" opacity=".28"/>
+  </symbol>
+
+  <!-- ============ FACES (swappable · eyes + mouth only, transparent) ============ -->
+  <symbol id="f-happy" viewBox="0 0 80 50">
+    <ellipse cx="28" cy="20" rx="6" ry="8" fill="#241d16"/><ellipse cx="52" cy="20" rx="6" ry="8" fill="#241d16"/>
+    <circle cx="30" cy="17" r="2" fill="#fff"/><circle cx="54" cy="17" r="2" fill="#fff"/>
+    <path d="M30 33 q10 9 20 0" fill="none" stroke="#241d16" stroke-width="3.4" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="f-determined" viewBox="0 0 80 50">
+    <path d="M18 9 L34 15 M62 9 L46 15" stroke="#241d16" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <ellipse cx="28" cy="22" rx="6" ry="8" fill="#241d16"/><ellipse cx="52" cy="22" rx="6" ry="8" fill="#241d16"/>
+    <circle cx="30" cy="19" r="2" fill="#fff"/><circle cx="54" cy="19" r="2" fill="#fff"/>
+    <path d="M31 36 q9 5 18 0" fill="none" stroke="#241d16" stroke-width="3.2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="f-surprised" viewBox="0 0 80 50">
+    <ellipse cx="28" cy="19" rx="7" ry="9.5" fill="#241d16"/><ellipse cx="52" cy="19" rx="7" ry="9.5" fill="#241d16"/>
+    <circle cx="30" cy="15" r="2.4" fill="#fff"/><circle cx="54" cy="15" r="2.4" fill="#fff"/>
+    <ellipse cx="40" cy="36" rx="5.5" ry="6.5" fill="#241d16"/>
+  </symbol>
+  <symbol id="f-nervous" viewBox="0 0 80 50">
+    <ellipse cx="28" cy="20" rx="6.5" ry="8.5" fill="#241d16"/><ellipse cx="52" cy="20" rx="6.5" ry="8.5" fill="#241d16"/>
+    <circle cx="26" cy="18" r="2" fill="#fff"/><circle cx="50" cy="18" r="2" fill="#fff"/>
+    <path d="M30 35 q4 -4 8 0 t8 0" fill="none" stroke="#241d16" stroke-width="3" stroke-linecap="round"/>
+    <path d="M64 8 c-3.5 5 -3.5 8 0 8 c3.5 0 3.5 -3 0 -8 z" fill="#7fd4ff"/>
+  </symbol>
+  <symbol id="f-dizzy" viewBox="0 0 80 50">
+    <path d="M23 14 L33 24 M33 14 L23 24 M47 14 L57 24 M57 14 L47 24" stroke="#241d16" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M30 35 q5 5 10 0 t10 0" fill="none" stroke="#241d16" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<div style="min-height:100vh;padding:64px;background:radial-gradient(1300px 800px at 30% -5%,#33222f,#1a1017 68%);font-family:'Nunito',sans-serif;display:flex;flex-direction:column;gap:44px;align-items:flex-start;">
+
+  <div style="max-width:1120px;color:#f2e6d4;">
+    <div style="font:700 12px/1 'Space Mono',monospace;letter-spacing:.32em;color:#f2a63c;text-transform:uppercase;">RocknRolla — Rollers · two-layer rig</div>
+    <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:46px;line-height:1;margin:14px 0 10px;">The body rolls. The face stays put.</div>
+    <div style="max-width:820px;font-size:16px;line-height:1.55;color:#cdbda8;">Each roller is <b style="color:#f5ecd8;">two separate layers</b>: a faceless <b style="color:#f5ecd8;">body</b> that spins with the physics, and a <b style="color:#f5ecd8;">face</b> pinned upright over its centre. Swap the face symbol to change the expression at any time — happy, determined, dizzy on impact — without touching the body art.</div>
+  </div>
+
+  <!-- ================= CONCEPT · exploded rig ================= -->
+  <div style="width:100%;max-width:1000px;background:linear-gradient(180deg,rgba(58,36,52,.5),rgba(30,18,28,.5));border:1px solid rgba(245,236,216,.1);border-radius:24px;padding:30px 34px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <!-- body layer -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:150px;">
+      <svg width="104" height="104" style="transform:rotate(-18deg);"><use href="#b-rock"/></svg>
+      <div style="font:700 10px/1.3 'Space Mono',monospace;letter-spacing:.12em;color:#b7a58f;text-transform:uppercase;text-align:center;">Body layer<br><span style="color:#8f7f6c;">rotates w/ physics</span></div>
+    </div>
+    <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:34px;color:#6d5f52;">+</div>
+    <!-- face layer -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:150px;">
+      <div style="width:104px;height:104px;border-radius:16px;border:1.5px dashed rgba(245,236,216,.28);display:flex;align-items:center;justify-content:center;background:rgba(245,236,216,.05);"><svg width="64" height="40"><use href="#f-happy"/></svg></div>
+      <div style="font:700 10px/1.3 'Space Mono',monospace;letter-spacing:.12em;color:#b7a58f;text-transform:uppercase;text-align:center;">Face layer<br><span style="color:#8f7f6c;">swappable</span></div>
+    </div>
+    <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:34px;color:#6d5f52;">=</div>
+    <!-- live demo -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;flex:1;min-width:220px;">
+      <div style="position:relative;width:150px;height:150px;">
+        <div style="position:absolute;left:19px;bottom:8px;width:112px;height:18px;background:rgba(20,10,20,.4);border-radius:50%;filter:blur(4px);"></div>
+        <svg width="128" height="128" style="position:absolute;left:11px;top:8px;transform-origin:center;animation:roll 3.4s linear infinite;filter:drop-shadow(0 6px 8px rgba(20,10,18,.4));"><use href="#b-rock"/></svg>
+        <svg width="72" height="46" style="position:absolute;left:39px;top:56px;"><use href="{{ demoHref }}"></use></svg>
+      </div>
+      <div style="font:700 10px/1 'Space Mono',monospace;letter-spacing:.16em;color:#ffce7a;text-transform:uppercase;">FACE · {{ demoName }} · stays upright</div>
+    </div>
+  </div>
+
+  <!-- ================= STUDY ROW ================= -->
+  <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- ROCK -->
+    <div style="width:322px;flex:none;background:linear-gradient(180deg,rgba(58,36,52,.55),rgba(30,18,28,.55));border:1px solid rgba(245,236,216,.1);border-radius:24px;padding:22px;display:flex;flex-direction:column;align-items:center;">
+      <div style="align-self:flex-start;font:700 10px/1 'Space Mono',monospace;letter-spacing:.16em;color:#8f7f6c;">01 · DENSE</div>
+      <div style="position:relative;width:200px;height:190px;margin-top:6px;">
+        <div style="position:absolute;left:44px;bottom:6px;width:112px;height:20px;background:rgba(20,10,20,.4);border-radius:50%;filter:blur(4px);"></div>
+        <svg width="150" height="150" style="position:absolute;left:25px;top:14px;transform-origin:center;animation:roll 5s linear infinite;filter:drop-shadow(0 8px 8px rgba(20,10,18,.4));"><use href="#b-rock"/></svg>
+        <svg width="66" height="42" style="position:absolute;left:67px;top:75px;"><use href="#f-determined"/></svg>
+      </div>
+      <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:#f5ecd8;margin-top:6px;">Rock</div>
+      <div style="font-size:13.5px;color:#e6c9a0;text-align:center;margin-top:4px;line-height:1.4;">Angular &amp; heavy. Catches on an edge, stalls, then lurches off the next face. Shoves heavy blocks.</div>
+      <div style="display:flex;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(245,236,216,.12);width:100%;justify-content:center;">
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(52deg);"><use href="#b-rock"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-determined"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(140deg);"><use href="#b-rock"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-determined"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(238deg);"><use href="#b-rock"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-determined"/></svg></div>
+      </div>
+    </div>
+
+    <!-- GEM SHARD -->
+    <div style="width:322px;flex:none;background:linear-gradient(180deg,rgba(58,36,52,.55),rgba(30,18,28,.55));border:1px solid rgba(245,236,216,.1);border-radius:24px;padding:22px;display:flex;flex-direction:column;align-items:center;">
+      <div style="align-self:flex-start;font:700 10px/1 'Space Mono',monospace;letter-spacing:.16em;color:#8f7f6c;">02 · SPRINGY</div>
+      <div style="position:relative;width:200px;height:190px;margin-top:6px;">
+        <div style="position:absolute;left:52px;bottom:6px;width:96px;height:18px;background:rgba(20,10,20,.4);border-radius:50%;filter:blur(4px);"></div>
+        <svg width="150" height="150" style="position:absolute;left:25px;top:14px;transform-origin:center;animation:rollccw 4.4s linear infinite;filter:drop-shadow(0 8px 8px rgba(20,10,18,.4));"><use href="#b-gem"/></svg>
+        <svg width="66" height="42" style="position:absolute;left:67px;top:78px;"><use href="#f-surprised"/></svg>
+      </div>
+      <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:#f5ecd8;margin-top:6px;">Gem Shard</div>
+      <div style="font-size:13.5px;color:#e6c9a0;text-align:center;margin-top:4px;line-height:1.4;">Long axis, sharp points. Tips end-over-end and springs high off a tip — huge jumps, hard to place.</div>
+      <div style="display:flex;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(245,236,216,.12);width:100%;justify-content:center;">
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(35deg);"><use href="#b-gem"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-surprised"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(118deg);"><use href="#b-gem"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-surprised"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(205deg);"><use href="#b-gem"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-surprised"/></svg></div>
+      </div>
+    </div>
+
+    <!-- EGG -->
+    <div style="width:322px;flex:none;background:linear-gradient(180deg,rgba(58,36,52,.55),rgba(30,18,28,.55));border:1px solid rgba(245,236,216,.1);border-radius:24px;padding:22px;display:flex;flex-direction:column;align-items:center;">
+      <div style="align-self:flex-start;font:700 10px/1 'Space Mono',monospace;letter-spacing:.16em;color:#8f7f6c;">03 · FLOATY</div>
+      <div style="position:relative;width:200px;height:190px;margin-top:6px;">
+        <div style="position:absolute;left:56px;bottom:6px;width:88px;height:18px;background:rgba(20,10,20,.4);border-radius:50%;filter:blur(4px);"></div>
+        <svg width="150" height="150" style="position:absolute;left:25px;top:14px;transform-origin:center;animation:roll 5.6s linear infinite;filter:drop-shadow(0 8px 8px rgba(20,10,18,.4));"><use href="#b-egg"/></svg>
+        <svg width="66" height="42" style="position:absolute;left:67px;top:78px;"><use href="#f-happy"/></svg>
+      </div>
+      <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:#f5ecd8;margin-top:6px;">Egg</div>
+      <div style="font-size:13.5px;color:#e6c9a0;text-align:center;margin-top:4px;line-height:1.4;">Off-center weight. Wobbles, briefly balances on its point, then self-rights. Floats — bobs on water.</div>
+      <div style="display:flex;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(245,236,216,.12);width:100%;justify-content:center;">
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(60deg);"><use href="#b-egg"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-happy"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(160deg);"><use href="#b-egg"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-happy"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(250deg);"><use href="#b-egg"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:16px;"><use href="#f-happy"/></svg></div>
+      </div>
+    </div>
+
+    <!-- COCONUT -->
+    <div style="width:322px;flex:none;background:linear-gradient(180deg,rgba(58,36,52,.55),rgba(30,18,28,.55));border:1px solid rgba(245,236,216,.1);border-radius:24px;padding:22px;display:flex;flex-direction:column;align-items:center;">
+      <div style="align-self:flex-start;font:700 10px/1 'Space Mono',monospace;letter-spacing:.16em;color:#8f7f6c;">04 · STEADY</div>
+      <div style="position:relative;width:200px;height:190px;margin-top:6px;">
+        <div style="position:absolute;left:48px;bottom:6px;width:104px;height:19px;background:rgba(20,10,20,.42);border-radius:50%;filter:blur(4px);"></div>
+        <svg width="150" height="150" style="position:absolute;left:25px;top:14px;transform-origin:center;animation:roll 4.8s linear infinite;filter:drop-shadow(0 8px 8px rgba(20,10,18,.4));"><use href="#b-coco"/></svg>
+        <svg width="66" height="42" style="position:absolute;left:67px;top:74px;"><use href="#f-happy"/></svg>
+      </div>
+      <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:#f5ecd8;margin-top:6px;">Coconut</div>
+      <div style="font-size:13.5px;color:#e6c9a0;text-align:center;margin-top:4px;line-height:1.4;">Lumpy, nearly round. Rolls in little hops as its bumps hit — mostly steady, occasionally skips.</div>
+      <div style="display:flex;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(245,236,216,.12);width:100%;justify-content:center;">
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(48deg);"><use href="#b-coco"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:15px;"><use href="#f-happy"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(132deg);"><use href="#b-coco"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:15px;"><use href="#f-happy"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(236deg);"><use href="#b-coco"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:15px;"><use href="#f-happy"/></svg></div>
+      </div>
+    </div>
+
+    <!-- PAPER BALL -->
+    <div style="width:322px;flex:none;background:linear-gradient(180deg,rgba(58,36,52,.55),rgba(30,18,28,.55));border:1px solid rgba(245,236,216,.1);border-radius:24px;padding:22px;display:flex;flex-direction:column;align-items:center;">
+      <div style="align-self:flex-start;font:700 10px/1 'Space Mono',monospace;letter-spacing:.16em;color:#8f7f6c;">05 · FEATHERWEIGHT</div>
+      <div style="position:relative;width:200px;height:190px;margin-top:6px;">
+        <div style="position:absolute;left:50px;bottom:6px;width:100px;height:18px;background:rgba(20,10,20,.38);border-radius:50%;filter:blur(4px);"></div>
+        <svg width="150" height="150" style="position:absolute;left:25px;top:14px;transform-origin:center;animation:rollccw 3.6s linear infinite;filter:drop-shadow(0 8px 8px rgba(20,10,18,.4));"><use href="#b-paper"/></svg>
+        <svg width="66" height="42" style="position:absolute;left:67px;top:74px;"><use href="#f-nervous"/></svg>
+      </div>
+      <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:#f5ecd8;margin-top:6px;">Paper Ball</div>
+      <div style="font-size:13.5px;color:#e6c9a0;text-align:center;margin-top:4px;line-height:1.4;">Light &amp; creased. Barely any momentum — bounces off faces and drifts. Wind and water push it around.</div>
+      <div style="display:flex;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(245,236,216,.12);width:100%;justify-content:center;">
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(70deg);"><use href="#b-paper"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:15px;"><use href="#f-nervous"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(150deg);"><use href="#b-paper"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:15px;"><use href="#f-nervous"/></svg></div>
+        <div style="position:relative;width:44px;height:44px;"><svg width="40" height="40" style="position:absolute;left:2px;top:2px;transform:rotate(255deg);"><use href="#b-paper"/></svg><svg width="22" height="14" style="position:absolute;left:11px;top:15px;"><use href="#f-nervous"/></svg></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= EXPRESSION LIBRARY ================= -->
+  <div style="width:100%;max-width:1000px;">
+    <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;margin-bottom:16px;">Expression library — one face set, any body</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div style="width:130px;background:rgba(245,236,216,.06);border:1px solid rgba(245,236,216,.12);border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;"><svg width="70" height="44"><use href="#f-happy"/></svg><div style="font:700 10px/1 'Space Mono',monospace;letter-spacing:.14em;color:#e6c9a0;">HAPPY</div></div>
+      <div style="width:130px;background:rgba(245,236,216,.06);border:1px solid rgba(245,236,216,.12);border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;"><svg width="70" height="44"><use href="#f-determined"/></svg><div style="font:700 10px/1 'Space Mono',monospace;letter-spacing:.14em;color:#e6c9a0;">DETERMINED</div></div>
+      <div style="width:130px;background:rgba(245,236,216,.06);border:1px solid rgba(245,236,216,.12);border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;"><svg width="70" height="44"><use href="#f-surprised"/></svg><div style="font:700 10px/1 'Space Mono',monospace;letter-spacing:.14em;color:#e6c9a0;">SURPRISED</div></div>
+      <div style="width:130px;background:rgba(245,236,216,.06);border:1px solid rgba(245,236,216,.12);border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;"><svg width="70" height="44"><use href="#f-nervous"/></svg><div style="font:700 10px/1 'Space Mono',monospace;letter-spacing:.14em;color:#e6c9a0;">NERVOUS</div></div>
+      <div style="width:130px;background:rgba(245,236,216,.06);border:1px solid rgba(245,236,216,.12);border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;"><svg width="70" height="44"><use href="#f-dizzy"/></svg><div style="font:700 10px/1 'Space Mono',monospace;letter-spacing:.14em;color:#e6c9a0;">DIZZY</div></div>
+    </div>
+    <div style="font:400 12px/1.5 'Space Mono',monospace;color:#8f7f6c;margin-top:16px;max-width:760px;">In Phaser: the body is a Matter Image whose angle tracks the physics; the face is a sibling in the same container placed at the body's centre with <span style="color:#f2a63c;">rotation reset to 0</span> each frame. Swap the face texture on events — <span style="color:#f2a63c;">dizzy</span> on a hard hit, <span style="color:#f2a63c;">surprised</span> off a big jump.</div>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="tbc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33203c"/><stop offset=".5" stop-color="#6d3a4e"/><stop offset="1" stop-color="#f2a63c"/></linearGradient></defs>
+    <rect width="100" height="100" rx="22" fill="url(#tbc)"/>
+    <polygon points="50,26 68,32 76,50 68,72 50,80 32,72 26,50 34,32" fill="#8a8177"/>
+    <ellipse cx="44" cy="48" rx="4" ry="5" fill="#241d16"/><ellipse cx="56" cy="48" rx="4" ry="5" fill="#241d16"/>
+    <path d="M44 58 q6 5 12 0" fill="none" stroke="#241d16" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>
+</template></x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { i: 0 };
+  componentDidMount() {
+    this._t = setInterval(
+      () => this.setState((s) => ({ i: (s.i + 1) % 5 })),
+      1400,
+    );
+  }
+  componentWillUnmount() {
+    clearInterval(this._t);
+  }
+  renderVals() {
+    const names = ['happy', 'determined', 'surprised', 'nervous', 'dizzy'];
+    const name = names[this.state.i];
+    return { demoHref: '#f-' + name, demoName: name.toUpperCase() };
+  }
+}
+</script>
+</body>
+</html>

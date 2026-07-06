@@ -13,10 +13,8 @@ import {
 export default __t.row({
   levelId: __t.uuid().name("level_id"),
   z: __t.u8(),
-  width: __t.u16(),
-  height: __t.u16(),
-  cellWidth: __t.u16().name("cell_width"),
-  cellHeight: __t.u16().name("cell_height"),
+  widthPx: __t.u32().name("width_px"),
+  heightPx: __t.u32().name("height_px"),
   parallaxX: __t.f32().name("parallax_x"),
   parallaxY: __t.f32().name("parallax_y"),
   encoding: __t.string(),

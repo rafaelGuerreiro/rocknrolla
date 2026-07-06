@@ -28,12 +28,11 @@ pub struct LevelLayer {
     #[index(btree)]
     pub level_id: Uuid,
     pub z: u8,
-    pub width: u16,
-    pub height: u16,
-    pub cell_width: u16,
-    pub cell_height: u16,
+    pub width_px: u32,
+    pub height_px: u32,
     pub parallax_x: f32,
     pub parallax_y: f32,
+    /// Layer codec identifier (`svg-v1`): `data` is one SVG document.
     pub encoding: String,
     pub content_hash: String,
     pub data: Vec<u8>,

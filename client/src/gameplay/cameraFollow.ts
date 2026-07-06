@@ -26,9 +26,12 @@ export class CameraFollow {
 
   private follow = (): void => {
     const camera = this.scene.cameras.main;
-    camera.setScroll(
-      this.target.x - camera.width * ANCHOR_X_FRACTION,
-      this.target.y - camera.height * ANCHOR_Y_FRACTION,
+    // Anchor in visible-world units so the DPR camera zoom is respected.
+    const viewWidth = camera.width / camera.zoom;
+    const viewHeight = camera.height / camera.zoom;
+    camera.centerOn(
+      this.target.x + viewWidth * (0.5 - ANCHOR_X_FRACTION),
+      this.target.y + viewHeight * (0.5 - ANCHOR_Y_FRACTION),
     );
   };
 

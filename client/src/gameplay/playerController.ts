@@ -22,7 +22,8 @@ export interface CharacterStats {
 }
 
 export interface ControllerEvents {
-  onJump: () => void;
+  /** Fired on every jump with the jump count in this airtime (2 = double). */
+  onJump: (jumps: number) => void;
   onHardLanding: () => void;
 }
 
@@ -39,6 +40,7 @@ export class PlayerController {
   private buffedAt = -Infinity;
   private liftUntil = 0;
   private enabled = true;
+  private inWater = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -59,6 +61,11 @@ export class PlayerController {
   /** Whether this character survives fire tiles. */
   survivesFire(): boolean {
     return this.stats.fireResistance >= FIRE_RESISTANCE_THRESHOLD;
+  }
+
+  /** Whether the player is currently inside a water region. */
+  isInWater(): boolean {
+    return this.inWater;
   }
 
   /** Stop reacting to input once the run has an outcome. */
@@ -90,7 +97,7 @@ export class PlayerController {
         this.groundedUntil = 0;
         this.liftUntil = time + this.stats.flightTimeMs;
         this.player.setVelocityY(-this.stats.jumpSpeed);
-        this.events.onJump();
+        this.events.onJump(this.jumpsUsed);
       }
     }
 
@@ -113,6 +120,7 @@ export class PlayerController {
     const inWater = this.waterRects.some((rect) =>
       rect.contains(this.player.x, this.player.y),
     );
+    this.inWater = inWater;
     if (inWater) {
       this.player.applyForce(
         new Phaser.Math.Vector2(0, -gravityForce * this.stats.buoyancy),

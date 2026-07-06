@@ -1,7 +1,8 @@
 //! RocknRolla content administration shell.
 //!
-//! An interactive shell that validates committed Tiled JSON and seed content,
-//! then imports them through the owner-only reducers using the locally
+//! An interactive shell that validates committed level sources and seed
+//! content, renders levels into `svg-v1` scene layers, then imports them
+//! through the owner-only reducers using the locally
 //! installed, already authenticated `spacetime` CLI session. This binary
 //! never reads or prints the `.env` token; run `task server:login` first.
 
@@ -13,8 +14,9 @@ use std::{
 };
 
 mod command;
+mod levelsrc;
 mod seed;
-mod tiled;
+mod svggen;
 mod uuid;
 
 use command::Command;
@@ -22,7 +24,7 @@ use command::Command;
 const DEFAULT_DATABASE: &str = "rocknrolladb-dev";
 const PRODUCTION_DATABASE: &str = "rocknrolladb";
 const DEFAULT_SERVER: &str = "maincloud";
-const DEFAULT_LEVELS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../levels/generated");
+const DEFAULT_LEVELS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../levels/src");
 const DEFAULT_SEED_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../levels/seed.json");
 
 /// Target and content-path state kept alive across shell commands.
@@ -126,6 +128,18 @@ fn execute(session: &mut Session, parsed: Command, input: &mut impl Iterator<Ite
                 import_seed(session, &content)?;
             }
         },
+        Command::ExportLevels(dir) => {
+            let levels = load_levels(session, None)?;
+            let target = PathBuf::from(&dir);
+            std::fs::create_dir_all(&target).with_context(|| format!("cannot create {}", target.display()))?;
+            for level in &levels {
+                for layer in &level.layers {
+                    let file = target.join(format!("{}-z{}.svg", level.slug, layer.z));
+                    std::fs::write(&file, &layer.data).with_context(|| format!("cannot write {}", file.display()))?;
+                    println!("wrote {}", file.display());
+                }
+            }
+        },
         Command::ImportAll => {
             let content = load_seed(session, None)?;
             let levels = load_levels(session, None)?;
@@ -191,7 +205,7 @@ fn load_seed(session: &Session, path_override: Option<&str>) -> Result<seed::See
     Ok(content)
 }
 
-fn load_levels(session: &Session, path_override: Option<&str>) -> Result<Vec<tiled::ImportedLevel>> {
+fn load_levels(session: &Session, path_override: Option<&str>) -> Result<Vec<levelsrc::ImportedLevel>> {
     let path = path_override
         .map(PathBuf::from)
         .unwrap_or_else(|| session.levels_path.clone());
@@ -199,9 +213,9 @@ fn load_levels(session: &Session, path_override: Option<&str>) -> Result<Vec<til
     let mut levels = Vec::new();
     for file in &files {
         let source = std::fs::read_to_string(file).with_context(|| format!("cannot read {}", file.display()))?;
-        let level = tiled::parse_level(&source).with_context(|| file.display().to_string())?;
+        let level = levelsrc::parse_level(&source).with_context(|| file.display().to_string())?;
         println!(
-            "validated {}: level '{}' ({} layers, {} compressed bytes, gameplay hash {})",
+            "validated {}: level '{}' ({} layers, {} SVG bytes, gameplay hash {})",
             file.display(),
             level.slug,
             level.layers.len(),
@@ -219,7 +233,7 @@ fn load_levels(session: &Session, path_override: Option<&str>) -> Result<Vec<til
     Ok(levels)
 }
 
-fn reject_duplicate_levels(levels: &[tiled::ImportedLevel]) -> Result<()> {
+fn reject_duplicate_levels(levels: &[levelsrc::ImportedLevel]) -> Result<()> {
     let mut ids = std::collections::HashSet::new();
     let mut slugs = std::collections::HashSet::new();
     for level in levels {
@@ -277,10 +291,8 @@ fn call_reducer(session: &Session, reducer: &str, args: &[String]) -> Result<()>
 fn layer_to_json(layer: &rocknrolla_level::LayerFacts) -> serde_json::Value {
     serde_json::json!({
         "z": layer.z,
-        "width": layer.width,
-        "height": layer.height,
-        "cell_width": layer.cell_width,
-        "cell_height": layer.cell_height,
+        "width_px": layer.width_px,
+        "height_px": layer.height_px,
         "parallax_x": layer.parallax_x,
         "parallax_y": layer.parallax_y,
         "encoding": layer.encoding,
@@ -289,7 +301,7 @@ fn layer_to_json(layer: &rocknrolla_level::LayerFacts) -> serde_json::Value {
     })
 }
 
-fn import_levels(session: &Session, levels: &[tiled::ImportedLevel]) -> Result<()> {
+fn import_levels(session: &Session, levels: &[levelsrc::ImportedLevel]) -> Result<()> {
     for level in levels {
         let args = vec![
             crate::uuid::uuid_arg(&level.id)?,

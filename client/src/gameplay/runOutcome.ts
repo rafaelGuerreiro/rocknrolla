@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Uuid } from 'spacetimedb';
 import { db } from '../db';
-import { UI_FONT, button } from '../ui';
+import { UI_FONT } from '../ui';
 
 /** How long to wait for the server to confirm a completion report. */
 const CONFIRM_TIMEOUT_MS = 6000;
@@ -10,7 +10,7 @@ export interface RunOutcomeConfig {
   levelId: string;
   levelName: string;
   /** Invoked exactly once when the run settles, before any scene change. */
-  onSettled: () => void;
+  onSettled: (outcome: 'success' | 'defeat') => void;
 }
 
 type CompletedRow = { levelId: Uuid };
@@ -27,11 +27,13 @@ export class RunOutcome {
   private state: 'playing' | 'settled' = 'playing';
   private confirmListener?: RowCallback;
   private confirmTimeout?: Phaser.Time.TimerEvent;
+  private readonly startedAt: number;
 
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly config: RunOutcomeConfig,
   ) {
+    this.startedAt = scene.time.now;
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup);
   }
 
@@ -43,7 +45,7 @@ export class RunOutcome {
   finish(): void {
     if (this.state !== 'playing') return;
     this.state = 'settled';
-    this.config.onSettled();
+    this.config.onSettled('success');
     const conn = db();
 
     const alreadyCompleted = [...conn.db.vw_my_completed_level.iter()].some(
@@ -54,19 +56,16 @@ export class RunOutcome {
       return;
     }
 
+    // World-positioned at the camera's current center: scrollFactor-0 UI
+    // breaks under the DPR camera zoom, and the camera is static here.
+    const midPoint = this.scene.cameras.main.midPoint;
     const saving = this.scene.add
-      .text(
-        this.scene.scale.width / 2,
-        this.scene.scale.height / 2,
-        'Finish! Saving…',
-        {
-          fontFamily: UI_FONT,
-          fontSize: '32px',
-          color: '#f5c451',
-        },
-      )
+      .text(midPoint.x, midPoint.y, 'Finish! Saving…', {
+        fontFamily: UI_FONT,
+        fontSize: '32px',
+        color: '#f5c451',
+      })
       .setOrigin(0.5)
-      .setScrollFactor(0)
       .setDepth(301);
 
     this.confirmListener = (_ctx, row) => {
@@ -95,11 +94,11 @@ export class RunOutcome {
       });
   }
 
-  /** End the run as a defeat and offer only the way back to level select. */
+  /** End the run as a defeat; the result scene shows the defeat beat. */
   defeat(reason: string): void {
     if (this.state !== 'playing') return;
     this.state = 'settled';
-    this.config.onSettled();
+    this.config.onSettled('defeat');
     this.cleanup();
     this.scene.cameras.main.shake(180, 0.008);
     this.showDefeat(reason);
@@ -109,47 +108,22 @@ export class RunOutcome {
     this.scene.scene.start('result', {
       levelId: this.config.levelId,
       levelName: this.config.levelName,
+      outcome: 'success',
+      timeMs: this.scene.time.now - this.startedAt,
     });
   }
 
   private showDefeat(reason: string): void {
     this.scene.matter.world.pause();
-    const { width, height } = this.scene.scale;
-    this.scene.add
-      .rectangle(0, 0, width, height, 0x2b0a0a, 0.6)
-      .setOrigin(0)
-      .setScrollFactor(0)
-      .setDepth(300);
-    this.scene.add
-      .text(width / 2, height / 2 - 60, 'Defeat', {
-        fontFamily: UI_FONT,
-        fontSize: '42px',
-        color: '#ffd9d9',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(301);
-    this.scene.add
-      .text(width / 2, height / 2 - 10, reason, {
-        fontFamily: UI_FONT,
-        fontSize: '19px',
-        color: '#e8b7b7',
-        align: 'center',
-        wordWrap: { width: width - 160 },
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(301);
-    button(
-      this.scene,
-      width / 2,
-      height / 2 + 70,
-      'Level select',
-      () => this.scene.scene.start('level-select'),
-      { width: 300 },
-    )
-      .setScrollFactor(0)
-      .setDepth(301);
+    // Let the impact shake land before switching to the result scene.
+    this.scene.time.delayedCall(450, () => {
+      this.scene.scene.start('result', {
+        levelId: this.config.levelId,
+        levelName: this.config.levelName,
+        outcome: 'defeat',
+        reason,
+      });
+    });
   }
 
   private cleanup = (): void => {

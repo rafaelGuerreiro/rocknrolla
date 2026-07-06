@@ -1,13 +1,14 @@
 import type { DbConnection } from './module_bindings';
 
-/** Gameplay layer logical cell size in pixels (Kenney Default tile size). */
+/** Gameplay grid cell size in pixels (authoring unit; markers may merge cells). */
 export const CELL = 64;
 export const GAMEPLAY_Z = 127;
 /** Fire hazards burn characters below this fire resistance. */
 export const FIRE_RESISTANCE_THRESHOLD = 0.5;
-/** Matter density of the heavy pushable obstacle tiles. */
+/** Matter density of the heavy pushable obstacles. */
 export const HEAVY_DENSITY = 0.0035;
 
+/** Semantic ids used by the `data-t` collider markers inside layer SVGs. */
 export const TILE = {
   EMPTY: 0,
   SOLID: 1,
@@ -24,13 +25,24 @@ export const TILE = {
 
 export interface DecodedLayer {
   z: number;
-  width: number;
-  height: number;
-  cellWidth: number;
-  cellHeight: number;
+  widthPx: number;
+  heightPx: number;
   parallaxX: number;
   parallaxY: number;
-  tiles: Uint8Array;
+  /** The standalone SVG scene document for this layer. */
+  svg: string;
+  contentHash: string;
+}
+
+/** One collider marker parsed from the gameplay layer's hidden group. */
+export interface LevelMarker {
+  t: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** Present for polygon markers (slopes). */
+  points?: { x: number; y: number }[];
 }
 
 export interface DecodedLevel {
@@ -38,11 +50,17 @@ export interface DecodedLevel {
   name: string;
   layers: DecodedLayer[];
   gameplay: DecodedLayer;
+  markers: LevelMarker[];
   widthPx: number;
   heightPx: number;
 }
 
-function fnv1a64(width: number, height: number, tiles: Uint8Array): string {
+/** Phaser texture key for one decoded layer's scene SVG. */
+export function layerTextureKey(layer: DecodedLayer): string {
+  return `level_layer_${layer.contentHash}`;
+}
+
+function fnv1a64(widthPx: number, heightPx: number, data: Uint8Array): string {
   let hash = 0xcbf29ce484222325n;
   const prime = 0x100000001b3n;
   const mask = 0xffffffffffffffffn;
@@ -50,36 +68,58 @@ function fnv1a64(width: number, height: number, tiles: Uint8Array): string {
     hash ^= BigInt(byte);
     hash = (hash * prime) & mask;
   };
-  eat(width & 0xff);
-  eat((width >> 8) & 0xff);
-  eat(height & 0xff);
-  eat((height >> 8) & 0xff);
-  for (const byte of tiles) eat(byte);
+  for (let shift = 0; shift < 32; shift += 8) eat((widthPx >> shift) & 0xff);
+  for (let shift = 0; shift < 32; shift += 8) eat((heightPx >> shift) & 0xff);
+  for (const byte of data) eat(byte);
   return hash.toString(16).padStart(16, '0');
 }
 
-/** Decode `rle-v1` bytes, enforcing the exact `width * height` tile count. */
-export function rleDecode(
-  data: Uint8Array,
-  width: number,
-  height: number,
-): Uint8Array {
-  if (data.length % 2 !== 0) throw new Error('rle-v1: unpaired trailing byte');
-  const expected = width * height;
-  const tiles = new Uint8Array(expected);
-  let cursor = 0;
-  for (let i = 0; i < data.length; i += 2) {
-    const run = data[i];
-    const tile = data[i + 1];
-    if (run === 0) throw new Error('rle-v1: zero run length');
-    if (cursor + run > expected)
-      throw new Error('rle-v1: decoded length too long');
-    tiles.fill(tile, cursor, cursor + run);
-    cursor += run;
+/** Parse the `data-t` collider markers out of a gameplay layer document. */
+function parseMarkers(svg: string, z: number): LevelMarker[] {
+  const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+  if (doc.querySelector('parsererror')) {
+    throw new Error(`layer z ${z}: stored SVG does not parse`);
   }
-  if (cursor !== expected)
-    throw new Error(`rle-v1: decoded ${cursor} tiles, expected ${expected}`);
-  return tiles;
+  const markers: LevelMarker[] = [];
+  for (const el of doc.querySelectorAll('[data-t]')) {
+    const t = Number(el.getAttribute('data-t'));
+    if (!Number.isInteger(t)) continue;
+    const points = el.getAttribute('points');
+    if (points) {
+      const list = points
+        .trim()
+        .split(/\s+/)
+        .map((pair) => {
+          const [x, y] = pair.split(',').map(Number);
+          return { x, y };
+        });
+      if (list.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y))) {
+        throw new Error(`layer z ${z}: marker has malformed points`);
+      }
+      const xs = list.map((p) => p.x);
+      const ys = list.map((p) => p.y);
+      const x = Math.min(...xs);
+      const y = Math.min(...ys);
+      markers.push({
+        t,
+        x,
+        y,
+        width: Math.max(...xs) - x,
+        height: Math.max(...ys) - y,
+        points: list,
+      });
+      continue;
+    }
+    const x = Number(el.getAttribute('x'));
+    const y = Number(el.getAttribute('y'));
+    const width = Number(el.getAttribute('width'));
+    const height = Number(el.getAttribute('height'));
+    if (![x, y, width, height].every(Number.isFinite)) {
+      throw new Error(`layer z ${z}: marker has malformed bounds`);
+    }
+    markers.push({ t, x, y, width, height });
+  }
+  return markers;
 }
 
 const cache = new Map<string, { key: string; level: DecodedLevel }>();
@@ -109,39 +149,42 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
 
   const layers: DecodedLayer[] = rows
     .map((row) => {
-      if (row.encoding !== 'rle-v1') {
+      if (row.encoding !== 'svg-v1') {
         throw new Error(
           `layer z ${row.z}: unsupported encoding '${row.encoding}'`,
         );
       }
-      const tiles = rleDecode(row.data, row.width, row.height);
-      const hash = fnv1a64(row.width, row.height, tiles);
+      const hash = fnv1a64(row.widthPx, row.heightPx, row.data);
       if (hash !== row.contentHash) {
         throw new Error(`layer z ${row.z}: content hash mismatch`);
       }
       return {
         z: row.z,
-        width: row.width,
-        height: row.height,
-        cellWidth: row.cellWidth,
-        cellHeight: row.cellHeight,
+        widthPx: row.widthPx,
+        heightPx: row.heightPx,
         parallaxX: row.parallaxX,
         parallaxY: row.parallaxY,
-        tiles,
+        svg: new TextDecoder().decode(row.data),
+        contentHash: row.contentHash,
       };
     })
     .sort((a, b) => a.z - b.z);
 
   const gameplay = layers.find((layer) => layer.z === GAMEPLAY_Z);
   if (!gameplay) throw new Error(`level '${levelId}' has no gameplay layer`);
+  const markers = parseMarkers(gameplay.svg, gameplay.z);
+  if (!markers.some((m) => m.t === TILE.SPAWN)) {
+    throw new Error(`level '${levelId}' has no spawn marker`);
+  }
 
   const level: DecodedLevel = {
     id: meta.id.toString(),
     name: meta.name,
     layers,
     gameplay,
-    widthPx: gameplay.width * CELL,
-    heightPx: gameplay.height * CELL,
+    markers,
+    widthPx: gameplay.widthPx,
+    heightPx: gameplay.heightPx,
   };
   cache.set(levelId, { key, level });
   return level;

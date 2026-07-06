@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import { GAMEPLAY_Z } from '../levels';
 
+/**
+ * On-screen character size in world pixels. Matches the original 64px
+ * sprites so body mass and level proportions stay unchanged while the
+ * SVG textures raster larger for crispness.
+ */
+const PLAYER_DISPLAY_PX = 64;
 /** Pixels with alpha at or above this are part of the collision silhouette. */
 const ALPHA_THRESHOLD = 16;
 /** Douglas-Peucker tolerance in pixels for simplifying the traced contour. */
@@ -48,6 +54,9 @@ export function createPlayerBody(
     },
   );
   player.setExistingBody(body);
+  // Matter's setScale rescales the attached body with the sprite, mapping
+  // the texture-resolution hull down to the world-pixel character size.
+  player.setScale(PLAYER_DISPLAY_PX / hull.width);
   // Draw the sprite so the pixel at the hull centroid sits on the body's
   // center of mass; rotation then keeps sprite and hull aligned.
   player.setOrigin(hull.centroid.x / hull.width, hull.centroid.y / hull.height);

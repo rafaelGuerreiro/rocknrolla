@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:#1c1219;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.85}}
+</style>
+</helmet>
+
+<!-- =============== SHARED SPRITE SHEET : all characters + hazards as SVG symbols =============== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="g-rock" cx="36%" cy="30%"><stop offset="0" stop-color="#b8ad9d"/><stop offset=".7" stop-color="#6a6154"/><stop offset="1" stop-color="#4a4238"/></radialGradient>
+    <radialGradient id="g-melon" cx="38%" cy="32%"><stop offset="0" stop-color="#93c651"/><stop offset=".6" stop-color="#5f9236"/><stop offset="1" stop-color="#456d29"/></radialGradient>
+    <radialGradient id="g-blaze" cx="42%" cy="40%"><stop offset="0" stop-color="#ffbe57"/><stop offset=".55" stop-color="#f26a2c"/><stop offset="1" stop-color="#cf3a1f"/></radialGradient>
+    <radialGradient id="g-hub" cx="40%" cy="34%"><stop offset="0" stop-color="#cd7f4f"/><stop offset="1" stop-color="#9c4f2b"/></radialGradient>
+    <linearGradient id="g-gem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#74e6e6"/><stop offset="1" stop-color="#2f8f9a"/></linearGradient>
+    <radialGradient id="g-egg" cx="40%" cy="34%"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#ecdcc2"/></radialGradient>
+    <radialGradient id="g-flame" cx="50%" cy="70%"><stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#f2882c"/><stop offset="1" stop-color="#d13a1f"/></radialGradient>
+  </defs>
+
+  <!-- ROCCO · boulder -->
+  <symbol id="char-rocco" viewBox="0 0 100 100">
+    <circle cx="50" cy="53" r="43" fill="url(#g-rock)"/>
+    <ellipse cx="40" cy="30" rx="20" ry="12" fill="#ffffff" opacity=".16"/>
+    <path d="M20 58 l9 -3 l6 4" fill="none" stroke="#40382f" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+    <ellipse cx="40" cy="53" rx="6" ry="8" fill="#241d16"/><ellipse cx="62" cy="51" rx="6" ry="8" fill="#241d16"/>
+    <circle cx="42" cy="50" r="2" fill="#fff"/><circle cx="64" cy="48" r="2" fill="#fff"/>
+    <path d="M42 66 q9 8 17 0" fill="none" stroke="#241d16" stroke-width="3.2" stroke-linecap="round"/>
+  </symbol>
+  <!-- MELON · watermelon -->
+  <symbol id="char-melon" viewBox="0 0 100 100">
+    <circle cx="50" cy="52" r="43" fill="url(#g-melon)"/>
+    <path d="M50 9 C60 33 60 71 50 95" fill="none" stroke="#2f5f22" stroke-width="7" opacity=".85"/>
+    <path d="M27 15 C35 40 35 64 27 89" fill="none" stroke="#2f5f22" stroke-width="6" opacity=".7"/>
+    <path d="M73 15 C65 40 65 64 73 89" fill="none" stroke="#2f5f22" stroke-width="6" opacity=".7"/>
+    <ellipse cx="40" cy="30" rx="16" ry="9" fill="#ffffff" opacity=".18"/>
+    <ellipse cx="41" cy="52" rx="5.5" ry="7.5" fill="#20330f"/><ellipse cx="60" cy="51" rx="5.5" ry="7.5" fill="#20330f"/>
+    <circle cx="43" cy="49" r="2" fill="#fff"/><circle cx="62" cy="48" r="2" fill="#fff"/>
+    <path d="M42 65 q8 7 16 0" fill="none" stroke="#20330f" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <!-- BLAZE · ember sprite -->
+  <symbol id="char-blaze" viewBox="0 0 100 100">
+    <path d="M50 3 C42 15 50 22 50 26 C50 20 60 16 50 3 Z" fill="#ffd24a"/>
+    <circle cx="50" cy="55" r="41" fill="url(#g-blaze)"/>
+    <ellipse cx="50" cy="66" rx="24" ry="16" fill="#ffd24a" opacity=".3"/>
+    <ellipse cx="40" cy="53" rx="6" ry="8" fill="#5a1e10"/><ellipse cx="62" cy="52" rx="6" ry="8" fill="#5a1e10"/>
+    <circle cx="42" cy="50" r="2.2" fill="#fff"/><circle cx="64" cy="49" r="2.2" fill="#fff"/>
+    <path d="M41 66 q9 9 18 0" fill="none" stroke="#5a1e10" stroke-width="3.2" stroke-linecap="round"/>
+  </symbol>
+  <!-- COG · tire -->
+  <symbol id="char-cog" viewBox="0 0 100 100">
+    <circle cx="50" cy="52" r="43" fill="#3a2f2a"/>
+    <circle cx="50" cy="52" r="43" fill="none" stroke="#241c18" stroke-width="7" stroke-dasharray="7 8"/>
+    <circle cx="50" cy="52" r="26" fill="url(#g-hub)"/>
+    <circle cx="50" cy="30" r="3" fill="#6e3a1f"/><circle cx="50" cy="74" r="3" fill="#6e3a1f"/><circle cx="28" cy="52" r="3" fill="#6e3a1f"/><circle cx="72" cy="52" r="3" fill="#6e3a1f"/>
+    <ellipse cx="43" cy="50" rx="5" ry="6.5" fill="#3a1e10"/><ellipse cx="59" cy="50" rx="5" ry="6.5" fill="#3a1e10"/>
+    <circle cx="44" cy="48" r="1.8" fill="#fff"/><circle cx="60" cy="48" r="1.8" fill="#fff"/>
+    <path d="M44 62 q7 6 14 0" fill="none" stroke="#3a1e10" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <!-- GEMMA · gem -->
+  <symbol id="char-gemma" viewBox="0 0 100 100">
+    <polygon points="50,9 84,38 68,92 32,92 16,38" fill="url(#g-gem)"/>
+    <polygon points="50,9 84,38 16,38" fill="#8ff0f0" opacity=".45"/>
+    <path d="M16 38 H84 M50 9 V38 M50 38 L32 92 M50 38 L68 92" stroke="#ffffff" stroke-width="1.4" opacity=".4" fill="none"/>
+    <ellipse cx="42" cy="52" rx="5" ry="6.5" fill="#14424a"/><ellipse cx="60" cy="52" rx="5" ry="6.5" fill="#14424a"/>
+    <circle cx="43" cy="50" r="1.8" fill="#fff"/><circle cx="61" cy="50" r="1.8" fill="#fff"/>
+    <path d="M43 66 q8 6 15 0" fill="none" stroke="#14424a" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <!-- YOLKY · egg -->
+  <symbol id="char-yolky" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="55" rx="34" ry="42" fill="url(#g-egg)"/>
+    <ellipse cx="40" cy="34" rx="12" ry="16" fill="#ffffff" opacity=".5"/>
+    <ellipse cx="42" cy="54" rx="5" ry="7" fill="#6a5a3f"/><ellipse cx="60" cy="53" rx="5" ry="7" fill="#6a5a3f"/>
+    <circle cx="43" cy="51" r="1.8" fill="#fff"/><circle cx="61" cy="50" r="1.8" fill="#fff"/>
+    <path d="M43 66 q8 7 15 0" fill="none" stroke="#6a5a3f" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="66" cy="40" r="3.4" fill="#f6b8c4" opacity=".7"/><circle cx="36" cy="42" r="3.4" fill="#f6b8c4" opacity=".7"/>
+  </symbol>
+  <!-- FLAME hazard -->
+  <symbol id="flame" viewBox="0 0 60 80">
+    <path d="M30 4 C10 30 42 36 30 60 C30 48 18 46 22 30 C16 42 8 52 16 66 C22 78 40 78 46 66 C54 50 40 44 44 24 C40 34 36 24 30 4 Z" fill="url(#g-flame)"/>
+    <path d="M30 34 C22 46 34 50 30 62 C36 54 40 46 34 36 C33 44 32 40 30 34 Z" fill="#ffe08a"/>
+  </symbol>
+</svg>
+
+<div style="min-height:100vh;padding:64px;background:radial-gradient(1300px 800px at 30% -5%,#33222f,#1a1017 68%);font-family:'Nunito',sans-serif;display:flex;flex-direction:column;gap:56px;align-items:flex-start;">
+
+  <!-- HEADER -->
+  <div style="max-width:1120px;color:#f2e6d4;">
+    <div style="font:700 12px/1 'Space Mono',monospace;letter-spacing:.32em;color:#f2a63c;text-transform:uppercase;">RocknRolla — Claymation Dusk · committed</div>
+    <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:48px;line-height:1;margin:14px 0 10px;">Seven views, one warm world.</div>
+    <div style="max-width:780px;font-size:16px;line-height:1.55;color:#cdbda8;">Every character is one shared SVG symbol reused with <span style="font-family:'Space Mono',monospace;font-size:13px;color:#f2a63c;">&lt;use&gt;</span>; slopes are pure CSS; hazards reuse two symbols. Six rollers — Rocco, Melon, Blaze, Cog, Gemma, Yolky — read their build at a glance. Mobile landscape 16:9, HUD inset for safe areas.</div>
+  </div>
+
+  <!-- ================= BOARD ================= -->
+  <div style="display:grid;grid-template-columns:repeat(2,720px);gap:34px 56px;">
+
+    <!-- ========== 1 · BOOT / LOADING ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">01 · Boot / Loading</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#33203c 0%,#6d3a4e 42%,#c66240 78%,#f2a63c 100%);">
+        <div style="position:absolute;right:24%;bottom:28%;width:200px;height:200px;transform:translate(50%,50%);border-radius:50%;background:radial-gradient(circle,#ffe0a3 0%,rgba(255,190,92,.3) 46%,transparent 68%);"></div>
+        <div style="position:absolute;left:-10%;right:-10%;bottom:0;height:120px;background:#4a2d45;border-radius:50% 50% 0 0/100% 100% 0 0;"></div>
+        <div style="position:absolute;left:-14%;right:36%;bottom:20px;height:96px;background:#6b4a3a;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.9;"></div>
+        <!-- logo -->
+        <svg width="92" height="92" style="position:absolute;left:50%;top:96px;transform:translateX(-50%) rotate(-16deg);filter:drop-shadow(0 8px 10px rgba(20,10,18,.4));animation:bob 3s ease-in-out infinite;"><use href="#char-rocco"/></svg>
+        <div style="position:absolute;left:0;right:0;top:198px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;color:#f5ecd8;text-shadow:0 3px 0 rgba(30,16,26,.35);letter-spacing:-.5px;">RocknRolla</div>
+        <div style="position:absolute;left:0;right:0;top:258px;text-align:center;font:700 12px/1 'Space Mono',monospace;letter-spacing:.34em;color:#ffe0a3;text-transform:uppercase;">A downhill physics roller</div>
+        <!-- progress -->
+        <div style="position:absolute;left:50%;bottom:74px;transform:translateX(-50%);width:340px;height:16px;border-radius:10px;background:rgba(30,16,26,.4);box-shadow:inset 0 2px 4px rgba(0,0,0,.3);">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:64%;border-radius:10px;background:linear-gradient(90deg,#ffce7a,#f2932f);"></div>
+          <svg width="26" height="26" style="position:absolute;left:64%;top:50%;transform:translate(-50%,-50%) rotate(30deg);"><use href="#char-rocco"/></svg>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:44px;text-align:center;font:700 11px/1 'Space Mono',monospace;letter-spacing:.14em;color:rgba(245,236,216,.8);">CONNECTING TO BASECAMP…</div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Wordmark + Rocco as mascot; the boulder rides the loading bar while the backend connects.</div>
+    </div>
+
+    <!-- ========== 2 · LEVEL SELECT ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">02 · Level Select</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#4a2d44 0%,#864152 34%,#c66a44 66%,#eaa24a 100%);">
+        <svg viewBox="0 0 720 405" style="position:absolute;inset:0;width:100%;height:100%;"><path d="M40 120 C 200 120, 210 220, 360 220 S 540 300, 690 300" fill="none" stroke="rgba(245,236,216,.35)" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 18"/></svg>
+        <!-- node 1 done -->
+        <div style="position:absolute;left:16px;top:96px;width:56px;height:56px;border-radius:18px;background:linear-gradient(180deg,#ffce7a,#f2932f);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;color:#5a2f14;box-shadow:0 6px 0 #b5651f,0 10px 18px rgba(20,10,18,.3);">1</div>
+        <div style="position:absolute;left:14px;top:78px;display:flex;gap:2px;color:#ffe08a;font-size:12px;">★★★</div>
+        <div style="position:absolute;left:78px;top:104px;width:10px;height:10px;border-radius:50%;background:#6d7a44;box-shadow:0 0 0 2px rgba(245,236,216,.5);"></div>
+        <!-- node 2 done -->
+        <div style="position:absolute;left:190px;top:196px;width:56px;height:56px;border-radius:18px;background:linear-gradient(180deg,#ffce7a,#f2932f);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;color:#5a2f14;box-shadow:0 6px 0 #b5651f,0 10px 18px rgba(20,10,18,.3);">2</div>
+        <div style="position:absolute;left:188px;top:178px;display:flex;gap:2px;color:#ffe08a;font-size:12px;">★★☆</div>
+        <div style="position:absolute;left:252px;top:204px;width:10px;height:10px;border-radius:50%;background:#3f7d8c;box-shadow:0 0 0 2px rgba(245,236,216,.5);"></div>
+        <!-- current -->
+        <div style="position:absolute;left:328px;top:190px;width:72px;height:72px;border-radius:22px;background:linear-gradient(180deg,#f5ecd8,#e6d3ad);border:4px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(255,224,138,.6),0 10px 22px rgba(20,10,18,.4);">
+          <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;color:#b5531f;line-height:1;">3</div>
+          <div style="font:700 8px/1 'Space Mono',monospace;color:#9a7d5c;letter-spacing:.1em;margin-top:2px;">PLAY</div>
+        </div>
+        <!-- locked -->
+        <div style="position:absolute;left:520px;top:272px;width:56px;height:56px;border-radius:18px;background:rgba(58,42,34,.42);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;color:rgba(245,236,216,.5);">?</div>
+        <div style="position:absolute;left:640px;top:272px;width:56px;height:56px;border-radius:18px;background:rgba(58,42,34,.42);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;color:rgba(245,236,216,.5);">?</div>
+        <!-- header -->
+        <div style="position:absolute;top:18px;left:18px;background:rgba(245,236,216,.94);border-radius:16px;padding:8px 16px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:17px;color:#3a2a22;box-shadow:0 4px 14px rgba(20,10,18,.28);">Choose your hill</div>
+        <div style="position:absolute;top:18px;right:18px;display:flex;gap:10px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;background:rgba(245,236,216,.94);border-radius:14px;padding:7px 12px;box-shadow:0 4px 14px rgba(20,10,18,.28);"><svg width="18" height="18"><use href="#char-melon"/></svg><span style="font-weight:800;font-size:14px;color:#3a2a22;">3/6</span></div>
+          <div style="width:40px;height:40px;border-radius:13px;background:rgba(245,236,216,.94);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(20,10,18,.28);"><svg width="28" height="28"><use href="#char-rocco"/></svg></div>
+        </div>
+        <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font:700 11px/1 'Space Mono',monospace;color:rgba(245,236,216,.78);letter-spacing:.12em;">TAP A HILL TO ROLL IN ▸</div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Levels ARE the descent — a dotted trail of hills; cleared ones show stars, the next is haloed, future ones sealed.</div>
+    </div>
+
+    <!-- ========== 3 · CHARACTER SELECT ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">03 · Character Select</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:radial-gradient(520px 420px at 50% 30%,#8a4a56,#3a2440 75%);">
+        <div style="position:absolute;left:50%;top:44%;width:300px;height:300px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,224,138,.28),transparent 66%);"></div>
+        <!-- roster -->
+        <div style="position:absolute;left:18px;top:56px;display:flex;flex-direction:column;gap:10px;">
+          <div style="width:52px;height:52px;border-radius:16px;background:rgba(245,236,216,.14);border:3px solid #ffe08a;box-shadow:0 0 0 4px rgba(255,224,138,.3);display:flex;align-items:center;justify-content:center;"><svg width="44" height="44"><use href="#char-rocco"/></svg></div>
+          <div style="width:52px;height:52px;border-radius:16px;background:rgba(245,236,216,.1);display:flex;align-items:center;justify-content:center;"><svg width="42" height="42"><use href="#char-melon"/></svg></div>
+          <div style="width:52px;height:52px;border-radius:16px;background:rgba(245,236,216,.1);display:flex;align-items:center;justify-content:center;"><svg width="42" height="42"><use href="#char-blaze"/></svg></div>
+          <div style="width:52px;height:52px;border-radius:16px;background:rgba(58,42,34,.5);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;color:rgba(245,236,216,.5);font-size:22px;">?</div>
+          <div style="width:52px;height:52px;border-radius:16px;background:rgba(58,42,34,.5);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;color:rgba(245,236,216,.5);font-size:22px;">?</div>
+        </div>
+        <!-- hero -->
+        <div style="position:absolute;left:314px;top:238px;width:120px;height:26px;background:rgba(20,10,20,.4);border-radius:50%;filter:blur(4px);"></div>
+        <svg width="140" height="140" style="position:absolute;left:304px;top:100px;filter:drop-shadow(0 10px 12px rgba(20,10,18,.4));animation:bob 3s ease-in-out infinite;"><use href="#char-rocco"/></svg>
+        <div style="position:absolute;left:284px;top:250px;width:180px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:30px;color:#f5ecd8;text-shadow:0 2px 0 rgba(30,16,26,.4);">ROCCO</div>
+        <div style="position:absolute;left:254px;top:288px;width:240px;text-align:center;font-size:13px;color:#e6c9a0;">“Dense as they come — sinks like a stone, shoves anything.”</div>
+        <!-- stats -->
+        <div style="position:absolute;right:18px;top:52px;width:216px;background:rgba(245,236,216,.95);border-radius:20px;padding:16px;box-shadow:0 12px 26px rgba(20,10,18,.4);">
+          <div style="font:700 10px/1 'Space Mono',monospace;letter-spacing:.18em;color:#9a7d5c;text-transform:uppercase;margin-bottom:12px;">Build · Rocco</div>
+          <div style="display:flex;flex-direction:column;gap:11px;">
+            <div><div style="font-size:12px;font-weight:800;color:#3a2a22;margin-bottom:4px;">Density</div><div style="display:flex;gap:3px;"><div style="flex:1;height:8px;border-radius:4px;background:#c66240;"></div><div style="flex:1;height:8px;border-radius:4px;background:#c66240;"></div><div style="flex:1;height:8px;border-radius:4px;background:#c66240;"></div><div style="flex:1;height:8px;border-radius:4px;background:#c66240;"></div><div style="flex:1;height:8px;border-radius:4px;background:#c66240;"></div></div></div>
+            <div><div style="font-size:12px;font-weight:800;color:#3a2a22;margin-bottom:4px;">Jump</div><div style="display:flex;gap:3px;"><div style="flex:1;height:8px;border-radius:4px;background:#6d7a44;"></div><div style="flex:1;height:8px;border-radius:4px;background:#6d7a44;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div></div></div>
+            <div><div style="font-size:12px;font-weight:800;color:#3a2a22;margin-bottom:4px;">Buoyancy</div><div style="display:flex;gap:3px;"><div style="flex:1;height:8px;border-radius:4px;background:#3f7d8c;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div></div></div>
+            <div><div style="font-size:12px;font-weight:800;color:#3a2a22;margin-bottom:4px;">Fire Resist</div><div style="display:flex;gap:3px;"><div style="flex:1;height:8px;border-radius:4px;background:#f2a63c;"></div><div style="flex:1;height:8px;border-radius:4px;background:#f2a63c;"></div><div style="flex:1;height:8px;border-radius:4px;background:#f2a63c;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div><div style="flex:1;height:8px;border-radius:4px;background:#e2d6bd;"></div></div></div>
+          </div>
+        </div>
+        <div style="position:absolute;top:18px;left:18px;width:40px;height:40px;border-radius:13px;background:rgba(245,236,216,.94);display:flex;align-items:center;justify-content:center;font-size:20px;color:#3a2a22;">‹</div>
+        <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#ffce7a,#f2932f);border-radius:18px;padding:13px 40px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:#5a2f14;box-shadow:0 6px 0 #b5651f,0 12px 22px rgba(20,10,18,.4);">ROLL OUT ▸</div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Spotlit turntable hero; roster rail of the same SVG at small size; segmented bars expose the data build.</div>
+    </div>
+
+    <!-- ========== 4 · GAMEPLAY ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">04 · Gameplay</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#33203c 0%,#6d3a4e 40%,#c66240 72%,#f2a63c 100%);">
+        <div style="position:absolute;right:20%;bottom:40%;width:190px;height:190px;transform:translate(50%,50%);border-radius:50%;background:radial-gradient(circle,#ffe0a3 0%,rgba(255,190,92,.28) 46%,transparent 68%);"></div>
+        <div style="position:absolute;left:-8%;right:-8%;bottom:110px;height:140px;background:#5a3550;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.85;"></div>
+        <!-- left ground slope -->
+        <div style="position:absolute;left:-4px;top:0;width:400px;height:405px;background:#9aa763;clip-path:polygon(0 52%,100% 78%,100% 100%,0 100%);"></div>
+        <div style="position:absolute;left:-4px;top:0;width:400px;height:405px;background:linear-gradient(180deg,#6c7a3e,#4c5528);clip-path:polygon(0 56%,100% 82%,100% 100%,0 100%);"></div>
+        <!-- water pit -->
+        <div style="position:absolute;left:360px;right:150px;bottom:0;height:86px;background:linear-gradient(180deg,#5aa6b4,#2f6472);border-radius:6px 6px 0 0;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:10px;background:rgba(255,255,255,.28);"></div>
+          <div style="position:absolute;top:8px;left:12px;width:36px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);"></div>
+          <div style="position:absolute;top:14px;left:80px;width:28px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);"></div>
+        </div>
+        <!-- finish platform -->
+        <div style="position:absolute;left:548px;right:-4px;bottom:0;height:150px;background:#9aa763;border-radius:14px 0 0 0;"></div>
+        <div style="position:absolute;left:548px;right:-4px;bottom:118px;height:10px;background:#6c7a3e;"></div>
+        <!-- finish flag -->
+        <div style="position:absolute;left:632px;bottom:150px;width:5px;height:70px;background:#4a4238;border-radius:3px;"></div>
+        <div style="position:absolute;left:637px;bottom:186px;width:44px;height:32px;background:repeating-conic-gradient(#3a2a22 0deg 90deg,#f5ecd8 90deg 180deg) 0 0/16px 16px;border-radius:0 6px 6px 0;"></div>
+        <!-- fire hazard on slope -->
+        <svg width="40" height="54" style="position:absolute;left:320px;bottom:118px;filter:drop-shadow(0 0 14px rgba(242,136,44,.7));"><use href="#flame"/></svg>
+        <svg width="30" height="40" style="position:absolute;left:300px;bottom:120px;filter:drop-shadow(0 0 10px rgba(242,136,44,.6));"><use href="#flame"/></svg>
+        <!-- character -->
+        <div style="position:absolute;left:200px;top:238px;width:88px;height:22px;background:rgba(30,16,26,.35);border-radius:50%;filter:blur(3px);"></div>
+        <svg width="80" height="80" style="position:absolute;left:204px;top:176px;transform:rotate(-16deg);filter:drop-shadow(0 6px 8px rgba(20,10,18,.35));"><use href="#char-rocco"/></svg>
+        <div style="position:absolute;left:158px;top:198px;width:44px;height:4px;border-radius:3px;background:rgba(255,255,255,.4);"></div>
+        <div style="position:absolute;left:148px;top:212px;width:30px;height:4px;border-radius:3px;background:rgba(255,255,255,.28);"></div>
+        <!-- jump-arc hint -->
+        <svg viewBox="0 0 720 405" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"><path d="M250 210 Q 340 120 470 190" fill="none" stroke="rgba(255,224,138,.5)" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12"/></svg>
+        <div style="position:absolute;left:344px;top:110px;transform:rotate(-6deg);font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;color:#ffe08a;text-shadow:0 2px 0 #b8531f,0 0 18px rgba(255,190,90,.6);">×3 NICE!</div>
+        <!-- HUD -->
+        <div style="position:absolute;top:18px;left:18px;display:flex;align-items:center;gap:9px;background:rgba(245,236,216,.94);border-radius:16px;padding:7px 13px 7px 8px;box-shadow:0 4px 14px rgba(20,10,18,.28);">
+          <svg width="30" height="30"><use href="#char-rocco"/></svg>
+          <div><div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;color:#3a2a22;line-height:1;">Mossy Descent</div><div style="font:700 10px/1 'Space Mono',monospace;color:#9a7d5c;margin-top:3px;letter-spacing:.08em;">ROCCO</div></div>
+        </div>
+        <div style="position:absolute;top:18px;right:18px;display:flex;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:13px;background:rgba(245,236,216,.94);display:flex;align-items:center;justify-content:center;gap:4px;box-shadow:0 4px 14px rgba(20,10,18,.28);"><div style="width:5px;height:15px;border-radius:2px;background:#3a2a22;"></div><div style="width:5px;height:15px;border-radius:2px;background:#3a2a22;"></div></div>
+          <div style="width:40px;height:40px;border-radius:13px;background:rgba(245,236,216,.94);display:flex;align-items:center;justify-content:center;font-size:20px;color:#3a2a22;box-shadow:0 4px 14px rgba(20,10,18,.28);">↺</div>
+        </div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Whole vocabulary in one shot: roll, fire, water pit, finish flag. Dashed arc = tap-to-jump; combo flash for juice.</div>
+    </div>
+
+    <!-- ========== 5 · RESULT SUCCESS ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">05 · Result — Success</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:radial-gradient(560px 440px at 50% 34%,#a8586a,#3a2440 78%);">
+        <div style="position:absolute;left:50%;top:36%;width:420px;height:420px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,224,138,.22),transparent 62%);"></div>
+        <!-- confetti -->
+        <div style="position:absolute;left:120px;top:60px;width:12px;height:12px;border-radius:3px;background:#ffce7a;transform:rotate(20deg);"></div>
+        <div style="position:absolute;left:600px;top:80px;width:10px;height:10px;border-radius:3px;background:#3f7d8c;transform:rotate(-16deg);"></div>
+        <div style="position:absolute;left:180px;top:150px;width:9px;height:9px;border-radius:50%;background:#6d7a44;"></div>
+        <div style="position:absolute;left:560px;top:180px;width:12px;height:12px;border-radius:3px;background:#e85d3c;transform:rotate(30deg);"></div>
+        <div style="position:absolute;left:90px;top:230px;width:10px;height:10px;border-radius:50%;background:#ffce7a;"></div>
+        <div style="position:absolute;left:640px;top:250px;width:11px;height:11px;border-radius:3px;background:#c66240;transform:rotate(-24deg);"></div>
+        <!-- banner -->
+        <div style="position:absolute;left:0;right:0;top:42px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:44px;color:#f5ecd8;text-shadow:0 3px 0 rgba(30,16,26,.4);">Hill cleared!</div>
+        <!-- stars -->
+        <div style="position:absolute;left:0;right:0;top:104px;display:flex;justify-content:center;gap:12px;">
+          <div style="font-size:34px;color:#ffce5c;text-shadow:0 2px 0 #b5651f;transform:translateY(6px);">★</div>
+          <div style="font-size:44px;color:#ffce5c;text-shadow:0 3px 0 #b5651f;">★</div>
+          <div style="font-size:34px;color:#ffce5c;text-shadow:0 2px 0 #b5651f;transform:translateY(6px);">★</div>
+        </div>
+        <!-- hero + flag -->
+        <svg width="72" height="72" style="position:absolute;left:238px;top:184px;filter:drop-shadow(0 8px 8px rgba(20,10,18,.4));animation:bob 2.4s ease-in-out infinite;"><use href="#char-rocco"/></svg>
+        <div style="position:absolute;left:322px;top:170px;width:4px;height:60px;background:#4a4238;border-radius:2px;"></div>
+        <div style="position:absolute;left:326px;top:170px;width:38px;height:26px;background:repeating-conic-gradient(#3a2a22 0deg 90deg,#f5ecd8 90deg 180deg) 0 0/13px 13px;border-radius:0 5px 5px 0;"></div>
+        <div style="position:absolute;left:196px;top:250px;display:flex;align-items:center;gap:8px;background:rgba(245,236,216,.92);border-radius:12px;padding:6px 14px;font:700 12px/1 'Space Mono',monospace;color:#3a2a22;">TIME 0:42 · BEST 0:39</div>
+        <!-- lootbox -->
+        <div style="position:absolute;left:50%;bottom:30px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <div style="position:relative;width:96px;height:80px;animation:pulse 1.6s ease-in-out infinite;">
+            <div style="position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,rgba(255,206,92,.5),transparent 68%);"></div>
+            <div style="position:absolute;left:8px;top:22px;width:80px;height:56px;border-radius:10px;background:linear-gradient(180deg,#c68544,#8a4f24);box-shadow:inset 0 -6px 0 rgba(0,0,0,.2);"></div>
+            <div style="position:absolute;left:4px;top:12px;width:88px;height:22px;border-radius:10px 10px 6px 6px;background:linear-gradient(180deg,#e0a45c,#b06a30);"></div>
+            <div style="position:absolute;left:44px;top:16px;width:8px;height:36px;background:#ffce5c;border-radius:3px;"></div>
+            <div style="position:absolute;left:38px;top:30px;width:20px;height:16px;border-radius:4px;background:#ffce5c;"></div>
+          </div>
+          <div style="background:linear-gradient(180deg,#ffce7a,#f2932f);border-radius:16px;padding:11px 34px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:18px;color:#5a2f14;box-shadow:0 5px 0 #b5651f;">TAP TO OPEN ▸</div>
+        </div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Celebratory: confetti, arced banner, 3 stars, time-vs-best, then a glowing lootbox begging to be tapped.</div>
+    </div>
+
+    <!-- ========== 6 · LOOTBOX REVEAL ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">06 · Lootbox Reveal</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:radial-gradient(520px 460px at 50% 40%,#7a5a3a,#2e1c34 78%);">
+        <!-- rays -->
+        <div style="position:absolute;left:50%;top:44%;width:520px;height:520px;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,rgba(255,224,138,.22) 0deg 12deg,transparent 12deg 30deg,rgba(255,224,138,.22) 30deg 42deg,transparent 42deg 60deg,rgba(255,224,138,.22) 60deg 72deg,transparent 72deg 90deg,rgba(255,224,138,.22) 90deg 102deg,transparent 102deg 120deg,rgba(255,224,138,.22) 120deg 132deg,transparent 132deg 150deg,rgba(255,224,138,.22) 150deg 162deg,transparent 162deg 180deg,rgba(255,224,138,.22) 180deg 192deg,transparent 192deg 210deg,rgba(255,224,138,.22) 210deg 222deg,transparent 222deg 240deg,rgba(255,224,138,.22) 240deg 252deg,transparent 252deg 270deg,rgba(255,224,138,.22) 270deg 282deg,transparent 282deg 300deg,rgba(255,224,138,.22) 300deg 312deg,transparent 312deg 330deg,rgba(255,224,138,.22) 330deg 342deg,transparent 342deg 360deg);border-radius:50%;animation:spin 24s linear infinite;"></div>
+        <!-- confetti -->
+        <div style="position:absolute;left:150px;top:70px;width:11px;height:11px;border-radius:3px;background:#5f9236;transform:rotate(20deg);"></div>
+        <div style="position:absolute;left:560px;top:90px;width:10px;height:10px;border-radius:50%;background:#ffce7a;"></div>
+        <div style="position:absolute;left:110px;top:250px;width:12px;height:12px;border-radius:3px;background:#e85d3c;transform:rotate(-18deg);"></div>
+        <div style="position:absolute;left:600px;top:240px;width:10px;height:10px;border-radius:3px;background:#3f7d8c;transform:rotate(28deg);"></div>
+        <!-- piece token -->
+        <div style="position:absolute;left:50%;top:104px;transform:translateX(-50%);width:132px;height:132px;">
+          <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(255,224,138,.55),transparent 66%);"></div>
+          <div style="position:absolute;left:14px;top:14px;width:104px;height:104px;border-radius:26px;background:linear-gradient(180deg,#f5ecd8,#e6d3ad);border:4px solid #ffce5c;box-shadow:0 10px 22px rgba(20,10,18,.4);display:flex;align-items:center;justify-content:center;animation:bob 2.6s ease-in-out infinite;"><svg width="78" height="78"><use href="#char-melon"/></svg></div>
+        </div>
+        <!-- broken crate below -->
+        <div style="position:absolute;left:50%;bottom:96px;transform:translateX(-50%);display:flex;gap:6px;opacity:.9;">
+          <div style="width:34px;height:26px;border-radius:8px;background:linear-gradient(180deg,#c68544,#8a4f24);transform:rotate(-18deg);"></div>
+          <div style="width:34px;height:26px;border-radius:8px;background:linear-gradient(180deg,#c68544,#8a4f24);transform:rotate(16deg);"></div>
+        </div>
+        <!-- labels -->
+        <div style="position:absolute;left:0;right:0;top:250px;text-align:center;font:700 12px/1 'Space Mono',monospace;letter-spacing:.28em;color:#ffe0a3;text-transform:uppercase;">New piece!</div>
+        <div style="position:absolute;left:0;right:0;top:270px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:34px;color:#f5ecd8;text-shadow:0 2px 0 rgba(30,16,26,.4);">Melon</div>
+        <!-- progress -->
+        <div style="position:absolute;left:50%;bottom:56px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;">
+          <div style="width:26px;height:26px;border-radius:8px;background:#6d7a44;"></div><div style="width:26px;height:26px;border-radius:8px;background:#6d7a44;"></div><div style="width:26px;height:26px;border-radius:8px;background:rgba(245,236,216,.18);border:2px dashed rgba(245,236,216,.5);"></div><div style="width:26px;height:26px;border-radius:8px;background:rgba(245,236,216,.18);border:2px dashed rgba(245,236,216,.5);"></div>
+          <span style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#f5ecd8;margin-left:6px;">2 / 4 pieces</span>
+        </div>
+        <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#ffce7a,#f2932f);border-radius:14px;padding:9px 30px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:16px;color:#5a2f14;box-shadow:0 4px 0 #b5651f;">COLLECT ▸</div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Crate bursts, a piece token flies up on rotating rays; progress shows how close Melon is to unlocking.</div>
+    </div>
+
+    <!-- ========== 7 · RESULT DEFEAT ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">07 · Result — Defeat</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#241730 0%,#3f2438 46%,#5a3030 100%);">
+        <div style="position:absolute;inset:0;background:rgba(20,10,18,.35);"></div>
+        <div style="position:absolute;left:-8%;right:-8%;bottom:0;height:120px;background:#33202f;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.7;"></div>
+        <!-- spikes -->
+        <div style="position:absolute;left:296px;bottom:76px;display:flex;gap:3px;opacity:.85;">
+          <div style="width:22px;height:34px;background:linear-gradient(180deg,#a8503a,#6a2c1e);clip-path:polygon(50% 0,100% 100%,0 100%);"></div>
+          <div style="width:22px;height:40px;background:linear-gradient(180deg,#a8503a,#6a2c1e);clip-path:polygon(50% 0,100% 100%,0 100%);"></div>
+          <div style="width:22px;height:34px;background:linear-gradient(180deg,#a8503a,#6a2c1e);clip-path:polygon(50% 0,100% 100%,0 100%);"></div>
+        </div>
+        <!-- tumbled character (dizzy) -->
+        <div style="position:absolute;left:300px;top:150px;width:80px;height:20px;background:rgba(10,4,10,.45);border-radius:50%;filter:blur(3px);"></div>
+        <svg width="82" height="82" style="position:absolute;left:298px;top:88px;transform:rotate(150deg);filter:drop-shadow(0 6px 8px rgba(10,4,10,.5)) grayscale(.2);"><use href="#char-rocco"/></svg>
+        <div style="position:absolute;left:352px;top:78px;font-size:20px;color:#ffe0a3;">✦</div>
+        <div style="position:absolute;left:288px;top:70px;font-size:15px;color:#ffe0a3;opacity:.7;">✦</div>
+        <!-- text -->
+        <div style="position:absolute;left:0;right:0;top:196px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:46px;color:#f5ecd8;text-shadow:0 3px 0 rgba(10,4,10,.5);">Ouch!</div>
+        <div style="position:absolute;left:0;right:0;top:252px;text-align:center;font-size:15px;color:#d9bfae;">No checkpoints on this hill — back to the top you roll.</div>
+        <div style="position:absolute;left:50%;top:284px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(58,42,34,.6);border-radius:12px;padding:6px 14px;font:700 11px/1 'Space Mono',monospace;letter-spacing:.1em;color:#ffb9a4;">MET · SPIKES</div>
+        <!-- single action -->
+        <div style="position:absolute;bottom:26px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#f5ecd8,#e2d0af);border-radius:18px;padding:13px 44px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:#3a2a22;box-shadow:0 6px 0 #9a8261;">‹ LEVEL SELECT</div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Dimmed, wholesome not harsh: dizzy tumble, “what met you,” one calm route back — no retry-in-place.</div>
+    </div>
+
+    <!-- ========== 8 · COLLECTION ========== -->
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="font:700 11px/1 'Space Mono',monospace;letter-spacing:.18em;color:#b7a58f;text-transform:uppercase;">08 · Collection</div>
+      <div style="position:relative;width:720px;height:405px;border-radius:22px;overflow:hidden;flex:none;box-shadow:0 26px 50px -18px rgba(18,8,16,.65),0 0 0 1px rgba(255,255,255,.06) inset;font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#3a2440,#5a3448);padding:16px;">
+        <!-- header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;height:40px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:13px;background:rgba(245,236,216,.92);display:flex;align-items:center;justify-content:center;font-size:20px;color:#3a2a22;">‹</div>
+            <div style="font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;color:#f5ecd8;">Your Rollers</div>
+          </div>
+          <div style="background:rgba(245,236,216,.92);border-radius:12px;padding:7px 14px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;color:#3a2a22;">3 / 6 unlocked</div>
+        </div>
+        <!-- grid -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;">
+          <!-- unlocked cards -->
+          <div style="height:140px;border-radius:16px;background:rgba(245,236,216,.95);padding:10px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 6px 14px rgba(20,10,18,.3);position:relative;">
+            <div style="position:absolute;top:9px;right:9px;font:700 8px/1 'Space Mono',monospace;letter-spacing:.1em;color:#5f9236;background:rgba(95,146,54,.16);padding:3px 6px;border-radius:6px;">READY</div>
+            <svg width="58" height="58"><use href="#char-rocco"/></svg>
+            <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#3a2a22;line-height:1;">Rocco</div>
+            <div style="display:flex;gap:3px;margin-top:2px;"><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div></div>
+            <div style="font:400 9px/1 'Space Mono',monospace;color:#9a7d5c;margin-top:1px;">DENSE · SINKS</div>
+          </div>
+          <div style="height:140px;border-radius:16px;background:rgba(245,236,216,.95);padding:10px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 6px 14px rgba(20,10,18,.3);position:relative;">
+            <div style="position:absolute;top:9px;right:9px;font:700 8px/1 'Space Mono',monospace;letter-spacing:.1em;color:#5f9236;background:rgba(95,146,54,.16);padding:3px 6px;border-radius:6px;">READY</div>
+            <svg width="58" height="58"><use href="#char-blaze"/></svg>
+            <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#3a2a22;line-height:1;">Blaze</div>
+            <div style="display:flex;gap:3px;margin-top:2px;"><div style="width:6px;height:6px;border-radius:50%;background:#f2a63c;"></div><div style="width:6px;height:6px;border-radius:50%;background:#f2a63c;"></div><div style="width:6px;height:6px;border-radius:50%;background:#f2a63c;"></div><div style="width:6px;height:6px;border-radius:50%;background:#f2a63c;"></div><div style="width:6px;height:6px;border-radius:50%;background:#f2a63c;"></div></div>
+            <div style="font:400 9px/1 'Space Mono',monospace;color:#9a7d5c;margin-top:1px;">FIREPROOF</div>
+          </div>
+          <div style="height:140px;border-radius:16px;background:rgba(245,236,216,.95);padding:10px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 6px 14px rgba(20,10,18,.3);position:relative;">
+            <div style="position:absolute;top:9px;right:9px;font:700 8px/1 'Space Mono',monospace;letter-spacing:.1em;color:#5f9236;background:rgba(95,146,54,.16);padding:3px 6px;border-radius:6px;">READY</div>
+            <svg width="58" height="58"><use href="#char-cog"/></svg>
+            <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#3a2a22;line-height:1;">Cog</div>
+            <div style="display:flex;gap:3px;margin-top:2px;"><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#c66240;"></div><div style="width:6px;height:6px;border-radius:50%;background:#e2d6bd;"></div></div>
+            <div style="font:400 9px/1 'Space Mono',monospace;color:#9a7d5c;margin-top:1px;">SHOVES HEAVY</div>
+          </div>
+          <!-- in-progress -->
+          <div style="height:140px;border-radius:16px;background:rgba(30,18,28,.5);border:2px dashed rgba(245,236,216,.28);padding:10px;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;">
+            <div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;filter:brightness(0) invert(1);opacity:.28;"><svg width="52" height="52"><use href="#char-melon"/></svg></div>
+            <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:rgba(245,236,216,.7);line-height:1;">Melon</div>
+            <div style="display:flex;gap:4px;margin-top:2px;"><div style="width:10px;height:10px;border-radius:3px;background:#6d7a44;"></div><div style="width:10px;height:10px;border-radius:3px;background:#6d7a44;"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div></div>
+            <div style="font:700 9px/1 'Space Mono',monospace;color:#ffce7a;margin-top:1px;">2 / 4 PIECES</div>
+          </div>
+          <div style="height:140px;border-radius:16px;background:rgba(30,18,28,.5);border:2px dashed rgba(245,236,216,.28);padding:10px;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;">
+            <div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;filter:brightness(0) invert(1);opacity:.28;"><svg width="52" height="52"><use href="#char-gemma"/></svg></div>
+            <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:rgba(245,236,216,.7);line-height:1;">Gemma</div>
+            <div style="display:flex;gap:4px;margin-top:2px;"><div style="width:10px;height:10px;border-radius:3px;background:#6d7a44;"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div></div>
+            <div style="font:700 9px/1 'Space Mono',monospace;color:#ffce7a;margin-top:1px;">1 / 4 PIECES</div>
+          </div>
+          <div style="height:140px;border-radius:16px;background:rgba(30,18,28,.5);border:2px dashed rgba(245,236,216,.28);padding:10px;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;">
+            <div style="width:58px;height:58px;display:flex;align-items:center;justify-content:center;filter:brightness(0) invert(1);opacity:.28;"><svg width="52" height="52"><use href="#char-yolky"/></svg></div>
+            <div style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:rgba(245,236,216,.7);line-height:1;">Yolky</div>
+            <div style="display:flex;gap:4px;margin-top:2px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div><div style="width:10px;height:10px;border-radius:3px;background:rgba(245,236,216,.16);border:1.5px dashed rgba(245,236,216,.4);"></div></div>
+            <div style="font:700 9px/1 'Space Mono',monospace;color:rgba(245,236,216,.55);margin-top:1px;">0 / 4 PIECES</div>
+          </div>
+        </div>
+      </div>
+      <div style="font:400 11px/1.4 'Space Mono',monospace;color:#8f7f6c;margin-left:4px;">Unlocked rollers full-color with their signature trait; locked ones silhouetted, piece-progress visible as the pull.</div>
+    </div>
+
+  </div>
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="tb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33203c"/><stop offset=".5" stop-color="#6d3a4e"/><stop offset="1" stop-color="#f2a63c"/></linearGradient></defs>
+    <rect width="100" height="100" rx="22" fill="url(#tb)"/>
+    <circle cx="50" cy="46" r="20" fill="#8a8177"/>
+    <ellipse cx="44" cy="40" rx="5" ry="6" fill="#241d16"/><ellipse cx="56" cy="40" rx="5" ry="6" fill="#241d16"/>
+    <path d="M44 52 q6 6 12 0" fill="none" stroke="#241d16" stroke-width="3" stroke-linecap="round"/>
+    <text x="50" y="82" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="13" font-weight="700" fill="#f5ecd8">RocknRolla</text>
+  </svg>
+</template></x-dc>
+</body>
+</html>

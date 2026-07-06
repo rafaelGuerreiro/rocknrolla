@@ -5,10 +5,8 @@ use spacetimedb::SpacetimeType;
 #[derive(SpacetimeType)]
 pub struct LayerImport {
     pub z: u8,
-    pub width: u16,
-    pub height: u16,
-    pub cell_width: u16,
-    pub cell_height: u16,
+    pub width_px: u32,
+    pub height_px: u32,
     pub parallax_x: f32,
     pub parallax_y: f32,
     pub encoding: String,

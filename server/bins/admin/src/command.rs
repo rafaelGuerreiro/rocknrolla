@@ -15,6 +15,7 @@ pub enum Command {
     ValidateSeed(Option<String>),
     ValidateAll,
     ImportLevels(Option<String>),
+    ExportLevels(String),
     ImportSeed(Option<String>),
     ImportAll,
 }
@@ -25,12 +26,13 @@ commands:
   status                   show target server, database, and content paths
   set server <name>        change the target server
   set database <name>      change the target database
-  validate levels [path]   validate Tiled level exports (no mutation)
+  validate levels [path]   validate authored level sources (no mutation)
   validate seed [path]     validate seed content (no mutation)
   validate all             validate levels and seed together (no mutation)
   import levels [path]     import levels after confirmation
   import seed [path]       import seed content after confirmation
   import all               import seed then levels after confirmation
+  export levels <dir>      render level sources to SVG files for inspection
   quit | exit              leave the shell (EOF also exits)";
 
 /// Parse one input line. `Ok(None)` means an empty line to ignore.
@@ -52,6 +54,8 @@ pub fn parse_line(line: &str) -> Result<Option<Command>> {
         ["import", "levels", rest @ ..] => Command::ImportLevels(optional_path(rest)?),
         ["import", "seed", rest @ ..] => Command::ImportSeed(optional_path(rest)?),
         ["import", "all"] => Command::ImportAll,
+        ["export", "levels", dir] => Command::ExportLevels(dir.to_string()),
+        ["export", "levels"] => bail!("'export levels' needs a target directory"),
         _ => bail!("unknown command '{}'", line.trim()),
     };
     Ok(Some(command))
@@ -84,6 +88,10 @@ mod tests {
             Some(Command::ImportSeed(Some("custom/seed.json".into())))
         );
         assert_eq!(parse_line("import all").unwrap(), Some(Command::ImportAll));
+        assert_eq!(
+            parse_line("export levels /tmp/out").unwrap(),
+            Some(Command::ExportLevels("/tmp/out".into()))
+        );
     }
 
     #[test]
@@ -113,5 +121,6 @@ mod tests {
         assert!(parse_line("set database").is_err());
         assert!(parse_line("validate levels a b").is_err());
         assert!(parse_line("frobnicate").is_err());
+        assert!(parse_line("export levels").is_err());
     }
 }

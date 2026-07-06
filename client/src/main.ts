@@ -1,18 +1,29 @@
 import Phaser from 'phaser';
 import './style.css';
+import { DPR, VIEW_H, VIEW_W } from './ui';
 import { BootScene } from './scenes/BootScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { CollectionScene } from './scenes/CollectionScene';
+import { GameHudScene } from './scenes/GameHudScene';
 import { GameScene } from './scenes/GameScene';
 import { LevelSelectScene } from './scenes/LevelSelectScene';
 import { ResultScene } from './scenes/ResultScene';
 
-new Phaser.Game({
+declare global {
+  interface Window {
+    /** Exposed for debugging and headless drive scripts. */
+    game: Phaser.Game;
+  }
+}
+
+window.game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
-  width: 960,
-  height: 540,
-  backgroundColor: '#10141f',
+  // Backing store at device resolution; scenes lay out in 960×540 via a
+  // per-scene camera zoom (ui.setupCamera). Phaser 4 has no DPR support.
+  width: VIEW_W * DPR,
+  height: VIEW_H * DPR,
+  backgroundColor: '#33203c',
   physics: {
     default: 'matter',
     matter: {
@@ -28,6 +39,7 @@ new Phaser.Game({
     LevelSelectScene,
     CharacterSelectScene,
     GameScene,
+    GameHudScene,
     ResultScene,
     CollectionScene,
   ],

@@ -45,17 +45,15 @@ pub struct LevelImport {
 impl LevelServices<'_> {
     /// Atomically overwrite one level's metadata, layers, and successor
     /// edges. The stable authored UUID is the replacement key; git history of
-    /// the committed Tiled files is the rollback mechanism.
+    /// the committed authored sources is the rollback mechanism.
     pub fn import_level(&self, import: LevelImport) -> ServiceResult<()> {
         let facts: Vec<LayerFacts> = import
             .layers
             .iter()
             .map(|layer| LayerFacts {
                 z: layer.z,
-                width: layer.width,
-                height: layer.height,
-                cell_width: layer.cell_width,
-                cell_height: layer.cell_height,
+                width_px: layer.width_px,
+                height_px: layer.height_px,
                 parallax_x: layer.parallax_x,
                 parallax_y: layer.parallax_y,
                 encoding: layer.encoding.clone(),
@@ -96,10 +94,8 @@ impl LevelServices<'_> {
                 id: self.ctx.generate_uuid()?,
                 level_id: import.id,
                 z: layer.z,
-                width: layer.width,
-                height: layer.height,
-                cell_width: layer.cell_width,
-                cell_height: layer.cell_height,
+                width_px: layer.width_px,
+                height_px: layer.height_px,
                 parallax_x: layer.parallax_x,
                 parallax_y: layer.parallax_y,
                 encoding: layer.encoding,
