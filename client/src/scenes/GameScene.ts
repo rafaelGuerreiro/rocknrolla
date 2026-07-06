@@ -15,6 +15,7 @@ import {
   type FaceName,
 } from '../rollers';
 import { svgDataUrl } from '../tiles';
+import { TUNING } from '../tuning';
 import { CameraFollow } from '../gameplay/cameraFollow';
 import { buildLevel } from '../gameplay/levelBuilder';
 import { createPlayerBody } from '../gameplay/playerBody';
@@ -66,6 +67,8 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.paused = false;
     this.player = undefined;
+    // Live feel-tuning: gravity is re-read on every run start.
+    this.matter.world.setGravity(0, TUNING.GRAVITY_Y);
     setupCamera(this);
     ensureParticleTextures(this);
     this.buildBackdrop();

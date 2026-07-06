@@ -1,14 +1,7 @@
 import Phaser from 'phaser';
 import { FIRE_RESISTANCE_THRESHOLD } from '../levels';
-
-// Touch feel tuning.
-const COYOTE_MS = 110;
-const BUFFER_MS = 110;
-const MAX_JUMPS = 2;
-const LIFT_GRAVITY_FACTOR = 0.82;
-const RELEASE_CUT = 0.45;
-const WATER_DRAG = 0.96;
-const HARD_LANDING_SPEED = 9;
+import { TUNING } from '../tuning';
+import { PLAYER_DISPLAY_PX } from './playerBody';
 
 export interface CharacterStats {
   id: string;
@@ -78,6 +71,15 @@ export class PlayerController {
     if (!this.enabled) return;
 
     const grounded = time <= this.groundedUntil;
+    const {
+      JUMP_BUFFER_MS,
+      MAX_JUMPS,
+      JUMP_SCALE,
+      FLIGHT_TIME_SCALE,
+      LIFT_GRAVITY_FACTOR,
+      WATER_DRAG,
+      HARD_LANDING_SPEED,
+    } = TUNING;
     if (grounded && !this.wasGrounded) {
       this.jumpsUsed = 0;
       const impact = Math.abs(this.player.getVelocity().y ?? 0);
@@ -85,8 +87,17 @@ export class PlayerController {
     }
     this.wasGrounded = grounded;
 
+    // Contact friction is near zero (it must not brake forward velocity),
+    // so the rolling rotation is driven from the forward speed instead.
+    if (grounded && TUNING.ROLL_SPIN > 0) {
+      const vx = this.player.getVelocity().x ?? 0;
+      this.player.setAngularVelocity(
+        (vx / (PLAYER_DISPLAY_PX / 2)) * TUNING.ROLL_SPIN,
+      );
+    }
+
     // Buffered, coyote-friendly variable jump with one double jump.
-    const buffered = time - this.buffedAt <= BUFFER_MS;
+    const buffered = time - this.buffedAt <= JUMP_BUFFER_MS;
     if (buffered) {
       const firstJump =
         grounded || (this.jumpsUsed === 0 && time <= this.groundedUntil);
@@ -95,8 +106,8 @@ export class PlayerController {
         this.buffedAt = -Infinity;
         this.jumpsUsed = firstJump ? 1 : this.jumpsUsed + 1;
         this.groundedUntil = 0;
-        this.liftUntil = time + this.stats.flightTimeMs;
-        this.player.setVelocityY(-this.stats.jumpSpeed);
+        this.liftUntil = time + this.stats.flightTimeMs * FLIGHT_TIME_SCALE;
+        this.player.setVelocityY(-this.stats.jumpSpeed * JUMP_SCALE);
         this.events.onJump(this.jumpsUsed);
       }
     }
@@ -157,7 +168,7 @@ export class PlayerController {
     this.holding = false;
     const velocity = this.player.getVelocity();
     if ((velocity.y ?? 0) < 0) {
-      this.player.setVelocityY((velocity.y ?? 0) * RELEASE_CUT);
+      this.player.setVelocityY((velocity.y ?? 0) * TUNING.RELEASE_CUT);
     }
   };
 
@@ -175,7 +186,7 @@ export class PlayerController {
       if (!other || other.isSensor) continue;
       for (const support of pair.collision.supports) {
         if (support && support.y > this.player.y + 6) {
-          this.groundedUntil = this.scene.time.now + COYOTE_MS;
+          this.groundedUntil = this.scene.time.now + TUNING.COYOTE_MS;
         }
       }
     }

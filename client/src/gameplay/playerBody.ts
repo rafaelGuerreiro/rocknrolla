@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import { GAMEPLAY_Z } from '../levels';
+import { TUNING } from '../tuning';
 
 /**
  * On-screen character size in world pixels. Matches the original 64px
  * sprites so body mass and level proportions stay unchanged while the
  * SVG textures raster larger for crispness.
  */
-const PLAYER_DISPLAY_PX = 64;
+export const PLAYER_DISPLAY_PX = 64;
 /** Pixels with alpha at or above this are part of the collision silhouette. */
 const ALPHA_THRESHOLD = 16;
 /** Douglas-Peucker tolerance in pixels for simplifying the traced contour. */
@@ -48,9 +49,12 @@ export function createPlayerBody(
     {
       label: 'player',
       density: stats.density,
-      friction: 0.9,
-      frictionAir: 0.012,
-      restitution: 0.08,
+      // High contact friction keeps the body spinning instead of sliding;
+      // near-zero air drag lets downhill momentum carry across flats and
+      // gaps — the game's only propulsion is gravity on slopes.
+      friction: TUNING.BODY_FRICTION,
+      frictionAir: TUNING.BODY_FRICTION_AIR,
+      restitution: TUNING.BODY_RESTITUTION,
     },
   );
   player.setExistingBody(body);

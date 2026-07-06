@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import './style.css';
+import { TUNING } from './tuning';
 import { DPR, VIEW_H, VIEW_W } from './ui';
 import { BootScene } from './scenes/BootScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
@@ -27,7 +28,7 @@ window.game = new Phaser.Game({
   physics: {
     default: 'matter',
     matter: {
-      gravity: { x: 0, y: 1 },
+      gravity: { x: 0, y: TUNING.GRAVITY_Y },
     },
   },
   scale: {
