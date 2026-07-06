@@ -13,9 +13,12 @@ export class BootScene extends Phaser.Scene {
   preload(): void {
     this.failedFiles = [];
     queueSprites(this.load, Object.values(TILE_SPRITES));
-    this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
-      this.failedFiles.push(file.key);
-    });
+    this.load.on(
+      Phaser.Loader.Events.FILE_LOAD_ERROR,
+      (file: Phaser.Loader.File) => {
+        this.failedFiles.push(file.key);
+      },
+    );
   }
 
   create(): void {
@@ -29,14 +32,19 @@ export class BootScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     if (this.failedFiles.length > 0) {
-      status.setText(`Failed to load game art:\n${this.failedFiles.join(', ')}\nTap to retry.`);
+      status.setText(
+        `Failed to load game art:\n${this.failedFiles.join(', ')}\nTap to retry.`,
+      );
       this.retryOnTap();
       return;
     }
 
     connect()
       .then((conn) => {
-        if (conn.db.vw_level.count() === 0n || conn.db.vw_character.count() === 0n) {
+        if (
+          conn.db.vw_level.count() === 0n ||
+          conn.db.vw_character.count() === 0n
+        ) {
           status.setText(
             'Connected, but no content is imported.\nRun task server:admin and import, then tap to retry.',
           );

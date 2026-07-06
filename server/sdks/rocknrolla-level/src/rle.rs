@@ -16,11 +16,11 @@ impl core::fmt::Display for CodecError {
         match self {
             CodecError::ZeroRunLength { pair_index } => {
                 write!(f, "rle-v1 pair {pair_index} has zero run length")
-            }
+            },
             CodecError::TrailingByte => write!(f, "rle-v1 data has a trailing unpaired byte"),
             CodecError::LengthMismatch { decoded, expected } => {
                 write!(f, "rle-v1 decoded {decoded} tiles, expected {expected}")
-            }
+            },
             CodecError::EmptyLayer => write!(f, "layer has zero width or height"),
         }
     }
@@ -120,27 +120,18 @@ mod tests {
 
     #[test]
     fn rejects_trailing_byte() {
-        assert_eq!(
-            rle_decode(&[1, tile::SOLID, 9], 1, 1),
-            Err(CodecError::TrailingByte)
-        );
+        assert_eq!(rle_decode(&[1, tile::SOLID, 9], 1, 1), Err(CodecError::TrailingByte));
     }
 
     #[test]
     fn rejects_short_and_long_decodes() {
         assert_eq!(
             rle_decode(&[2, tile::SOLID], 2, 2),
-            Err(CodecError::LengthMismatch {
-                decoded: 2,
-                expected: 4
-            })
+            Err(CodecError::LengthMismatch { decoded: 2, expected: 4 })
         );
         assert_eq!(
             rle_decode(&[5, tile::SOLID], 2, 2),
-            Err(CodecError::LengthMismatch {
-                decoded: 5,
-                expected: 4
-            })
+            Err(CodecError::LengthMismatch { decoded: 5, expected: 4 })
         );
     }
 

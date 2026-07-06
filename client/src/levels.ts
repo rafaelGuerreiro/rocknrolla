@@ -59,7 +59,11 @@ function fnv1a64(width: number, height: number, tiles: Uint8Array): string {
 }
 
 /** Decode `rle-v1` bytes, enforcing the exact `width * height` tile count. */
-export function rleDecode(data: Uint8Array, width: number, height: number): Uint8Array {
+export function rleDecode(
+  data: Uint8Array,
+  width: number,
+  height: number,
+): Uint8Array {
   if (data.length % 2 !== 0) throw new Error('rle-v1: unpaired trailing byte');
   const expected = width * height;
   const tiles = new Uint8Array(expected);
@@ -68,11 +72,13 @@ export function rleDecode(data: Uint8Array, width: number, height: number): Uint
     const run = data[i];
     const tile = data[i + 1];
     if (run === 0) throw new Error('rle-v1: zero run length');
-    if (cursor + run > expected) throw new Error('rle-v1: decoded length too long');
+    if (cursor + run > expected)
+      throw new Error('rle-v1: decoded length too long');
     tiles.fill(tile, cursor, cursor + run);
     cursor += run;
   }
-  if (cursor !== expected) throw new Error(`rle-v1: decoded ${cursor} tiles, expected ${expected}`);
+  if (cursor !== expected)
+    throw new Error(`rle-v1: decoded ${cursor} tiles, expected ${expected}`);
   return tiles;
 }
 
@@ -85,7 +91,9 @@ const cache = new Map<string, { key: string; level: DecodedLevel }>();
  * next load.
  */
 export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
-  const meta = [...conn.db.vw_level.iter()].find((row) => row.id.toString() === levelId);
+  const meta = [...conn.db.vw_level.iter()].find(
+    (row) => row.id.toString() === levelId,
+  );
   if (!meta) throw new Error(`level '${levelId}' is not available`);
   const rows = [...conn.db.vw_level_layer.iter()].filter(
     (row) => row.levelId.toString() === levelId,
@@ -102,7 +110,9 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
   const layers: DecodedLayer[] = rows
     .map((row) => {
       if (row.encoding !== 'rle-v1') {
-        throw new Error(`layer z ${row.z}: unsupported encoding '${row.encoding}'`);
+        throw new Error(
+          `layer z ${row.z}: unsupported encoding '${row.encoding}'`,
+        );
       }
       const tiles = rleDecode(row.data, row.width, row.height);
       const hash = fnv1a64(row.width, row.height, tiles);

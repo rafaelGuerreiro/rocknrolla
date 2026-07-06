@@ -1,5 +1,6 @@
 //! Seed content (characters, pieces, lootboxes) parsing and validation.
 
+use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use std::collections::HashSet;
 
@@ -46,44 +47,34 @@ pub struct SeedContent {
 }
 
 /// Parse and cross-validate a committed seed content file.
-pub fn parse_seed(source: &str) -> Result<SeedContent, String> {
-    let content: SeedContent =
-        serde_json::from_str(source).map_err(|e| format!("invalid JSON: {e}"))?;
+pub fn parse_seed(source: &str) -> Result<SeedContent> {
+    let content: SeedContent = serde_json::from_str(source).context("invalid JSON")?;
 
     let mut character_ids = HashSet::new();
     for character in &content.characters {
         crate::uuid::validate_uuid(&character.id, "character id")?;
         if !character_ids.insert(character.id.as_str()) {
-            return Err(format!("duplicate character id '{}'", character.id));
+            bail!("duplicate character id '{}'", character.id);
         }
         if character.rarity_weight == 0 {
-            return Err(format!(
-                "character '{}' has zero rarity_weight",
-                character.id
-            ));
+            bail!("character '{}' has zero rarity_weight", character.id);
         }
         if character.density <= 0.0 {
-            return Err(format!(
-                "character '{}' needs a positive density",
-                character.id
-            ));
+            bail!("character '{}' needs a positive density", character.id);
         }
     }
     if !content.characters.iter().any(|c| c.starter) {
-        return Err("at least one character must be a starter".to_string());
+        bail!("at least one character must be a starter");
     }
 
     let mut piece_ids = HashSet::new();
     for piece in &content.pieces {
         crate::uuid::validate_uuid(&piece.id, "piece id")?;
         if !piece_ids.insert(piece.id.as_str()) {
-            return Err(format!("duplicate piece id '{}'", piece.id));
+            bail!("duplicate piece id '{}'", piece.id);
         }
         if !character_ids.contains(piece.character_id.as_str()) {
-            return Err(format!(
-                "piece '{}' references unknown character '{}'",
-                piece.id, piece.character_id
-            ));
+            bail!("piece '{}' references unknown character '{}'", piece.id, piece.character_id);
         }
     }
 
@@ -91,23 +82,17 @@ pub fn parse_seed(source: &str) -> Result<SeedContent, String> {
     for lootbox in &content.lootboxes {
         crate::uuid::validate_uuid(&lootbox.id, "lootbox id")?;
         if !lootbox_ids.insert(lootbox.id.as_str()) {
-            return Err(format!("duplicate lootbox id '{}'", lootbox.id));
+            bail!("duplicate lootbox id '{}'", lootbox.id);
         }
         if lootbox.drops.is_empty() {
-            return Err(format!("lootbox '{}' has no drops", lootbox.id));
+            bail!("lootbox '{}' has no drops", lootbox.id);
         }
         for drop in &lootbox.drops {
             if drop.weight == 0 {
-                return Err(format!(
-                    "lootbox '{}' drop '{}' has zero weight",
-                    lootbox.id, drop.piece_id
-                ));
+                bail!("lootbox '{}' drop '{}' has zero weight", lootbox.id, drop.piece_id);
             }
             if !piece_ids.contains(drop.piece_id.as_str()) {
-                return Err(format!(
-                    "lootbox '{}' references unknown piece '{}'",
-                    lootbox.id, drop.piece_id
-                ));
+                bail!("lootbox '{}' references unknown piece '{}'", lootbox.id, drop.piece_id);
             }
         }
     }
@@ -145,11 +130,7 @@ mod tests {
     #[test]
     fn rejects_non_uuid_ids() {
         let broken = VALID.replace("0195c8f1-0000-7000-8000-0000000000c1", "stone");
-        assert!(
-            parse_seed(&broken)
-                .unwrap_err()
-                .contains("not a valid UUID")
-        );
+        assert!(parse_seed(&broken).unwrap_err().to_string().contains("not a valid UUID"));
     }
 
     #[test]
@@ -158,23 +139,19 @@ mod tests {
             "\"character_id\": \"0195c8f1-0000-7000-8000-0000000000c1\"",
             "\"character_id\": \"0195c8f1-0000-7000-8000-0000000000ff\"",
         );
-        assert!(
-            parse_seed(&broken)
-                .unwrap_err()
-                .contains("unknown character")
-        );
+        assert!(parse_seed(&broken).unwrap_err().to_string().contains("unknown character"));
         let broken = VALID.replace(
             "\"piece_id\": \"0195c8f1-0000-7000-8000-0000000000e1\"",
             "\"piece_id\": \"0195c8f1-0000-7000-8000-0000000000ff\"",
         );
-        assert!(parse_seed(&broken).unwrap_err().contains("unknown piece"));
+        assert!(parse_seed(&broken).unwrap_err().to_string().contains("unknown piece"));
     }
 
     #[test]
     fn rejects_zero_weight_and_missing_starter() {
         let broken = VALID.replace("\"weight\": 10", "\"weight\": 0");
-        assert!(parse_seed(&broken).unwrap_err().contains("zero weight"));
+        assert!(parse_seed(&broken).unwrap_err().to_string().contains("zero weight"));
         let broken = VALID.replace("\"starter\": true", "\"starter\": false");
-        assert!(parse_seed(&broken).unwrap_err().contains("starter"));
+        assert!(parse_seed(&broken).unwrap_err().to_string().contains("starter"));
     }
 }

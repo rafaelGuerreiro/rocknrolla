@@ -1,7 +1,9 @@
 //! Character repository services: content import and piece/character lookups.
 
-use crate::error::{ServiceError, ServiceResult};
-use crate::repository::character::{CharacterDef, PieceDef, character_def, piece_def};
+use crate::{
+    error::{ServiceError, ServiceResult},
+    repository::character::{CharacterDef, PieceDef, character_def, piece_def},
+};
 use spacetimedb::{ReducerContext, Uuid};
 use std::ops::Deref;
 
@@ -35,13 +37,7 @@ impl CharacterServices<'_> {
 
     /// Overwrite one authored piece definition, verifying its character.
     pub fn import_piece(&self, row: PieceDef) -> ServiceResult<()> {
-        if self
-            .db
-            .character_def()
-            .id()
-            .find(row.character_id)
-            .is_none()
-        {
+        if self.db.character_def().id().find(row.character_id).is_none() {
             return Err(ServiceError::not_found(format!(
                 "piece references unknown character '{}'",
                 row.character_id
@@ -58,12 +54,7 @@ impl CharacterServices<'_> {
     }
 
     pub fn starter_character_ids(&self) -> Vec<Uuid> {
-        self.db
-            .character_def()
-            .starter()
-            .filter(true)
-            .map(|c| c.id)
-            .collect()
+        self.db.character_def().starter().filter(true).map(|c| c.id).collect()
     }
 
     pub fn find_piece(&self, piece_id: Uuid) -> ServiceResult<PieceDef> {
@@ -78,16 +69,9 @@ impl CharacterServices<'_> {
     /// lootbox drop weights.
     pub fn piece_rarity_weight(&self, piece_id: Uuid) -> ServiceResult<u32> {
         let piece = self.find_piece(piece_id)?;
-        let character = self
-            .db
-            .character_def()
-            .id()
-            .find(piece.character_id)
-            .ok_or_else(|| {
-                ServiceError::not_found(format!(
-                    "piece references unknown character '{}'",
-                    piece.character_id
-                ))
+        let character =
+            self.db.character_def().id().find(piece.character_id).ok_or_else(|| {
+                ServiceError::not_found(format!("piece references unknown character '{}'", piece.character_id))
             })?;
         Ok(character.rarity_weight)
     }

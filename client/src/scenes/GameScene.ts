@@ -5,7 +5,10 @@ import { GAMEPLAY_Z, loadLevel, type DecodedLevel } from '../levels';
 import { CameraFollow } from '../gameplay/cameraFollow';
 import { buildLevel } from '../gameplay/levelBuilder';
 import { createPlayerBody } from '../gameplay/playerBody';
-import { PlayerController, type CharacterStats } from '../gameplay/playerController';
+import {
+  PlayerController,
+  type CharacterStats,
+} from '../gameplay/playerController';
 import { RunOutcome } from '../gameplay/runOutcome';
 import { ensureParticleTextures } from '../textures';
 import { UI_FONT, button } from '../ui';
@@ -57,18 +60,29 @@ export class GameScene extends Phaser.Scene {
     try {
       this.level = loadLevel(conn, this.levelId);
       built = buildLevel(this, this.level);
-      this.player = createPlayerBody(this, characterSpriteKey(this.stats.style), built.spawn, {
-        density: this.stats.density,
-      });
+      this.player = createPlayerBody(
+        this,
+        characterSpriteKey(this.stats.style),
+        built.spawn,
+        {
+          density: this.stats.density,
+        },
+      );
     } catch (error) {
       this.failToMenu(error instanceof Error ? error.message : String(error));
       return;
     }
 
-    this.controller = new PlayerController(this, this.player, this.stats, built.waterRects, {
-      onJump: () => this.jumpPuff(),
-      onHardLanding: () => this.landingDust(),
-    });
+    this.controller = new PlayerController(
+      this,
+      this.player,
+      this.stats,
+      built.waterRects,
+      {
+        onJump: () => this.jumpPuff(),
+        onHardLanding: () => this.landingDust(),
+      },
+    );
     new CameraFollow(this, this.player);
     this.outcome = new RunOutcome(this, {
       levelId: this.levelId,
@@ -78,45 +92,75 @@ export class GameScene extends Phaser.Scene {
 
     this.bindCollisions();
     this.buildHud();
-    this.matter.world.setBounds(0, 0, this.level.widthPx, this.level.heightPx, 128, true, true, true, false);
+    this.matter.world.setBounds(
+      0,
+      0,
+      this.level.widthPx,
+      this.level.heightPx,
+      128,
+      true,
+      true,
+      true,
+      false,
+    );
   }
 
   private failToMenu(message: string): void {
     this.add
-      .text(this.scale.width / 2, this.scale.height / 2, `${message}\nTap to return.`, {
-        fontFamily: UI_FONT,
-        fontSize: '22px',
-        color: '#e8ecf5',
-        align: 'center',
-      })
+      .text(
+        this.scale.width / 2,
+        this.scale.height / 2,
+        `${message}\nTap to return.`,
+        {
+          fontFamily: UI_FONT,
+          fontSize: '22px',
+          color: '#e8ecf5',
+          align: 'center',
+        },
+      )
       .setOrigin(0.5);
     this.input.once('pointerdown', () => this.scene.start('level-select'));
   }
 
   private bindCollisions(): void {
-    const onCollisionStart = (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
+    const onCollisionStart = (
+      event: Phaser.Physics.Matter.Events.CollisionStartEvent,
+    ) => {
       const playerBody = this.player?.body as MatterJS.BodyType | undefined;
       if (!playerBody || this.outcome.settled) return;
       for (const pair of event.pairs) {
         const other =
-          pair.bodyA === playerBody ? pair.bodyB : pair.bodyB === playerBody ? pair.bodyA : null;
+          pair.bodyA === playerBody
+            ? pair.bodyB
+            : pair.bodyB === playerBody
+              ? pair.bodyA
+              : null;
         if (!other) continue;
-        if (other.label === 'lethal') this.outcome.defeat('Wrecked by a hazard.');
+        if (other.label === 'lethal')
+          this.outcome.defeat('Wrecked by a hazard.');
         if (other.label === 'fire' && !this.controller.survivesFire()) {
           this.outcome.defeat('Burned up — not enough fire resistance.');
         }
         if (other.label === 'finish') this.outcome.finish();
         if (other.label === 'heavy' && this.player) {
           const velocity = this.player.getVelocity();
-          if (Math.hypot(velocity.x ?? 0, velocity.y ?? 0) > HEAVY_SHAKE_SPEED) {
+          if (
+            Math.hypot(velocity.x ?? 0, velocity.y ?? 0) > HEAVY_SHAKE_SPEED
+          ) {
             this.cameras.main.shake(120, 0.004);
           }
         }
       }
     };
-    this.matter.world.on(Phaser.Physics.Matter.Events.COLLISION_START, onCollisionStart);
+    this.matter.world.on(
+      Phaser.Physics.Matter.Events.COLLISION_START,
+      onCollisionStart,
+    );
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.matter.world?.off(Phaser.Physics.Matter.Events.COLLISION_START, onCollisionStart);
+      this.matter.world?.off(
+        Phaser.Physics.Matter.Events.COLLISION_START,
+        onCollisionStart,
+      );
     });
   }
 
@@ -188,7 +232,11 @@ export class GameScene extends Phaser.Scene {
     if (!this.player) return;
     for (let i = 0; i < 6; i++) {
       const puff = this.add
-        .image(this.player.x + Phaser.Math.Between(-14, 14), this.player.y + 12, 'dust')
+        .image(
+          this.player.x + Phaser.Math.Between(-14, 14),
+          this.player.y + 12,
+          'dust',
+        )
         .setDepth(GAMEPLAY_Z)
         .setAlpha(0.6)
         .setTint(0xb9a58c)

@@ -23,5 +23,12 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, LevelSelectScene, CharacterSelectScene, GameScene, ResultScene, CollectionScene],
+  scene: [
+    BootScene,
+    LevelSelectScene,
+    CharacterSelectScene,
+    GameScene,
+    ResultScene,
+    CollectionScene,
+  ],
 });

@@ -1,8 +1,7 @@
 //! Public read models for the caller's own player state.
 
 use crate::repository::player::{
-    Player, PlayerPiece, PlayerUnlockedCharacter, player__view, player_piece__view,
-    player_unlocked_character__view,
+    Player, PlayerPiece, PlayerUnlockedCharacter, player__view, player_piece__view, player_unlocked_character__view,
 };
 use spacetimedb::{SpacetimeType, Uuid, ViewContext, view};
 
@@ -30,11 +29,7 @@ pub fn vw_my_piece(ctx: &ViewContext) -> Vec<MyPieceView> {
         .player_piece()
         .by_owner_piece()
         .filter(ctx.sender())
-        .map(
-            |PlayerPiece {
-                 piece_id, count, ..
-             }| MyPieceView { piece_id, count },
-        )
+        .map(|PlayerPiece { piece_id, count, .. }| MyPieceView { piece_id, count })
         .collect()
 }
 
@@ -45,8 +40,6 @@ pub fn vw_my_unlocked_character(ctx: &ViewContext) -> Vec<MyUnlockedCharacterVie
         .player_unlocked_character()
         .by_owner_character()
         .filter(ctx.sender())
-        .map(
-            |PlayerUnlockedCharacter { character_id, .. }| MyUnlockedCharacterView { character_id },
-        )
+        .map(|PlayerUnlockedCharacter { character_id, .. }| MyUnlockedCharacterView { character_id })
         .collect()
 }

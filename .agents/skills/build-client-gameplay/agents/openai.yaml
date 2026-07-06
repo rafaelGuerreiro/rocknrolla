@@ -1,4 +1,0 @@
-interface:
-  display_name: "Build Client Gameplay"
-  short_description: "Implement Phaser and Matter gameplay changes"
-  default_prompt: "Use $build-client-gameplay to implement this client gameplay change."

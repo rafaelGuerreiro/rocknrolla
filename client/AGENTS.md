@@ -20,8 +20,10 @@ This file extends the repository root `AGENTS.md` for work under `client/`.
 ## Commands
 
 - `task dev`: run Vite.
+- `task fmt`: format all client source with Prettier.
+- `task lint`: lint all client source with ESLint.
 - `task build`: type-check and build the web client.
 - `task sync`: build and sync both Capacitor projects.
 - `task ios` / `task android`: sync and open the native IDE.
 
-Run `task build` after client changes. Run `task sync` when Capacitor configuration, plugins, or native integration changes.
+Run `task fmt`, `task lint`, and `task build` after client changes. Run `task sync` when Capacitor configuration, plugins, or native integration changes.

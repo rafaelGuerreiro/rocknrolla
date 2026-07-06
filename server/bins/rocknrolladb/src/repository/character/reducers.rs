@@ -1,10 +1,13 @@
 //! Character reducers: parameter/caller validation plus one service delegation.
 
-use crate::error::ServiceResult;
-use crate::extend::validate::{validate_f32_range, validate_positive_u32, validate_required_str};
-use crate::repository::access;
-use crate::repository::character::services::CharacterReducerContext;
-use crate::repository::character::{CharacterDef, PieceDef};
+use crate::{
+    error::ServiceResult,
+    extend::validate::{validate_f32_range, validate_positive_u32, validate_required_str},
+    repository::{
+        access,
+        character::{CharacterDef, PieceDef, services::CharacterReducerContext},
+    },
+};
 use spacetimedb::{ReducerContext, Uuid};
 
 #[spacetimedb::reducer]
@@ -45,17 +48,8 @@ pub fn import_character(
 }
 
 #[spacetimedb::reducer]
-pub fn import_piece(
-    ctx: &ReducerContext,
-    id: Uuid,
-    name: String,
-    character_id: Uuid,
-) -> ServiceResult<()> {
+pub fn import_piece(ctx: &ReducerContext, id: Uuid, name: String, character_id: Uuid) -> ServiceResult<()> {
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&name, "name", 128)?;
-    ctx.character_services().import_piece(PieceDef {
-        id,
-        name,
-        character_id,
-    })
+    ctx.character_services().import_piece(PieceDef { id, name, character_id })
 }

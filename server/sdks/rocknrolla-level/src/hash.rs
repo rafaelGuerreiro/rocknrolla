@@ -30,10 +30,7 @@ mod tests {
     #[test]
     fn content_hash_is_stable_and_dimension_sensitive() {
         let tiles = vec![tile::SOLID; 8];
-        assert_eq!(
-            content_hash(4, 2, &tiles),
-            content_hash(4, 2, &tiles.clone())
-        );
+        assert_eq!(content_hash(4, 2, &tiles), content_hash(4, 2, &tiles.clone()));
         assert_ne!(content_hash(4, 2, &tiles), content_hash(2, 4, &tiles));
     }
 }

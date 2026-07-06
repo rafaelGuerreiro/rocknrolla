@@ -26,9 +26,6 @@ pub fn require_module_owner(ctx: &ReducerContext, sender: Identity) -> ServiceRe
     if record.owner == sender {
         Ok(())
     } else {
-        Err(ServiceError::forbidden(
-            sender,
-            "only the module owner may import content",
-        ))
+        Err(ServiceError::forbidden(sender, "only the module owner may import content"))
     }
 }

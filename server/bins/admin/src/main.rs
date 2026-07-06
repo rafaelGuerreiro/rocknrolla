@@ -5,9 +5,12 @@
 //! installed, already authenticated `spacetime` CLI session. This binary
 //! never reads or prints the `.env` token; run `task server:login` first.
 
-use std::io::{BufRead, Write};
-use std::path::PathBuf;
-use std::process::Command as Process;
+use anyhow::{Context, Result, bail};
+use std::{
+    io::{BufRead, Write},
+    path::PathBuf,
+    process::Command as Process,
+};
 
 mod command;
 mod seed;
@@ -42,9 +45,7 @@ impl Default for Session {
 }
 
 fn default_path(path: &str) -> PathBuf {
-    PathBuf::from(path)
-        .canonicalize()
-        .unwrap_or_else(|_| PathBuf::from(path))
+    PathBuf::from(path).canonicalize().unwrap_or_else(|_| PathBuf::from(path))
 }
 
 fn main() {
@@ -64,46 +65,44 @@ fn main() {
             Err(error) => {
                 eprintln!("error: cannot read input: {error}");
                 break;
-            }
+            },
         };
         match command::parse_line(&line) {
-            Ok(None) => {}
+            Ok(None) => {},
             Ok(Some(Command::Quit)) => break,
             Ok(Some(parsed)) => {
                 if let Err(error) = execute(&mut session, parsed, &mut input) {
-                    eprintln!("error: {error}");
+                    eprintln!("error: {error:?}");
                 }
-            }
+            },
             Err(error) => eprintln!("error: {error} (type 'help' for usage)"),
         }
     }
 }
 
-fn execute(
-    session: &mut Session,
-    parsed: Command,
-    input: &mut impl Iterator<Item = std::io::Result<String>>,
-) -> Result<(), String> {
+fn execute(session: &mut Session, parsed: Command, input: &mut impl Iterator<Item = std::io::Result<String>>) -> Result<()> {
     match parsed {
-        Command::Quit => unreachable!("quit is handled by the loop"),
+        Command::Quit => {
+            bail!("quit is handled by the caller loop and should not reach execute");
+        },
         Command::Help => println!("{}", command::USAGE),
         Command::Status => print_status(session),
         Command::SetServer(server) => {
             session.server = server;
             println!("server set to '{}'", session.server);
-        }
+        },
         Command::SetDatabase(database) => {
             session.database = database;
             println!("database set to '{}'", session.database);
-        }
+        },
         Command::ValidateLevels(path) => {
             let levels = load_levels(session, path.as_deref())?;
             println!("{} level(s) valid; nothing imported", levels.len());
-        }
+        },
         Command::ValidateSeed(path) => {
             load_seed(session, path.as_deref())?;
             println!("seed content valid; nothing imported");
-        }
+        },
         Command::ValidateAll => {
             let content = load_seed(session, None)?;
             let levels = load_levels(session, None)?;
@@ -114,19 +113,19 @@ fn execute(
                 content.pieces.len(),
                 content.lootboxes.len()
             );
-        }
+        },
         Command::ImportLevels(path) => {
             let levels = load_levels(session, path.as_deref())?;
             if confirm_import(session, input)? {
                 import_levels(session, &levels)?;
             }
-        }
+        },
         Command::ImportSeed(path) => {
             let content = load_seed(session, path.as_deref())?;
             if confirm_import(session, input)? {
                 import_seed(session, &content)?;
             }
-        }
+        },
         Command::ImportAll => {
             let content = load_seed(session, None)?;
             let levels = load_levels(session, None)?;
@@ -134,7 +133,7 @@ fn execute(
                 import_seed(session, &content)?;
                 import_levels(session, &levels)?;
             }
-        }
+        },
     }
     Ok(())
 }
@@ -148,10 +147,7 @@ fn print_status(session: &Session) {
 
 /// Show the destination and require explicit confirmation. Importing into the
 /// production database demands an additional unmistakable confirmation.
-fn confirm_import(
-    session: &Session,
-    input: &mut impl Iterator<Item = std::io::Result<String>>,
-) -> Result<bool, String> {
+fn confirm_import(session: &Session, input: &mut impl Iterator<Item = std::io::Result<String>>) -> Result<bool> {
     println!(
         "about to import into database '{}' on server '{}'",
         session.database, session.server
@@ -171,27 +167,20 @@ fn confirm_import(
     Ok(true)
 }
 
-fn prompt_matches(
-    input: &mut impl Iterator<Item = std::io::Result<String>>,
-    prompt: &str,
-    expected: &str,
-) -> Result<bool, String> {
+fn prompt_matches(input: &mut impl Iterator<Item = std::io::Result<String>>, prompt: &str, expected: &str) -> Result<bool> {
     print!("{prompt}");
     let _ = std::io::stdout().flush();
     match input.next() {
         Some(Ok(answer)) => Ok(answer.trim() == expected),
-        Some(Err(error)) => Err(format!("cannot read confirmation: {error}")),
+        Some(Err(error)) => Err(error).context("cannot read confirmation"),
         None => Ok(false),
     }
 }
 
-fn load_seed(session: &Session, path_override: Option<&str>) -> Result<seed::SeedContent, String> {
-    let path = path_override
-        .map(PathBuf::from)
-        .unwrap_or_else(|| session.seed_path.clone());
-    let source = std::fs::read_to_string(&path)
-        .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
-    let content = seed::parse_seed(&source).map_err(|e| format!("{}: {e}", path.display()))?;
+fn load_seed(session: &Session, path_override: Option<&str>) -> Result<seed::SeedContent> {
+    let path = path_override.map(PathBuf::from).unwrap_or_else(|| session.seed_path.clone());
+    let source = std::fs::read_to_string(&path).with_context(|| format!("cannot read {}", path.display()))?;
+    let content = seed::parse_seed(&source).with_context(|| path.display().to_string())?;
     println!(
         "validated {}: {} characters, {} pieces, {} lootboxes",
         path.display(),
@@ -202,19 +191,15 @@ fn load_seed(session: &Session, path_override: Option<&str>) -> Result<seed::See
     Ok(content)
 }
 
-fn load_levels(
-    session: &Session,
-    path_override: Option<&str>,
-) -> Result<Vec<tiled::ImportedLevel>, String> {
+fn load_levels(session: &Session, path_override: Option<&str>) -> Result<Vec<tiled::ImportedLevel>> {
     let path = path_override
         .map(PathBuf::from)
         .unwrap_or_else(|| session.levels_path.clone());
     let files = collect_json_files(&path)?;
     let mut levels = Vec::new();
     for file in &files {
-        let source = std::fs::read_to_string(file)
-            .map_err(|e| format!("cannot read {}: {e}", file.display()))?;
-        let level = tiled::parse_level(&source).map_err(|e| format!("{}: {e}", file.display()))?;
+        let source = std::fs::read_to_string(file).with_context(|| format!("cannot read {}", file.display()))?;
+        let level = tiled::parse_level(&source).with_context(|| file.display().to_string())?;
         println!(
             "validated {}: level '{}' ({} layers, {} compressed bytes, gameplay hash {})",
             file.display(),
@@ -234,40 +219,40 @@ fn load_levels(
     Ok(levels)
 }
 
-fn reject_duplicate_levels(levels: &[tiled::ImportedLevel]) -> Result<(), String> {
+fn reject_duplicate_levels(levels: &[tiled::ImportedLevel]) -> Result<()> {
     let mut ids = std::collections::HashSet::new();
     let mut slugs = std::collections::HashSet::new();
     for level in levels {
         if !ids.insert(level.id.to_lowercase()) {
-            return Err(format!("duplicate level id '{}'", level.id));
+            bail!("duplicate level id '{}'", level.id);
         }
         if !slugs.insert(level.slug.clone()) {
-            return Err(format!("duplicate level slug '{}'", level.slug));
+            bail!("duplicate level slug '{}'", level.slug);
         }
     }
     Ok(())
 }
 
-fn collect_json_files(path: &PathBuf) -> Result<Vec<PathBuf>, String> {
+fn collect_json_files(path: &PathBuf) -> Result<Vec<PathBuf>> {
     if path.is_file() {
         return Ok(vec![path.clone()]);
     }
     if !path.is_dir() {
-        return Err(format!("path not found: {}", path.display()));
+        bail!("path not found: {}", path.display());
     }
     let mut files: Vec<PathBuf> = std::fs::read_dir(path)
-        .map_err(|e| format!("cannot read directory {}: {e}", path.display()))?
+        .with_context(|| format!("cannot read directory {}", path.display()))?
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .filter(|p| p.extension().is_some_and(|ext| ext == "json"))
         .collect();
     files.sort();
     if files.is_empty() {
-        return Err(format!("no JSON files found in {}", path.display()));
+        bail!("no JSON files found in {}", path.display());
     }
     Ok(files)
 }
 
-fn call_reducer(session: &Session, reducer: &str, args: &[String]) -> Result<(), String> {
+fn call_reducer(session: &Session, reducer: &str, args: &[String]) -> Result<()> {
     let output = Process::new("spacetime")
         .arg("call")
         .arg("--server")
@@ -277,15 +262,15 @@ fn call_reducer(session: &Session, reducer: &str, args: &[String]) -> Result<(),
         .arg(reducer)
         .args(args)
         .output()
-        .map_err(|e| format!("failed to run the spacetime CLI: {e}"))?;
+        .context("failed to run the spacetime CLI")?;
     if output.status.success() {
         Ok(())
     } else {
-        Err(format!(
+        bail!(
             "spacetime call {reducer} failed: {}{}",
             String::from_utf8_lossy(&output.stdout).trim(),
             String::from_utf8_lossy(&output.stderr).trim()
-        ))
+        );
     }
 }
 
@@ -304,16 +289,16 @@ fn layer_to_json(layer: &rocknrolla_level::LayerFacts) -> serde_json::Value {
     })
 }
 
-fn import_levels(session: &Session, levels: &[tiled::ImportedLevel]) -> Result<(), String> {
+fn import_levels(session: &Session, levels: &[tiled::ImportedLevel]) -> Result<()> {
     for level in levels {
         let args = vec![
-            crate::uuid::uuid_arg(&level.id),
+            crate::uuid::uuid_arg(&level.id)?,
             serde_json::json!(level.slug).to_string(),
             serde_json::json!(level.name).to_string(),
             level.is_starting.to_string(),
             level.active.to_string(),
-            crate::uuid::uuid_opt_arg(level.reward_lootbox_id.as_deref()),
-            crate::uuid::uuid_vec_arg(&level.successors),
+            crate::uuid::uuid_opt_arg(level.reward_lootbox_id.as_deref())?,
+            crate::uuid::uuid_vec_arg(&level.successors)?,
             serde_json::Value::Array(level.layers.iter().map(layer_to_json).collect()).to_string(),
         ];
         call_reducer(session, "import_level", &args)?;
@@ -322,10 +307,10 @@ fn import_levels(session: &Session, levels: &[tiled::ImportedLevel]) -> Result<(
     Ok(())
 }
 
-fn import_seed(session: &Session, content: &seed::SeedContent) -> Result<(), String> {
+fn import_seed(session: &Session, content: &seed::SeedContent) -> Result<()> {
     for character in &content.characters {
         let args = vec![
-            crate::uuid::uuid_arg(&character.id),
+            crate::uuid::uuid_arg(&character.id)?,
             serde_json::json!(character.name).to_string(),
             serde_json::json!(character.style).to_string(),
             character.rarity_weight.to_string(),
@@ -341,21 +326,27 @@ fn import_seed(session: &Session, content: &seed::SeedContent) -> Result<(), Str
     }
     for piece in &content.pieces {
         let args = vec![
-            crate::uuid::uuid_arg(&piece.id),
+            crate::uuid::uuid_arg(&piece.id)?,
             serde_json::json!(piece.name).to_string(),
-            crate::uuid::uuid_arg(&piece.character_id),
+            crate::uuid::uuid_arg(&piece.character_id)?,
         ];
         call_reducer(session, "import_piece", &args)?;
         println!("imported piece '{}'", piece.name);
     }
     for lootbox in &content.lootboxes {
-        let drops: Vec<String> = lootbox
+        let drops = lootbox
             .drops
             .iter()
-            .map(|d| format!(r#"{{"piece_id":{},"weight":{}}}"#, crate::uuid::uuid_arg(&d.piece_id), d.weight))
-            .collect();
+            .map(|d| -> Result<String> {
+                Ok(format!(
+                    r#"{{"piece_id":{},"weight":{}}}"#,
+                    crate::uuid::uuid_arg(&d.piece_id)?,
+                    d.weight
+                ))
+            })
+            .collect::<Result<Vec<String>>>()?;
         let args = vec![
-            crate::uuid::uuid_arg(&lootbox.id),
+            crate::uuid::uuid_arg(&lootbox.id)?,
             serde_json::json!(lootbox.name).to_string(),
             format!("[{}]", drops.join(",")),
         ];

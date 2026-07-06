@@ -6,6 +6,7 @@ version = 4
 name = "admin"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "rocknrolla-level",
  "serde",
  "serde_json",
@@ -470,17 +471,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "rocknrolla-error"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "rocknrolla-level"
 version = "0.1.0"
+dependencies = [
+ "rocknrolla-error",
+]
 
 [[package]]
 name = "rocknrolladb"
 version = "0.1.0"
 dependencies = [
  "log",
+ "rocknrolla-error",
  "rocknrolla-level",
  "spacetimedb",
- "thiserror 2.0.18",
 ]
 
 [[package]]

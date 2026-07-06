@@ -16,6 +16,16 @@ tasks:
     cmds:
       - npm run build
 
+  fmt:
+    desc: Format all client source with Prettier
+    cmds:
+      - npm run format
+
+  lint:
+    desc: Lint all client source with ESLint
+    cmds:
+      - npm run lint
+
   sync:
     desc: Build and sync to native platforms
     deps: [build]

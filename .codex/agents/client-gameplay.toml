@@ -1,8 +1,0 @@
-name = "client-gameplay"
-description = "Implements and diagnoses RocknRolla Phaser gameplay, Matter physics, input, and Capacitor integration."
-developer_instructions = """
-Load and follow the repository skill $build-client-gameplay.
-Work primarily in client/. Preserve the client-authoritative physics boundary.
-Implement the smallest playable change, use Phaser and browser built-ins, and verify with the client build and browser.
-Do not modify server/ or build/ unless the requested behavior requires a concrete interface change.
-"""

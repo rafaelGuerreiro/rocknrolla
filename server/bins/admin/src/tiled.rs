@@ -1,8 +1,7 @@
 //! Tiled JSON parsing and validation for the RocknRolla level importer.
 
-use rocknrolla_level::{
-    ENCODING_RLE_V1, GAMEPLAY_Z, LayerFacts, content_hash, rle_encode, tile, validate_layers,
-};
+use anyhow::{Context, Result, bail};
+use rocknrolla_level::{ENCODING_RLE_V1, GAMEPLAY_Z, LayerFacts, content_hash, rle_encode, tile, validate_layers};
 use serde::Deserialize;
 
 const FLIP_FLAGS: u32 = 0xf000_0000;
@@ -77,62 +76,64 @@ fn prop<'a>(props: &'a [TiledProperty], name: &str) -> Option<&'a serde_json::Va
     props.iter().find(|p| p.name == name).map(|p| &p.value)
 }
 
-fn string_prop(props: &[TiledProperty], name: &str) -> Result<Option<String>, String> {
+fn string_prop(props: &[TiledProperty], name: &str) -> Result<Option<String>> {
     match prop(props, name) {
         None => Ok(None),
         Some(serde_json::Value::String(s)) => Ok(Some(s.clone())),
-        Some(other) => Err(format!("property '{name}' must be a string, got {other}")),
+        Some(other) => bail!("property '{name}' must be a string, got {other}"),
     }
 }
 
-fn bool_prop(props: &[TiledProperty], name: &str) -> Result<Option<bool>, String> {
+fn bool_prop(props: &[TiledProperty], name: &str) -> Result<Option<bool>> {
     match prop(props, name) {
         None => Ok(None),
         Some(serde_json::Value::Bool(b)) => Ok(Some(*b)),
-        Some(other) => Err(format!("property '{name}' must be a bool, got {other}")),
+        Some(other) => bail!("property '{name}' must be a bool, got {other}"),
     }
 }
 
-fn u16_prop(props: &[TiledProperty], name: &str) -> Result<Option<u16>, String> {
+fn u16_prop(props: &[TiledProperty], name: &str) -> Result<Option<u16>> {
     match prop(props, name) {
         None => Ok(None),
-        Some(serde_json::Value::Number(n)) => n
-            .as_u64()
-            .and_then(|v| u16::try_from(v).ok())
-            .map(Some)
-            .ok_or_else(|| format!("property '{name}' out of range")),
-        Some(other) => Err(format!("property '{name}' must be an integer, got {other}")),
+        Some(serde_json::Value::Number(n)) => {
+            let value = n
+                .as_u64()
+                .and_then(|v| u16::try_from(v).ok())
+                .with_context(|| format!("property '{name}' out of range"))?;
+            Ok(Some(value))
+        },
+        Some(other) => bail!("property '{name}' must be an integer, got {other}"),
     }
 }
 
 /// Parse and validate one Tiled JSON document into an importable level.
-pub fn parse_level(source: &str) -> Result<ImportedLevel, String> {
-    let map: TiledMap = serde_json::from_str(source).map_err(|e| format!("invalid JSON: {e}"))?;
+pub fn parse_level(source: &str) -> Result<ImportedLevel> {
+    let map: TiledMap = serde_json::from_str(source).context("invalid JSON")?;
     if map.kind != "map" {
-        return Err(format!("expected a Tiled map, got type '{}'", map.kind));
+        bail!("expected a Tiled map, got type '{}'", map.kind);
     }
     if map.orientation != "orthogonal" {
-        return Err(format!("unsupported orientation '{}'", map.orientation));
+        bail!("unsupported orientation '{}'", map.orientation);
     }
     if map.infinite {
-        return Err("infinite maps are not supported".to_string());
+        bail!("infinite maps are not supported");
     }
     let firstgid = match map.tilesets.as_slice() {
         [only] => only.firstgid,
-        [] => return Err("map has no tileset".to_string()),
-        _ => return Err("map must use exactly one tileset".to_string()),
+        [] => bail!("map has no tileset"),
+        _ => bail!("map must use exactly one tileset"),
     };
 
     let id = string_prop(&map.properties, "id")?
         .filter(|s| !s.is_empty())
-        .ok_or("map is missing the 'id' string property")?;
+        .context("map is missing the 'id' string property")?;
     crate::uuid::validate_uuid(&id, "level id")?;
     let slug = string_prop(&map.properties, "slug")?
         .filter(|s| !s.is_empty())
-        .ok_or("map is missing the 'slug' string property")?;
+        .context("map is missing the 'slug' string property")?;
     let name = string_prop(&map.properties, "name")?
         .filter(|s| !s.is_empty())
-        .ok_or("map is missing the 'name' string property")?;
+        .context("map is missing the 'name' string property")?;
     let is_starting = bool_prop(&map.properties, "starting")?.unwrap_or(false);
     let active = bool_prop(&map.properties, "active")?.unwrap_or(true);
     let reward_lootbox_id = string_prop(&map.properties, "reward_lootbox_id")?
@@ -150,77 +151,60 @@ pub fn parse_level(source: &str) -> Result<ImportedLevel, String> {
     for successor in &successors {
         crate::uuid::validate_uuid(successor, "successor")?;
         if successor.eq_ignore_ascii_case(&id) {
-            return Err(format!("level '{slug}' lists itself as a successor"));
+            bail!("level '{slug}' lists itself as a successor");
         }
         if !seen_successors.insert(successor.to_lowercase()) {
-            return Err(format!(
-                "level '{slug}' lists successor '{successor}' twice"
-            ));
+            bail!("level '{slug}' lists successor '{successor}' twice");
         }
     }
 
     let mut layers = Vec::new();
     for layer in &map.layers {
         if layer.kind != "tilelayer" {
-            return Err(format!(
+            bail!(
                 "layer '{}' has unsupported type '{}'; only tile layers are allowed",
-                layer.name, layer.kind
-            ));
+                layer.name,
+                layer.kind
+            );
         }
         let z_value = u16_prop(&layer.properties, "z")?
-            .ok_or_else(|| format!("layer '{}' is missing the 'z' int property", layer.name))?;
-        let z = u8::try_from(z_value)
-            .map_err(|_| format!("layer '{}' z {z_value} is out of 0..=255", layer.name))?;
+            .with_context(|| format!("layer '{}' is missing the 'z' int property", layer.name))?;
+        let z = u8::try_from(z_value).with_context(|| format!("layer '{}' z {z_value} is out of 0..=255", layer.name))?;
         if let Some(role) = string_prop(&layer.properties, "role")? {
-            let expected = if z == GAMEPLAY_Z {
-                "gameplay"
-            } else {
-                "visual"
-            };
+            let expected = if z == GAMEPLAY_Z { "gameplay" } else { "visual" };
             if role != expected {
-                return Err(format!(
+                bail!(
                     "layer '{}' role '{role}' contradicts z {z} (expected '{expected}')",
                     layer.name
-                ));
+                );
             }
         }
         if layer.width == 0 || layer.height == 0 {
-            return Err(format!("layer '{}' has zero dimensions", layer.name));
+            bail!("layer '{}' has zero dimensions", layer.name);
         }
         let expected_len = layer.width as usize * layer.height as usize;
         if layer.data.len() != expected_len {
-            return Err(format!(
+            bail!(
                 "layer '{}' has {} tiles, expected {expected_len}",
                 layer.name,
                 layer.data.len()
-            ));
+            );
         }
         let mut tiles = Vec::with_capacity(expected_len);
         for (index, &gid) in layer.data.iter().enumerate() {
             if gid & FLIP_FLAGS != 0 {
-                return Err(format!(
-                    "layer '{}' tile {index} uses unsupported flip/rotation flags",
-                    layer.name
-                ));
+                bail!("layer '{}' tile {index} uses unsupported flip/rotation flags", layer.name);
             }
             let tile_id = if gid == 0 {
                 tile::EMPTY
             } else {
-                let local = gid.checked_sub(firstgid).ok_or_else(|| {
-                    format!(
-                        "layer '{}' tile {index} gid {gid} below firstgid",
-                        layer.name
-                    )
-                })?;
+                let local = gid
+                    .checked_sub(firstgid)
+                    .with_context(|| format!("layer '{}' tile {index} gid {gid} below firstgid", layer.name))?;
                 u8::try_from(local)
                     .ok()
                     .filter(|&t| t <= tile::MAX)
-                    .ok_or_else(|| {
-                        format!(
-                            "layer '{}' tile {index} has unknown tile id {local}",
-                            layer.name
-                        )
-                    })?
+                    .with_context(|| format!("layer '{}' tile {index} has unknown tile id {local}", layer.name))?
             };
             tiles.push(tile_id);
         }
@@ -308,29 +292,37 @@ mod tests {
 
     #[test]
     fn rejects_non_uuid_ids_and_references() {
-        let err = parse_level(&sample(127, 0).replace(LEVEL_ID, "tutorial-hill")).unwrap_err();
+        let err = parse_level(&sample(127, 0).replace(LEVEL_ID, "tutorial-hill"))
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("not a valid UUID"), "{err}");
-        let err = parse_level(&sample(127, 0).replace(NEXT_ID, "next-level")).unwrap_err();
+        let err = parse_level(&sample(127, 0).replace(NEXT_ID, "next-level"))
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("not a valid UUID"), "{err}");
     }
 
     #[test]
     fn rejects_self_and_duplicate_successors() {
-        let err = parse_level(&sample(127, 0).replace(NEXT_ID, LEVEL_ID)).unwrap_err();
+        let err = parse_level(&sample(127, 0).replace(NEXT_ID, LEVEL_ID))
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("itself"), "{err}");
-        let err = parse_level(&sample(127, 0).replace(OTHER_ID, NEXT_ID)).unwrap_err();
+        let err = parse_level(&sample(127, 0).replace(OTHER_ID, NEXT_ID))
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("twice"), "{err}");
     }
 
     #[test]
     fn rejects_flip_flags() {
-        let err = parse_level(&sample(127, 0x8000_0000)).unwrap_err();
+        let err = parse_level(&sample(127, 0x8000_0000)).unwrap_err().to_string();
         assert!(err.contains("flip/rotation"), "{err}");
     }
 
     #[test]
     fn rejects_missing_gameplay_layer() {
-        let err = parse_level(&sample(50, 0)).unwrap_err();
+        let err = parse_level(&sample(50, 0)).unwrap_err().to_string();
         assert!(err.contains("no gameplay layer"), "{err}");
     }
 }

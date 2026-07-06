@@ -14,7 +14,7 @@ Build the smallest playable browser-first change and keep it compatible with Cap
 3. Reuse the current scene and direct Phaser APIs before adding classes, managers, plugins, or state frameworks.
 4. Keep movement, collisions, escape input, and waypoint detection in the client.
 5. Report only discrete waypoints or outcomes to SpacetimeDB. Do not stream transforms or ask the server to validate physics.
-6. Run `task client:build`, then exercise the affected behavior in a browser. Run `task client:sync` when native files or configuration change.
+6. Run `task client:fmt`, `task client:lint`, and `task client:build`, then exercise the affected behavior in a browser. Run `task client:sync` when native files or configuration change.
 
 ## Defaults
 

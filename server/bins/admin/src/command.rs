@@ -1,6 +1,8 @@
 //! Shell line parsing, kept separate from execution so commands are testable
 //! without an interactive terminal.
 
+use anyhow::{Result, bail};
+
 /// One parsed shell command.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command {
@@ -32,7 +34,7 @@ commands:
   quit | exit              leave the shell (EOF also exits)";
 
 /// Parse one input line. `Ok(None)` means an empty line to ignore.
-pub fn parse_line(line: &str) -> Result<Option<Command>, String> {
+pub fn parse_line(line: &str) -> Result<Option<Command>> {
     let words: Vec<&str> = line.split_whitespace().collect();
     let command = match words.as_slice() {
         [] => return Ok(None),
@@ -42,24 +44,24 @@ pub fn parse_line(line: &str) -> Result<Option<Command>, String> {
         ["set", "server", name] => Command::SetServer(name.to_string()),
         ["set", "database", name] => Command::SetDatabase(name.to_string()),
         ["set", "server"] | ["set", "database"] => {
-            return Err(format!("'{}' needs a value", line.trim()));
-        }
+            bail!("'{}' needs a value", line.trim());
+        },
         ["validate", "levels", rest @ ..] => Command::ValidateLevels(optional_path(rest)?),
         ["validate", "seed", rest @ ..] => Command::ValidateSeed(optional_path(rest)?),
         ["validate", "all"] => Command::ValidateAll,
         ["import", "levels", rest @ ..] => Command::ImportLevels(optional_path(rest)?),
         ["import", "seed", rest @ ..] => Command::ImportSeed(optional_path(rest)?),
         ["import", "all"] => Command::ImportAll,
-        _ => return Err(format!("unknown command '{}'", line.trim())),
+        _ => bail!("unknown command '{}'", line.trim()),
     };
     Ok(Some(command))
 }
 
-fn optional_path(rest: &[&str]) -> Result<Option<String>, String> {
+fn optional_path(rest: &[&str]) -> Result<Option<String>> {
     match rest {
         [] => Ok(None),
         [path] => Ok(Some(path.to_string())),
-        _ => Err("expected at most one path".to_string()),
+        _ => bail!("expected at most one path"),
     }
 }
 
@@ -71,14 +73,8 @@ mod tests {
     fn parses_valid_commands() {
         assert_eq!(parse_line("help").unwrap(), Some(Command::Help));
         assert_eq!(parse_line(" status ").unwrap(), Some(Command::Status));
-        assert_eq!(
-            parse_line("validate all").unwrap(),
-            Some(Command::ValidateAll)
-        );
-        assert_eq!(
-            parse_line("validate levels").unwrap(),
-            Some(Command::ValidateLevels(None))
-        );
+        assert_eq!(parse_line("validate all").unwrap(), Some(Command::ValidateAll));
+        assert_eq!(parse_line("validate levels").unwrap(), Some(Command::ValidateLevels(None)));
         assert_eq!(
             parse_line("import levels ../levels/generated").unwrap(),
             Some(Command::ImportLevels(Some("../levels/generated".into())))

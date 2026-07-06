@@ -16,7 +16,8 @@ const PREFIX = '../../levels/tiled/Sprites/';
 
 export function spriteUrl(key: string): string {
   const url = SPRITE_URLS[`${PREFIX}${key}.png`];
-  if (!url) throw new Error(`sprite '${key}' is not in the committed asset tree`);
+  if (!url)
+    throw new Error(`sprite '${key}' is not in the committed asset tree`);
   return url;
 }
 
@@ -47,7 +48,10 @@ export function characterSpriteKey(style: string): string {
  * Queue the given sprites on a scene's loader under their canonical keys.
  * Throws for keys outside the committed tree.
  */
-export function queueSprites(load: Phaser.Loader.LoaderPlugin, keys: string[]): void {
+export function queueSprites(
+  load: Phaser.Loader.LoaderPlugin,
+  keys: string[],
+): void {
   for (const key of keys) {
     if (!load.textureManager.exists(key)) load.image(key, spriteUrl(key));
   }

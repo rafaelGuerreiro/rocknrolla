@@ -1,16 +1,15 @@
 //! Lootbox repository services: import, granting, and the opening workflow.
 
-use crate::error::{ServiceError, ServiceResult};
-use crate::extend::access::ensure_owner;
-use crate::extend::stdb::UuidGen;
-use crate::repository::character::services::CharacterReducerContext;
-use crate::repository::lootbox::types::DropImport;
-use crate::repository::lootbox::{
-    LootboxDef, LootboxDrop, PlayerLootbox, lootbox_def, lootbox_drop, player_lootbox,
+use crate::{
+    error::{ServiceError, ServiceResult},
+    extend::{access::ensure_owner, stdb::UuidGen},
+    repository::{
+        character::services::CharacterReducerContext,
+        lootbox::{LootboxDef, LootboxDrop, PlayerLootbox, lootbox_def, lootbox_drop, player_lootbox, types::DropImport},
+        player::services::PlayerReducerContext,
+    },
 };
-use crate::repository::player::services::PlayerReducerContext;
-use spacetimedb::rand::Rng;
-use spacetimedb::{Identity, ReducerContext, Table, Uuid};
+use spacetimedb::{Identity, ReducerContext, Table, Uuid, rand::Rng};
 use std::ops::Deref;
 
 pub trait LootboxReducerContext {
@@ -37,16 +36,9 @@ impl Deref for LootboxServices<'_> {
 impl LootboxServices<'_> {
     /// Overwrite one authored lootbox definition and its drop table,
     /// verifying every referenced piece and weight.
-    pub fn import_lootbox(
-        &self,
-        id: Uuid,
-        name: String,
-        drops: Vec<DropImport>,
-    ) -> ServiceResult<()> {
+    pub fn import_lootbox(&self, id: Uuid, name: String, drops: Vec<DropImport>) -> ServiceResult<()> {
         if drops.is_empty() {
-            return Err(ServiceError::validation(
-                "lootbox must configure at least one drop",
-            ));
+            return Err(ServiceError::validation("lootbox must configure at least one drop"));
         }
         for drop in &drops {
             if drop.weight == 0 {
@@ -62,10 +54,7 @@ impl LootboxServices<'_> {
                 )));
             }
         }
-        self.db
-            .lootbox_def()
-            .id()
-            .insert_or_update(LootboxDef { id, name });
+        self.db.lootbox_def().id().insert_or_update(LootboxDef { id, name });
         self.db.lootbox_drop().lootbox_id().delete(id);
         for drop in drops {
             self.db.lootbox_drop().insert(LootboxDrop {
@@ -113,15 +102,8 @@ impl LootboxServices<'_> {
         }
 
         let mut weighted: Vec<(Uuid, u64)> = Vec::new();
-        for drop in self
-            .db
-            .lootbox_drop()
-            .lootbox_id()
-            .filter(lootbox.lootbox_id)
-        {
-            let rarity = self
-                .character_services()
-                .piece_rarity_weight(drop.piece_id)?;
+        for drop in self.db.lootbox_drop().lootbox_id().filter(lootbox.lootbox_id) {
+            let rarity = self.character_services().piece_rarity_weight(drop.piece_id)?;
             weighted.push((drop.piece_id, drop.weight as u64 * rarity as u64));
         }
         let total: u64 = weighted.iter().map(|(_, w)| w).sum();
@@ -132,8 +114,7 @@ impl LootboxServices<'_> {
             )));
         }
         let roll = self.rng().gen_range(0..total);
-        let piece_id = pick_weighted(&weighted, roll)
-            .ok_or_else(|| ServiceError::internal("weighted pick failed"))?;
+        let piece_id = pick_weighted(&weighted, roll).ok_or_else(|| ServiceError::internal("weighted pick failed"))?;
 
         let count = self.player_services().grant_piece(sender, piece_id)?;
         log::info!("player {sender} got piece {piece_id} (count {count})");
@@ -145,14 +126,9 @@ impl LootboxServices<'_> {
         });
 
         let piece = self.character_services().find_piece(piece_id)?;
-        let required = self
-            .character_services()
-            .piece_ids_of_character(piece.character_id);
-        self.player_services().unlock_character_when_owned(
-            sender,
-            piece.character_id,
-            &required,
-        )?;
+        let required = self.character_services().piece_ids_of_character(piece.character_id);
+        self.player_services()
+            .unlock_character_when_owned(sender, piece.character_id, &required)?;
         Ok(())
     }
 }
@@ -179,11 +155,7 @@ mod tests {
         let stone_chip = Uuid::from_u128(1);
         let paper_scrap_a = Uuid::from_u128(2);
         let paper_scrap_b = Uuid::from_u128(3);
-        let weighted = vec![
-            (stone_chip, 3u64),
-            (paper_scrap_a, 0u64),
-            (paper_scrap_b, 2u64),
-        ];
+        let weighted = vec![(stone_chip, 3u64), (paper_scrap_a, 0u64), (paper_scrap_b, 2u64)];
         assert_eq!(pick_weighted(&weighted, 0), Some(stone_chip));
         assert_eq!(pick_weighted(&weighted, 2), Some(stone_chip));
         assert_eq!(pick_weighted(&weighted, 3), Some(paper_scrap_b));

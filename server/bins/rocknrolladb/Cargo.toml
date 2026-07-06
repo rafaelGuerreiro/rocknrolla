@@ -9,5 +9,5 @@ crate-type = ["cdylib"]
 [dependencies]
 spacetimedb = { workspace = true }
 log = { workspace = true }
-thiserror = { workspace = true }
+rocknrolla-error = { path = "../../sdks/rocknrolla-error" }
 rocknrolla-level = { path = "../../sdks/rocknrolla-level" }

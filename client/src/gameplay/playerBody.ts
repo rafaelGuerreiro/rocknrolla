@@ -35,13 +35,18 @@ export function createPlayerBody(
 ): Phaser.Physics.Matter.Image {
   const hull = hullForTexture(scene, textureKey);
   const player = scene.matter.add.image(spawn.x ?? 0, spawn.y ?? 0, textureKey);
-  const body = scene.matter.bodies.fromVertices(0, 0, [hull.contour as MatterJS.Vector[]], {
-    label: 'player',
-    density: stats.density,
-    friction: 0.9,
-    frictionAir: 0.012,
-    restitution: 0.08,
-  });
+  const body = scene.matter.bodies.fromVertices(
+    0,
+    0,
+    [hull.contour as MatterJS.Vector[]],
+    {
+      label: 'player',
+      density: stats.density,
+      friction: 0.9,
+      frictionAir: 0.012,
+      restitution: 0.08,
+    },
+  );
   player.setExistingBody(body);
   // Draw the sprite so the pixel at the hull centroid sits on the body's
   // center of mass; rotation then keeps sprite and hull aligned.
@@ -59,8 +64,13 @@ function hullForTexture(scene: Phaser.Scene, textureKey: string): CachedHull {
     throw new Error(`character texture '${textureKey}' is not loaded`);
   }
   const source = scene.textures.get(textureKey).getSourceImage();
-  if (!('width' in source) || source instanceof Phaser.GameObjects.RenderTexture) {
-    throw new Error(`character texture '${textureKey}' has no readable image source`);
+  if (
+    !('width' in source) ||
+    source instanceof Phaser.GameObjects.RenderTexture
+  ) {
+    throw new Error(
+      `character texture '${textureKey}' has no readable image source`,
+    );
   }
   const width = source.width;
   const height = source.height;
@@ -68,20 +78,28 @@ function hullForTexture(scene: Phaser.Scene, textureKey: string): CachedHull {
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext('2d');
-  if (!context) throw new Error('2d canvas context unavailable for alpha tracing');
+  if (!context)
+    throw new Error('2d canvas context unavailable for alpha tracing');
   context.drawImage(source as CanvasImageSource, 0, 0);
   const alpha = context.getImageData(0, 0, width, height).data;
   const opaque = (x: number, y: number): boolean =>
-    x >= 0 && y >= 0 && x < width && y < height &&
+    x >= 0 &&
+    y >= 0 &&
+    x < width &&
+    y < height &&
     alpha[(y * width + x) * 4 + 3] >= ALPHA_THRESHOLD;
 
   const boundary = traceBoundary(opaque, width, height);
   if (!boundary) {
-    throw new Error(`character texture '${textureKey}' has no opaque pixels to trace`);
+    throw new Error(
+      `character texture '${textureKey}' has no opaque pixels to trace`,
+    );
   }
   const contour = simplifyClosed(boundary, SIMPLIFY_EPSILON);
   if (contour.length < 3) {
-    throw new Error(`character texture '${textureKey}' produced a degenerate collision hull`);
+    throw new Error(
+      `character texture '${textureKey}' produced a degenerate collision hull`,
+    );
   }
   const hull: CachedHull = {
     contour,
@@ -95,7 +113,14 @@ function hullForTexture(scene: Phaser.Scene, textureKey: string): CachedHull {
 
 /** Clockwise 8-neighborhood offsets starting from west. */
 const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
-  [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1],
+  [-1, 0],
+  [-1, -1],
+  [0, -1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
+  [0, 1],
+  [-1, 1],
 ];
 
 /**
@@ -121,7 +146,9 @@ function traceBoundary(
   }
   if (startX < 0) return undefined;
 
-  const points: Phaser.Math.Vector2[] = [new Phaser.Math.Vector2(startX + 0.5, startY + 0.5)];
+  const points: Phaser.Math.Vector2[] = [
+    new Phaser.Math.Vector2(startX + 0.5, startY + 0.5),
+  ];
   // The start pixel is the first in scan order, so its west neighbor is empty.
   let currentX = startX;
   let currentY = startY;
@@ -150,7 +177,11 @@ function traceBoundary(
     currentY += dy;
     backtrack = neighborIndex(px - dx, py - dy);
 
-    if (currentX === startX && currentY === startY && backtrack === startBacktrack) {
+    if (
+      currentX === startX &&
+      currentY === startY &&
+      backtrack === startBacktrack
+    ) {
       return points;
     }
     points.push(new Phaser.Math.Vector2(currentX + 0.5, currentY + 0.5));
@@ -165,7 +196,10 @@ function neighborIndex(dx: number, dy: number): number {
 }
 
 /** Ramer-Douglas-Peucker simplification of a closed contour. */
-function simplifyClosed(points: Phaser.Math.Vector2[], epsilon: number): Phaser.Math.Vector2[] {
+function simplifyClosed(
+  points: Phaser.Math.Vector2[],
+  epsilon: number,
+): Phaser.Math.Vector2[] {
   if (points.length < 4) return points;
   // Split the loop at the two mutually farthest anchor points so both chains
   // have stable endpoints.
@@ -183,7 +217,10 @@ function simplifyClosed(points: Phaser.Math.Vector2[], epsilon: number): Phaser.
   return [...first.slice(0, -1), ...second.slice(0, -1)];
 }
 
-function rdp(points: Phaser.Math.Vector2[], epsilon: number): Phaser.Math.Vector2[] {
+function rdp(
+  points: Phaser.Math.Vector2[],
+  epsilon: number,
+): Phaser.Math.Vector2[] {
   if (points.length < 3) return points;
   const first = points[0];
   const last = points[points.length - 1];
@@ -203,19 +240,25 @@ function rdp(points: Phaser.Math.Vector2[], epsilon: number): Phaser.Math.Vector
   return [...left.slice(0, -1), ...right];
 }
 
-function distanceToSegment(point: Phaser.Math.Vector2, line: Phaser.Geom.Line): number {
+function distanceToSegment(
+  point: Phaser.Math.Vector2,
+  line: Phaser.Geom.Line,
+): number {
   const closest = Phaser.Geom.Line.GetNearestPoint(line, point);
   const t =
     Math.abs(line.x2 - line.x1) > Math.abs(line.y2 - line.y1)
       ? (closest.x - line.x1) / (line.x2 - line.x1 || 1)
       : (closest.y - line.y1) / (line.y2 - line.y1 || 1);
-  if (Number.isNaN(t) || t < 0) return Phaser.Math.Distance.BetweenPoints(point, line.getPointA());
+  if (Number.isNaN(t) || t < 0)
+    return Phaser.Math.Distance.BetweenPoints(point, line.getPointA());
   if (t > 1) return Phaser.Math.Distance.BetweenPoints(point, line.getPointB());
   return Phaser.Math.Distance.BetweenPoints(point, closest);
 }
 
 /** Area centroid of a simple polygon, matching Matter's Vertices.centre. */
-function polygonCentroid(points: Phaser.Types.Math.Vector2Like[]): Phaser.Math.Vector2 {
+function polygonCentroid(
+  points: Phaser.Types.Math.Vector2Like[],
+): Phaser.Math.Vector2 {
   let area = 0;
   let cx = 0;
   let cy = 0;

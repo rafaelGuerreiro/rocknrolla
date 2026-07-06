@@ -1,8 +1,7 @@
 //! Public read models for the caller's own progression.
 
 use crate::repository::progression::{
-    PlayerCompletedLevel, PlayerEnabledLevel, player_completed_level__view,
-    player_enabled_level__view,
+    PlayerCompletedLevel, PlayerEnabledLevel, player_completed_level__view, player_enabled_level__view,
 };
 use spacetimedb::{SpacetimeType, Timestamp, Uuid, ViewContext, view};
 
@@ -37,13 +36,8 @@ pub fn vw_my_completed_level(ctx: &ViewContext) -> Vec<MyCompletedLevelView> {
         .filter(ctx.sender())
         .map(
             |PlayerCompletedLevel {
-                 level_id,
-                 completed_at,
-                 ..
-             }| MyCompletedLevelView {
-                level_id,
-                completed_at,
-            },
+                 level_id, completed_at, ..
+             }| MyCompletedLevelView { level_id, completed_at },
         )
         .collect()
 }

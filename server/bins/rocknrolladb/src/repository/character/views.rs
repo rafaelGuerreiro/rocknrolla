@@ -1,7 +1,9 @@
 //! Public read models for character content.
 
-use crate::extend::stdb::all_uuids;
-use crate::repository::character::{character_def__view, piece_def__view};
+use crate::{
+    extend::stdb::all_uuids,
+    repository::character::{character_def__view, piece_def__view},
+};
 use spacetimedb::{AnonymousViewContext, SpacetimeType, Uuid, view};
 
 #[derive(SpacetimeType)]

@@ -38,7 +38,10 @@ export function button(
   return container;
 }
 
-export function title(scene: Phaser.Scene, text: string): Phaser.GameObjects.Text {
+export function title(
+  scene: Phaser.Scene,
+  text: string,
+): Phaser.GameObjects.Text {
   return scene.add
     .text(scene.scale.width / 2, 56, text, {
       fontFamily: UI_FONT,
@@ -48,7 +51,11 @@ export function title(scene: Phaser.Scene, text: string): Phaser.GameObjects.Tex
     .setOrigin(0.5);
 }
 
-export function note(scene: Phaser.Scene, y: number, text: string): Phaser.GameObjects.Text {
+export function note(
+  scene: Phaser.Scene,
+  y: number,
+  text: string,
+): Phaser.GameObjects.Text {
   return scene.add
     .text(scene.scale.width / 2, y, text, {
       fontFamily: UI_FONT,

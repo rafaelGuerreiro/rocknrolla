@@ -1,10 +1,9 @@
 //! Level repository services: content import and level lookups.
 
-use crate::error::{ServiceError, ServiceResult};
-use crate::extend::stdb::UuidGen;
-use crate::repository::level::types::LayerImport;
-use crate::repository::level::{
-    Level, LevelLayer, LevelSuccessor, level, level_layer, level_successor,
+use crate::{
+    error::{ServiceError, ServiceResult},
+    extend::stdb::UuidGen,
+    repository::level::{Level, LevelLayer, LevelSuccessor, level, level_layer, level_successor, types::LayerImport},
 };
 use rocknrolla_level::{LayerFacts, validate_layers};
 use spacetimedb::{ReducerContext, Table, Uuid};
@@ -64,7 +63,7 @@ impl LevelServices<'_> {
                 data: layer.data.clone(),
             })
             .collect();
-        validate_layers(&facts).map_err(ServiceError::validation)?;
+        validate_layers(&facts)?;
         for successor in &import.successors {
             if *successor == import.id {
                 return Err(ServiceError::validation(format!(
@@ -126,10 +125,7 @@ impl LevelServices<'_> {
             .find(level_id)
             .ok_or_else(|| ServiceError::not_found(format!("unknown level '{level_id}'")))?;
         if !level.active {
-            return Err(ServiceError::conflict(format!(
-                "level '{}' is not active",
-                level.slug
-            )));
+            return Err(ServiceError::conflict(format!("level '{}' is not active", level.slug)));
         }
         Ok(level)
     }

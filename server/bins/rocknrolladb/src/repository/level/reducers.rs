@@ -1,10 +1,16 @@
 //! Level reducers: parameter/caller validation plus one service delegation.
 
-use crate::error::ServiceResult;
-use crate::extend::validate::validate_required_str;
-use crate::repository::access;
-use crate::repository::level::services::{LevelImport, LevelReducerContext};
-use crate::repository::level::types::LayerImport;
+use crate::{
+    error::ServiceResult,
+    extend::validate::validate_required_str,
+    repository::{
+        access,
+        level::{
+            services::{LevelImport, LevelReducerContext},
+            types::LayerImport,
+        },
+    },
+};
 use spacetimedb::{ReducerContext, Uuid};
 
 #[spacetimedb::reducer]

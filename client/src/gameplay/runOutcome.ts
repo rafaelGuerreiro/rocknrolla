@@ -55,11 +55,16 @@ export class RunOutcome {
     }
 
     const saving = this.scene.add
-      .text(this.scene.scale.width / 2, this.scene.scale.height / 2, 'Finish! Saving…', {
-        fontFamily: UI_FONT,
-        fontSize: '32px',
-        color: '#f5c451',
-      })
+      .text(
+        this.scene.scale.width / 2,
+        this.scene.scale.height / 2,
+        'Finish! Saving…',
+        {
+          fontFamily: UI_FONT,
+          fontSize: '32px',
+          color: '#f5c451',
+        },
+      )
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(301);
@@ -69,20 +74,25 @@ export class RunOutcome {
       this.cleanup();
       this.succeed();
     };
-    this.confirmTimeout = this.scene.time.delayedCall(CONFIRM_TIMEOUT_MS, () => {
-      this.cleanup();
-      saving.destroy();
-      this.showDefeat('The server did not confirm the run.');
-    });
+    this.confirmTimeout = this.scene.time.delayedCall(
+      CONFIRM_TIMEOUT_MS,
+      () => {
+        this.cleanup();
+        saving.destroy();
+        this.showDefeat('The server did not confirm the run.');
+      },
+    );
     conn.db.vw_my_completed_level.onInsert(this.confirmListener);
-    conn.reducers.completeLevel({ levelId: Uuid.parse(this.config.levelId) }).catch((error) => {
-      if (!this.scene.scene.isActive()) return;
-      this.cleanup();
-      saving.destroy();
-      this.showDefeat(
-        `Saving failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    });
+    conn.reducers
+      .completeLevel({ levelId: Uuid.parse(this.config.levelId) })
+      .catch((error) => {
+        if (!this.scene.scene.isActive()) return;
+        this.cleanup();
+        saving.destroy();
+        this.showDefeat(
+          `Saving failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
   }
 
   /** End the run as a defeat and offer only the way back to level select. */

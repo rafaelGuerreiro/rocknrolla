@@ -9,6 +9,18 @@ includes:
     dir: client
 
 tasks:
+  fmt:
+    desc: Format all projects
+    cmds:
+      - task server:fmt
+      - task client:fmt
+
+  lint:
+    desc: Lint all projects
+    cmds:
+      - task server:lint
+      - task client:lint
+
   check:
     desc: Check all projects
     cmds:

@@ -1,10 +1,10 @@
 //! Player repository services: bootstrap, character selection, piece grants,
 //! and character unlocks.
 
-use crate::error::{ServiceError, ServiceResult};
-use crate::extend::stdb::UuidGen;
-use crate::repository::player::{
-    Player, PlayerPiece, PlayerUnlockedCharacter, player, player_piece, player_unlocked_character,
+use crate::{
+    error::{ServiceError, ServiceResult},
+    extend::stdb::UuidGen,
+    repository::player::{Player, PlayerPiece, PlayerUnlockedCharacter, player, player_piece, player_unlocked_character},
 };
 use spacetimedb::{Identity, ReducerContext, Table, Uuid};
 use std::ops::Deref;
@@ -49,14 +49,14 @@ impl PlayerServices<'_> {
                     identity: owner,
                     selected_character_id: default_character_id,
                 });
-            }
+            },
             Some(existing) if existing.selected_character_id.is_none() => {
                 self.db.player().identity().update(Player {
                     selected_character_id: default_character_id,
                     ..existing
                 });
-            }
-            Some(_) => {}
+            },
+            Some(_) => {},
         }
         Ok(())
     }
@@ -85,21 +85,12 @@ impl PlayerServices<'_> {
     /// Add one copy of `piece_id` to the owner's collection and return the
     /// new count. Duplicates are allowed.
     pub fn grant_piece(&self, owner: Identity, piece_id: Uuid) -> ServiceResult<u32> {
-        match self
-            .db
-            .player_piece()
-            .by_owner_piece()
-            .filter((owner, piece_id))
-            .next()
-        {
+        match self.db.player_piece().by_owner_piece().filter((owner, piece_id)).next() {
             Some(existing) => {
                 let count = existing.count + 1;
-                self.db
-                    .player_piece()
-                    .id()
-                    .update(PlayerPiece { count, ..existing });
+                self.db.player_piece().id().update(PlayerPiece { count, ..existing });
                 Ok(count)
-            }
+            },
             None => {
                 self.db.player_piece().insert(PlayerPiece {
                     id: self.ctx.generate_uuid()?,
@@ -108,7 +99,7 @@ impl PlayerServices<'_> {
                     count: 1,
                 });
                 Ok(1)
-            }
+            },
         }
     }
 
@@ -133,19 +124,13 @@ impl PlayerServices<'_> {
         Ok(())
     }
 
-    pub fn unlock_character_if_absent(
-        &self,
-        owner: Identity,
-        character_id: Uuid,
-    ) -> ServiceResult<()> {
+    pub fn unlock_character_if_absent(&self, owner: Identity, character_id: Uuid) -> ServiceResult<()> {
         if !self.has_unlocked(owner, character_id) {
-            self.db
-                .player_unlocked_character()
-                .insert(PlayerUnlockedCharacter {
-                    id: self.ctx.generate_uuid()?,
-                    owner,
-                    character_id,
-                });
+            self.db.player_unlocked_character().insert(PlayerUnlockedCharacter {
+                id: self.ctx.generate_uuid()?,
+                owner,
+                character_id,
+            });
         }
         Ok(())
     }

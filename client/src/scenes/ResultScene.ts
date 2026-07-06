@@ -19,7 +19,9 @@ export class ResultScene extends Phaser.Scene {
     const conn = db();
     title(this, `${this.levelName} complete!`);
 
-    const unopened = [...conn.db.vw_my_lootbox.iter()].filter((row) => !row.opened).length;
+    const unopened = [...conn.db.vw_my_lootbox.iter()].filter(
+      (row) => !row.opened,
+    ).length;
     note(
       this,
       160,
@@ -29,8 +31,22 @@ export class ResultScene extends Phaser.Scene {
     );
 
     const centerX = this.scale.width / 2;
-    button(this, centerX, 250, 'Open rewards', () => this.scene.start('collection'), { width: 360 });
-    button(this, centerX, 330, 'Level select', () => this.scene.start('level-select'), { width: 360 });
+    button(
+      this,
+      centerX,
+      250,
+      'Open rewards',
+      () => this.scene.start('collection'),
+      { width: 360 },
+    );
+    button(
+      this,
+      centerX,
+      330,
+      'Level select',
+      () => this.scene.start('level-select'),
+      { width: 360 },
+    );
     button(
       this,
       centerX,

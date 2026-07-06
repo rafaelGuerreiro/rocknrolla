@@ -18,9 +18,7 @@ pub fn validate_required_str(value: &str, name: &str, max_length: usize) -> Serv
 /// Require a strictly positive integer (weights, rarity).
 pub fn validate_positive_u32(value: u32, name: &str) -> ServiceResult<()> {
     if value == 0 {
-        return Err(ServiceError::validation(format!(
-            "'{name}' must be positive"
-        )));
+        return Err(ServiceError::validation(format!("'{name}' must be positive")));
     }
     Ok(())
 }
@@ -31,9 +29,7 @@ pub fn validate_f32_range(value: f32, name: &str, min: f32, max: f32) -> Service
         return Err(ServiceError::validation(format!("'{name}' must be finite")));
     }
     if value < min || value > max {
-        return Err(ServiceError::validation(format!(
-            "'{name}' must be between {min} and {max}"
-        )));
+        return Err(ServiceError::validation(format!("'{name}' must be between {min} and {max}")));
     }
     Ok(())
 }

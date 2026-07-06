@@ -8,10 +8,7 @@ pub fn ensure_owner(sender: Identity, owner: Identity) -> ServiceResult<()> {
     if sender == owner {
         Ok(())
     } else {
-        Err(ServiceError::forbidden(
-            sender,
-            "row is owned by another player",
-        ))
+        Err(ServiceError::forbidden(sender, "row is owned by another player"))
     }
 }
 

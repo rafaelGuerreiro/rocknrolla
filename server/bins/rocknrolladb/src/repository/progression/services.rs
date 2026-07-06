@@ -1,11 +1,13 @@
 //! Progression services: level enabling and the first-completion workflow.
 
-use crate::error::{ServiceError, ServiceResult};
-use crate::extend::stdb::UuidGen;
-use crate::repository::level::services::LevelReducerContext;
-use crate::repository::lootbox::services::LootboxReducerContext;
-use crate::repository::progression::{
-    PlayerCompletedLevel, PlayerEnabledLevel, player_completed_level, player_enabled_level,
+use crate::{
+    error::{ServiceError, ServiceResult},
+    extend::stdb::UuidGen,
+    repository::{
+        level::services::LevelReducerContext,
+        lootbox::services::LootboxReducerContext,
+        progression::{PlayerCompletedLevel, PlayerEnabledLevel, player_completed_level, player_enabled_level},
+    },
 };
 use spacetimedb::{Identity, ReducerContext, Table, Uuid};
 use std::ops::Deref;
@@ -33,11 +35,7 @@ impl Deref for ProgressionServices<'_> {
 
 impl ProgressionServices<'_> {
     /// Idempotently enable each of the given levels for `owner`.
-    pub fn enable_levels_if_absent(
-        &self,
-        owner: Identity,
-        level_ids: &[Uuid],
-    ) -> ServiceResult<()> {
+    pub fn enable_levels_if_absent(&self, owner: Identity, level_ids: &[Uuid]) -> ServiceResult<()> {
         let enabled = self.enabled_level_ids(owner);
         for level_id in successor_inserts(level_ids, &enabled) {
             self.db.player_enabled_level().insert(PlayerEnabledLevel {
@@ -79,14 +77,12 @@ impl ProgressionServices<'_> {
             return Ok(());
         }
 
-        self.db
-            .player_completed_level()
-            .insert(PlayerCompletedLevel {
-                id: self.ctx.generate_uuid()?,
-                owner,
-                level_id,
-                completed_at: self.timestamp,
-            });
+        self.db.player_completed_level().insert(PlayerCompletedLevel {
+            id: self.ctx.generate_uuid()?,
+            owner,
+            level_id,
+            completed_at: self.timestamp,
+        });
 
         let successors = self.level_services().successor_ids(level_id);
         self.enable_levels_if_absent(owner, &successors)?;
@@ -94,8 +90,7 @@ impl ProgressionServices<'_> {
         if let Some(reward_lootbox_id) = level.reward_lootbox_id
             && self.lootbox_services().lootbox_exists(reward_lootbox_id)
         {
-            self.lootbox_services()
-                .grant_lootbox(owner, reward_lootbox_id)?;
+            self.lootbox_services().grant_lootbox(owner, reward_lootbox_id)?;
         }
         Ok(())
     }

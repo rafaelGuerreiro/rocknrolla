@@ -49,7 +49,10 @@ export class PlayerController {
   ) {
     scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.onPointerDown);
     scene.input.on(Phaser.Input.Events.POINTER_UP, this.onPointerUp);
-    scene.matter.world.on(Phaser.Physics.Matter.Events.COLLISION_ACTIVE, this.onCollisionActive);
+    scene.matter.world.on(
+      Phaser.Physics.Matter.Events.COLLISION_ACTIVE,
+      this.onCollisionActive,
+    );
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, this.destroy);
   }
 
@@ -78,7 +81,8 @@ export class PlayerController {
     // Buffered, coyote-friendly variable jump with one double jump.
     const buffered = time - this.buffedAt <= BUFFER_MS;
     if (buffered) {
-      const firstJump = grounded || (this.jumpsUsed === 0 && time <= this.groundedUntil);
+      const firstJump =
+        grounded || (this.jumpsUsed === 0 && time <= this.groundedUntil);
       const canDouble = !firstJump && this.jumpsUsed < MAX_JUMPS;
       if (firstJump || canDouble) {
         this.buffedAt = -Infinity;
@@ -92,21 +96,32 @@ export class PlayerController {
 
     const body = this.player.body as MatterJS.BodyType;
     const gravity = (
-      this.scene.matter.world.engine as unknown as { gravity: { y: number; scale: number } }
+      this.scene.matter.world.engine as unknown as {
+        gravity: { y: number; scale: number };
+      }
     ).gravity;
     const gravityForce = body.mass * gravity.y * gravity.scale;
 
     // Held lift, capped by the character's flight time.
     if (this.holding && time < this.liftUntil && !grounded) {
-      this.player.applyForce(new Phaser.Math.Vector2(0, -gravityForce * LIFT_GRAVITY_FACTOR));
+      this.player.applyForce(
+        new Phaser.Math.Vector2(0, -gravityForce * LIFT_GRAVITY_FACTOR),
+      );
     }
 
     // Buoyancy while inside water, scaled by the character stat.
-    const inWater = this.waterRects.some((rect) => rect.contains(this.player.x, this.player.y));
+    const inWater = this.waterRects.some((rect) =>
+      rect.contains(this.player.x, this.player.y),
+    );
     if (inWater) {
-      this.player.applyForce(new Phaser.Math.Vector2(0, -gravityForce * this.stats.buoyancy));
+      this.player.applyForce(
+        new Phaser.Math.Vector2(0, -gravityForce * this.stats.buoyancy),
+      );
       const velocity = this.player.getVelocity();
-      this.player.setVelocity((velocity.x ?? 0) * WATER_DRAG, (velocity.y ?? 0) * WATER_DRAG);
+      this.player.setVelocity(
+        (velocity.x ?? 0) * WATER_DRAG,
+        (velocity.y ?? 0) * WATER_DRAG,
+      );
     }
   }
 
@@ -138,11 +153,17 @@ export class PlayerController {
     }
   };
 
-  private onCollisionActive = (event: Phaser.Physics.Matter.Events.CollisionActiveEvent): void => {
+  private onCollisionActive = (
+    event: Phaser.Physics.Matter.Events.CollisionActiveEvent,
+  ): void => {
     const playerBody = this.player.body as MatterJS.BodyType;
     for (const pair of event.pairs) {
       const other =
-        pair.bodyA === playerBody ? pair.bodyB : pair.bodyB === playerBody ? pair.bodyA : null;
+        pair.bodyA === playerBody
+          ? pair.bodyB
+          : pair.bodyB === playerBody
+            ? pair.bodyA
+            : null;
       if (!other || other.isSensor) continue;
       for (const support of pair.collision.supports) {
         if (support && support.y > this.player.y + 6) {

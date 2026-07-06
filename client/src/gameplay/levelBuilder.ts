@@ -1,6 +1,13 @@
 import Phaser from 'phaser';
 import { tileTextureKey } from '../assets';
-import { CELL, GAMEPLAY_Z, HEAVY_DENSITY, TILE, type DecodedLayer, type DecodedLevel } from '../levels';
+import {
+  CELL,
+  GAMEPLAY_Z,
+  HEAVY_DENSITY,
+  TILE,
+  type DecodedLayer,
+  type DecodedLevel,
+} from '../levels';
 
 export interface BuiltLevel {
   spawn: Phaser.Math.Vector2;
@@ -11,7 +18,10 @@ export interface BuiltLevel {
  * Render every decoded layer and build the Matter terrain, slopes, sensors,
  * water regions, and heavy dynamic bodies from semantic tile ids.
  */
-export function buildLevel(scene: Phaser.Scene, level: DecodedLevel): BuiltLevel {
+export function buildLevel(
+  scene: Phaser.Scene,
+  level: DecodedLevel,
+): BuiltLevel {
   const built: BuiltLevel = {
     spawn: new Phaser.Math.Vector2(CELL * 2, CELL * 2),
     waterRects: [],
@@ -53,20 +63,27 @@ function buildVisualLayer(scene: Phaser.Scene, layer: DecodedLayer): void {
   });
 }
 
-function buildGameplayLayer(scene: Phaser.Scene, layer: DecodedLayer, built: BuiltLevel): void {
+function buildGameplayLayer(
+  scene: Phaser.Scene,
+  layer: DecodedLayer,
+  built: BuiltLevel,
+): void {
   // Draw every visible tile of the gameplay layer at depth 127.
   forEachTile(layer, (tile, x, y) => {
     if (tile === TILE.HEAVY) return; // rendered by its dynamic body
     const key = tileTextureKey(tile);
     if (!key) return;
-    scene.add.image(x * CELL + CELL / 2, y * CELL + CELL / 2, key).setDepth(GAMEPLAY_Z);
+    scene.add
+      .image(x * CELL + CELL / 2, y * CELL + CELL / 2, key)
+      .setDepth(GAMEPLAY_Z);
   });
 
   // Merge horizontal runs of solid tiles into single static bodies.
   for (let y = 0; y < layer.height; y++) {
     let runStart = -1;
     for (let x = 0; x <= layer.width; x++) {
-      const solid = x < layer.width && layer.tiles[y * layer.width + x] === TILE.SOLID;
+      const solid =
+        x < layer.width && layer.tiles[y * layer.width + x] === TILE.SOLID;
       if (solid && runStart < 0) runStart = x;
       if (!solid && runStart >= 0) {
         const cells = x - runStart;
@@ -115,15 +132,26 @@ function buildGameplayLayer(scene: Phaser.Scene, layer: DecodedLayer, built: Bui
         addSensor(scene, originX, originY, 'finish', 0);
         break;
       case TILE.WATER:
-        built.waterRects.push(new Phaser.Geom.Rectangle(originX, originY, CELL, CELL));
+        built.waterRects.push(
+          new Phaser.Geom.Rectangle(originX, originY, CELL, CELL),
+        );
         break;
       case TILE.HEAVY: {
         const key = tileTextureKey(TILE.HEAVY);
         if (!key) break;
-        const block = scene.matter.add.image(originX + CELL / 2, originY + CELL / 2, key);
+        const block = scene.matter.add.image(
+          originX + CELL / 2,
+          originY + CELL / 2,
+          key,
+        );
         block.setBody(
           { type: 'rectangle', width: CELL, height: CELL },
-          { label: 'heavy', density: HEAVY_DENSITY, friction: 0.8, frictionStatic: 1.2 },
+          {
+            label: 'heavy',
+            density: HEAVY_DENSITY,
+            friction: 0.8,
+            frictionStatic: 1.2,
+          },
         );
         block.setDepth(GAMEPLAY_Z);
         break;

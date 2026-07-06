@@ -1,10 +1,12 @@
 //! Domain repositories and cross-repository lifecycle coordination.
 
-use crate::error::ServiceResult;
-use crate::repository::character::services::CharacterReducerContext;
-use crate::repository::level::services::LevelReducerContext;
-use crate::repository::player::services::PlayerReducerContext;
-use crate::repository::progression::services::ProgressionReducerContext;
+use crate::{
+    error::ServiceResult,
+    repository::{
+        character::services::CharacterReducerContext, level::services::LevelReducerContext,
+        player::services::PlayerReducerContext, progression::services::ProgressionReducerContext,
+    },
+};
 use spacetimedb::ReducerContext;
 
 pub mod access;
@@ -25,10 +27,8 @@ pub fn identity_connected(ctx: &ReducerContext) -> ServiceResult<()> {
     let sender = ctx.sender();
     let starters = ctx.character_services().starter_character_ids();
     let default_character = ctx.character_services().default_starter_character_id();
-    ctx.player_services()
-        .ensure_player(sender, &starters, default_character)?;
+    ctx.player_services().ensure_player(sender, &starters, default_character)?;
     let starting_levels = ctx.level_services().active_starting_level_ids();
-    ctx.progression_services()
-        .enable_levels_if_absent(sender, &starting_levels)?;
+    ctx.progression_services().enable_levels_if_absent(sender, &starting_levels)?;
     Ok(())
 }
