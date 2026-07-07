@@ -26,10 +26,11 @@ export interface BuiltLevel {
 }
 
 /**
- * Draw every composed plane (already loaded as a texture) with its
- * z-derived parallax and depth, place the level-owned spawn and finish,
- * and build the Matter terrain, slopes, sensors, water regions, and heavy
- * dynamic bodies from the world-space collider markers.
+ * Draw every placement as its own component image (small textures, loaded
+ * once per content hash) with z-derived parallax and depth, place the
+ * level-owned spawn and finish, and build the Matter terrain, slopes,
+ * sensors, water regions, and heavy dynamic bodies from the world-space
+ * collider markers.
  */
 export function buildLevel(
   scene: Phaser.Scene,
@@ -39,13 +40,15 @@ export function buildLevel(
     spawn: new Phaser.Math.Vector2(level.spawn.x, level.spawn.y),
     waterRects: [],
   };
-  for (const plane of level.planes) {
-    const parallax = planeParallax(plane.z);
+  for (const placement of level.renderPlacements) {
+    const parallax = planeParallax(placement.z);
     scene.add
-      .image(0, 0, plane.textureKey)
+      .image(placement.x, placement.y, placement.textureKey)
       .setOrigin(0, 0)
+      .setScale(placement.scale)
+      .setFlipX(placement.flipX)
       .setScrollFactor(parallax, parallax)
-      .setDepth(plane.z);
+      .setDepth(placement.z);
   }
   for (const marker of level.markers) {
     buildMarker(scene, marker, built);

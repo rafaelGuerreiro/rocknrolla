@@ -1,0 +1,338 @@
+{
+  "id": "763184c8-57f7-54f5-b23b-868d5992c647",
+  "slug": "soggy-switchbacks",
+  "name": "Soggy Switchbacks",
+  "starting": false,
+  "active": true,
+  "reward_lootbox_id": "122789c5-1e95-429e-bd29-442219cf3c8c",
+  "successors": [
+    "99e93c47-239b-570a-bce2-586deed12d38"
+  ],
+  "spawn": {
+    "x": 544,
+    "y": 160
+  },
+  "finish": {
+    "x": 8568,
+    "y": 2272
+  },
+  "placements": [
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "ground-flat",
+      "x": 0,
+      "y": 256
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 384
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 640
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 896
+    },
+    {
+      "component": "slope-down-30",
+      "x": 512,
+      "y": 256
+    },
+    {
+      "component": "bank",
+      "x": 1408,
+      "y": 768,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 1408,
+      "y": 768
+    },
+    {
+      "component": "dirt-slab",
+      "x": 1408,
+      "y": 832
+    },
+    {
+      "component": "bank",
+      "x": 1600,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 1664,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 2176,
+      "y": 768
+    },
+    {
+      "component": "dirt-fill",
+      "x": 2176,
+      "y": 896
+    },
+    {
+      "component": "slope-down-45",
+      "x": 2688,
+      "y": 768
+    },
+    {
+      "component": "bank",
+      "x": 3200,
+      "y": 1280,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 3200,
+      "y": 1280
+    },
+    {
+      "component": "dirt-slab",
+      "x": 3200,
+      "y": 1344
+    },
+    {
+      "component": "bank",
+      "x": 3392,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 3456,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 3968,
+      "y": 1280
+    },
+    {
+      "component": "fire",
+      "x": 4192,
+      "y": 1216
+    },
+    {
+      "component": "dirt-fill",
+      "x": 3968,
+      "y": 1408
+    },
+    {
+      "component": "slope-down-30",
+      "x": 4480,
+      "y": 1280
+    },
+    {
+      "component": "bank",
+      "x": 5376,
+      "y": 1792,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 5376,
+      "y": 1792
+    },
+    {
+      "component": "dirt-slab",
+      "x": 5376,
+      "y": 1856
+    },
+    {
+      "component": "bank",
+      "x": 5568,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 5632,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 6144,
+      "y": 1792
+    },
+    {
+      "component": "bush-cluster",
+      "x": 6368,
+      "y": 1728
+    },
+    {
+      "component": "dirt-fill",
+      "x": 6144,
+      "y": 1920
+    },
+    {
+      "component": "slope-down-45",
+      "x": 6656,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 7168,
+      "y": 2304
+    },
+    {
+      "component": "ground-flat",
+      "x": 7680,
+      "y": 2304
+    },
+    {
+      "component": "ground-flat",
+      "x": 8192,
+      "y": 2304
+    },
+    {
+      "component": "spikes",
+      "x": 8416,
+      "y": 2240
+    },
+    {
+      "component": "ground-flat",
+      "x": 8704,
+      "y": 2304
+    },
+    {
+      "component": "bush-cluster",
+      "x": 5529,
+      "y": 1712,
+      "z": 40,
+      "scale": 2
+    },
+    {
+      "component": "bush-cluster",
+      "x": 7833,
+      "y": 2224,
+      "z": 40,
+      "scale": 2
+    }
+  ]
+}

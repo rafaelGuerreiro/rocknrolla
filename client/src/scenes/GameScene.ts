@@ -89,14 +89,11 @@ export class GameScene extends Phaser.Scene {
       this.failToMenu(error instanceof Error ? error.message : String(error));
       return;
     }
-    // Composed plane and dynamic-object SVGs become textures once per
-    // content hash; replays and unchanged planes skip straight to the build.
-    const missing = [...this.level.planes, ...this.level.dynamicTextures]
-      .map((t) => ({
-        key: 'textureKey' in t ? t.textureKey : t.key,
-        svg: t.svg,
-      }))
-      .filter((t) => !this.textures.exists(t.key));
+    // Component SVGs become textures once per content hash and are shared
+    // across every level that places them.
+    const missing = this.level.textures.filter(
+      (t) => !this.textures.exists(t.key),
+    );
     if (missing.length === 0) {
       this.buildWorld();
       return;
@@ -109,9 +106,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private buildWorld(): void {
-    if (
-      this.level.planes.some((plane) => !this.textures.exists(plane.textureKey))
-    ) {
+    if (this.level.textures.some((t) => !this.textures.exists(t.key))) {
       this.failToMenu('Level art failed to load.');
       return;
     }

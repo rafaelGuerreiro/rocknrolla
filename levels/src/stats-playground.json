@@ -115,5 +115,8 @@
       "z": 40,
       "scale": 2
     }
+  ],
+  "successors": [
+    "2d0ee582-2e70-5c49-a084-a02bce943c9b"
   ]
 }

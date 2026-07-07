@@ -69,20 +69,25 @@ export interface PlacementTransform {
   componentWidth: number;
 }
 
-/** A component-supplied texture for a dynamic object (heavy block). */
-export interface DynamicTexture {
+/** A component texture to load (content-addressed, shared across levels). */
+export interface ComponentTexture {
   key: string;
   svg: string;
 }
 
-/** One composed scenery/gameplay image at a single depth. */
-export interface DecodedPlane {
-  z: number;
-  widthPx: number;
-  heightPx: number;
-  /** Self-contained composed SVG document for this plane. */
-  svg: string;
+/**
+ * One image to draw: a component placement in world space. Levels can span
+ * tens of thousands of pixels, far past GPU texture limits, so each
+ * placement draws its own small component texture instead of composing
+ * per-depth mega-textures.
+ */
+export interface RenderPlacement {
   textureKey: string;
+  x: number;
+  y: number;
+  z: number;
+  flipX: boolean;
+  scale: number;
 }
 
 export interface DecodedLevel {
@@ -90,8 +95,8 @@ export interface DecodedLevel {
   name: string;
   spawn: { x: number; y: number };
   finish: { x: number; y: number };
-  planes: DecodedPlane[];
-  dynamicTextures: DynamicTexture[];
+  renderPlacements: RenderPlacement[];
+  textures: ComponentTexture[];
   /** World-space collider markers from gameplay-plane placements. */
   markers: LevelMarker[];
   widthPx: number;
@@ -222,62 +227,14 @@ interface DecodedPlacement {
   order: number;
 }
 
-/** The `<use>` transform for one placement (translate + flip + scale). */
-function placementTransform(placement: DecodedPlacement): string {
-  const { x, y, flipX, scale, component } = placement;
-  if (flipX) {
-    return `translate(${x + scale * component.widthPx},${y}) scale(${-scale},${scale})`;
-  }
-  if (scale !== 1) return `translate(${x},${y}) scale(${scale})`;
-  return `translate(${x},${y})`;
-}
-
-/**
- * Compose one plane's placements into a self-contained SVG document:
- * each distinct component becomes a `<symbol>`, each placement a `<use>`
- * in draw order.
- */
-function composePlane(placements: DecodedPlacement[]): {
-  svg: string;
-  widthPx: number;
-  heightPx: number;
-} {
-  let width = 1;
-  let height = 1;
-  const symbols = new Map<string, ComponentDef>();
-  for (const p of placements) {
-    width = Math.max(width, Math.ceil(p.x + p.scale * p.component.widthPx));
-    height = Math.max(height, Math.ceil(p.y + p.scale * p.component.heightPx));
-    symbols.set(p.component.slug, p.component);
-  }
-  const defs = [...symbols.values()]
-    .map((component) => {
-      const open = component.svg.indexOf('>');
-      const close = component.svg.lastIndexOf('</svg>');
-      const inner = component.svg.slice(open + 1, close);
-      return `<symbol id="c-${component.slug}" viewBox="0 0 ${component.widthPx} ${component.heightPx}" width="${component.widthPx}" height="${component.heightPx}" overflow="visible">${inner}</symbol>`;
-    })
-    .join('');
-  const uses = placements
-    .map(
-      (p) =>
-        `<use href="#c-${p.component.slug}" xlink:href="#c-${p.component.slug}" transform="${placementTransform(p)}"/>`,
-    )
-    .join('');
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
-    `width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs>${defs}</defs>${uses}</svg>`;
-  return { svg, widthPx: width, heightPx: height };
-}
-
 const cache = new Map<string, { key: string; level: DecodedLevel }>();
 
 /**
- * Decode the level from subscribed rows: verify component hashes, compose
- * one SVG document per distinct z, and transform gameplay-plane collider
- * markers into world space. Decoded levels are cached in memory for
- * instant retries; an overwritten import changes the content hashes and is
- * picked up on the next load.
+ * Decode the level from subscribed rows: verify component hashes, map
+ * placements onto per-component textures, and transform gameplay-plane
+ * collider markers into world space. Decoded levels are cached in memory
+ * for instant retries; an overwritten import changes the content hashes
+ * and is picked up on the next load.
  */
 export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
   const meta = [...conn.db.vw_level_v1.iter()].find(
@@ -333,11 +290,6 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
   const cached = cache.get(levelId);
   if (cached && cached.key === key) return cached.level;
 
-  // A component carrying a HEAVY marker is a dynamic object: its art moves
-  // with the physics body, so it stays out of the composed plane and ships
-  // as its own texture instead.
-  // ponytail: the whole component is treated as dynamic; keep heavy
-  // components to just the block.
   const componentMarkers = new Map<string, LevelMarker[]>();
   const markersOf = (component: ComponentDef): LevelMarker[] => {
     let local = componentMarkers.get(component.slug);
@@ -347,34 +299,45 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
     }
     return local;
   };
+  // A component carrying a HEAVY marker is a dynamic object: its art moves
+  // with the physics body, so no static image is drawn for it.
+  // ponytail: the whole component is treated as dynamic; keep heavy
+  // components to just the block.
   const isDynamic = (component: ComponentDef): boolean =>
     markersOf(component).some((marker) => marker.t === TILE.HEAVY);
-  const dynamicTextureKey = (component: ComponentDef): string =>
+  const textureKeyOf = (component: ComponentDef): string =>
     `component_${component.contentHash}`;
 
-  const dynamicTextures = new Map<string, DynamicTexture>();
-  const byZ = new Map<number, DecodedPlacement[]>();
+  const textures = new Map<string, ComponentTexture>();
+  const renderPlacements: RenderPlacement[] = [];
+  let widthPx = 1;
+  let heightPx = 1;
   for (const placement of placements) {
-    if (isDynamic(placement.component)) {
-      const key = dynamicTextureKey(placement.component);
-      dynamicTextures.set(key, { key, svg: placement.component.svg });
-      continue;
-    }
-    const group = byZ.get(placement.z) ?? [];
-    group.push(placement);
-    byZ.set(placement.z, group);
-  }
-  const planes: DecodedPlane[] = [...byZ.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([z, group]) => {
-      const composed = composePlane(group);
-      const bytes = new TextEncoder().encode(composed.svg);
-      return {
-        z,
-        ...composed,
-        textureKey: `level_plane_${contentHash(composed.widthPx, composed.heightPx, bytes)}`,
-      };
+    const { component } = placement;
+    textures.set(textureKeyOf(component), {
+      key: textureKeyOf(component),
+      svg: component.svg,
     });
+    if (placement.z === GAMEPLAY_PLANE_Z) {
+      widthPx = Math.max(
+        widthPx,
+        Math.ceil(placement.x + placement.scale * component.widthPx),
+      );
+      heightPx = Math.max(
+        heightPx,
+        Math.ceil(placement.y + placement.scale * component.heightPx),
+      );
+    }
+    if (isDynamic(component)) continue;
+    renderPlacements.push({
+      textureKey: textureKeyOf(component),
+      x: placement.x,
+      y: placement.y,
+      z: placement.z,
+      flipX: placement.flipX,
+      scale: placement.scale,
+    });
+  }
 
   const markers: LevelMarker[] = [];
   for (const placement of placements) {
@@ -389,14 +352,13 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
         componentWidth: component.widthPx,
       });
       if (marker.t === TILE.HEAVY) {
-        world.textureKey = dynamicTextureKey(component);
+        world.textureKey = textureKeyOf(component);
       }
       markers.push(world);
     }
   }
 
-  const gameplay = planes.find((plane) => plane.z === GAMEPLAY_PLANE_Z);
-  if (!gameplay) {
+  if (!placements.some((p) => p.z === GAMEPLAY_PLANE_Z)) {
     throw new Error(`level '${levelId}' has no gameplay-plane placement`);
   }
 
@@ -405,11 +367,11 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
     name: meta.name,
     spawn: { x: meta.spawn.x, y: meta.spawn.y },
     finish: { x: meta.finish.x, y: meta.finish.y },
-    planes,
-    dynamicTextures: [...dynamicTextures.values()],
+    renderPlacements,
+    textures: [...textures.values()],
     markers,
-    widthPx: gameplay.widthPx,
-    heightPx: gameplay.heightPx,
+    widthPx,
+    heightPx,
   };
   cache.set(levelId, { key, level });
   return level;
