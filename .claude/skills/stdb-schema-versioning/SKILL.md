@@ -11,8 +11,12 @@ breaking deployed clients.
 
 ## Naming rules
 
-- Table accessors end in `_v1`: `#[spacetimedb::table(accessor = player_v1, private)]`.
-- View accessors and their functions end in `_v1`: `#[view(accessor = vw_me_v1, public)] pub fn vw_me_v1(...)`.
+- Table accessors end in `_v1` AND carry an explicit matching `name`:
+  `#[spacetimedb::table(accessor = player_v1, name = "player_v1", private)]`.
+  Without `name`, SpacetimeDB derives the canonical table name by word-splitting
+  the accessor and publishes `player_v_1` (it does not understand `v1` as one word).
+- View accessors and functions follow the same rule:
+  `#[view(accessor = vw_me_v1, name = "vw_me_v1", public)] pub fn vw_me_v1(...)`.
 - Public-facing types (anything that reaches generated bindings: view row
   structs, reducer argument types) end in `V1`: `MyLootboxViewV1`, `LayerImportV1`.
 - Private table row structs stay unversioned (`Player`, `LevelLayer`) — they

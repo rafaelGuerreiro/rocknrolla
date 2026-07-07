@@ -9,15 +9,18 @@ import {
   type AlgebraicTypeType as __AlgebraicTypeType,
   type Infer as __Infer,
 } from "spacetimedb";
+import {
+  Vec3,
+} from "./types";
+
 
 export default __t.row({
   levelId: __t.uuid().name("level_id"),
-  z: __t.u8(),
-  widthPx: __t.u32().name("width_px"),
-  heightPx: __t.u32().name("height_px"),
-  parallaxX: __t.f32().name("parallax_x"),
-  parallaxY: __t.f32().name("parallax_y"),
-  encoding: __t.string(),
-  contentHash: __t.string().name("content_hash"),
-  data: __t.byteArray(),
+  componentId: __t.uuid().name("component_id"),
+  get position() {
+    return Vec3;
+  },
+  flipX: __t.bool().name("flip_x"),
+  scale: __t.f32(),
+  order: __t.u32(),
 });

@@ -7,14 +7,14 @@ pub mod services;
 pub mod types;
 pub mod views;
 
-#[spacetimedb::table(accessor = lootbox_def_v1, private)]
+#[spacetimedb::table(accessor = lootbox_def_v1, name = "lootbox_def_v1", private)]
 pub struct LootboxDef {
     #[primary_key]
     pub id: Uuid,
     pub name: String,
 }
 
-#[spacetimedb::table(accessor = lootbox_drop_v1, private)]
+#[spacetimedb::table(accessor = lootbox_drop_v1, name = "lootbox_drop_v1", private)]
 pub struct LootboxDrop {
     #[primary_key]
     pub id: Uuid,
@@ -24,7 +24,7 @@ pub struct LootboxDrop {
     pub weight: u32,
 }
 
-#[spacetimedb::table(accessor = player_lootbox_v1, private,
+#[spacetimedb::table(accessor = player_lootbox_v1, name = "player_lootbox_v1", private,
     index(accessor = by_owner, btree(columns = [owner])))]
 pub struct PlayerLootbox {
     #[primary_key]

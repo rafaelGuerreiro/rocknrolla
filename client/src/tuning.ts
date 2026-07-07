@@ -42,6 +42,13 @@ export const TUNING = {
   /** Per-frame velocity retention inside water (1 = no drag). */
   WATER_DRAG: 0.995,
 
+  /**
+   * Parallax per depth unit: a plane at z scrolls at 1 + z × this
+   * (clamped), so negative z drifts slower (background) and positive z
+   * faster (foreground).
+   */
+  PARALLAX_PER_Z: 0.005,
+
   /** Landing speed that triggers the dust burst. */
   HARD_LANDING_SPEED: 9,
 };
@@ -52,4 +59,6 @@ declare global {
     TUNING: typeof TUNING;
   }
 }
-window.TUNING = TUNING;
+// Guarded so pure-logic modules importing TUNING stay runnable under
+// `node --test` (no DOM).
+if (typeof window !== 'undefined') window.TUNING = TUNING;

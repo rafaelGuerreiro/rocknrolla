@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAMEPLAY_Z } from '../levels';
+import { DEPTH } from '../levels';
 import { TUNING } from '../tuning';
 
 /**
@@ -66,7 +66,7 @@ export function createPlayerBody(
   // center of mass; rotation then keeps sprite and hull aligned.
   player.setOrigin(hull.centroid.x / hull.width, hull.centroid.y / hull.height);
   player.setPosition(spawn.x ?? 0, spawn.y ?? 0);
-  player.setDepth(GAMEPLAY_Z + 1);
+  player.setDepth(DEPTH.PLAYER);
   return player;
 }
 
@@ -270,7 +270,7 @@ function distanceToSegment(
 }
 
 /** Area centroid of a simple polygon, matching Matter's Vertices.centre. */
-function polygonCentroid(
+export function polygonCentroid(
   points: Phaser.Types.Math.Vector2Like[],
 ): Phaser.Math.Vector2 {
   let area = 0;

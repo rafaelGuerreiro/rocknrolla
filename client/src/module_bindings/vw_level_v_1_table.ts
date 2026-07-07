@@ -9,9 +9,19 @@ import {
   type AlgebraicTypeType as __AlgebraicTypeType,
   type Infer as __Infer,
 } from "spacetimedb";
+import {
+  Vec2,
+} from "./types";
+
 
 export default __t.row({
   id: __t.uuid(),
   slug: __t.string(),
   name: __t.string(),
+  get spawn() {
+    return Vec2;
+  },
+  get finish() {
+    return Vec2;
+  },
 });

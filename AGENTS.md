@@ -43,7 +43,7 @@ Optimize for a playable prototype, not a future platform. Apply YAGNI: prefer Ph
 ## Verification
 
 - Run the narrowest relevant check available in the component.
-- For client changes, run `task client:fmt`, `task client:lint`, and `task client:build`, and exercise the affected behavior in a browser.
+- For client changes, run `task client:fmt`, `task client:lint`, `task client:build`, and `task client:test` (Node's built-in test runner over `client/tests/`), and exercise the affected behavior in a browser.
 - For Rust changes, run `task server:lint` (fmt + check + Clippy denying warnings, workspace-wide); use `task server:test` when behavior changes. A warning anywhere in the workspace fails this, even in code your change didn't touch — fix it rather than leaving it.
 - For build changes, run the affected build/export command rather than inventing a parallel validation path.
 - If a required tool or command is not present, report that clearly; do not claim verification.

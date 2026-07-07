@@ -48,7 +48,8 @@ export function connect(): Promise<DbConnection> {
           .onError((ctx) => fail(ctx.event))
           .subscribe([
             tables.vw_level_v1,
-            tables.vw_level_layer_v1,
+            tables.vw_level_placement_v1,
+            tables.vw_component_v1,
             tables.vw_character_v1,
             tables.vw_piece_v1,
             tables.vw_me_v1,

@@ -32,6 +32,7 @@ tasks:
     deps: [check]
     cmds:
       - task server:test
+      - task client:test
 
   build:
     desc: Build all projects

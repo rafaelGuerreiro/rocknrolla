@@ -11,6 +11,7 @@ use spacetimedb::ReducerContext;
 
 pub mod access;
 pub mod character;
+pub mod component;
 pub mod level;
 pub mod lootbox;
 pub mod player;

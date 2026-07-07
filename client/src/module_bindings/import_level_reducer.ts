@@ -11,7 +11,8 @@ import {
 } from "spacetimedb";
 
 import {
-  LayerImportV1,
+  Vec2,
+  PlacementImportV1,
 } from "./types";
 
 export default {
@@ -22,7 +23,13 @@ export default {
   active: __t.bool(),
   rewardLootboxId: __t.option(__t.uuid()),
   successors: __t.array(__t.uuid()),
-  get layers() {
-    return __t.array(LayerImportV1);
+  get spawn() {
+    return Vec2;
+  },
+  get finish() {
+    return Vec2;
+  },
+  get placements() {
+    return __t.array(PlacementImportV1);
   },
 };

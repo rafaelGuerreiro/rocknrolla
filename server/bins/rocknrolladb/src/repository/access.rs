@@ -3,7 +3,7 @@
 use crate::error::{ServiceError, ServiceResult};
 use spacetimedb::{Identity, ReducerContext, Table};
 
-#[spacetimedb::table(accessor = module_owner_v1, private)]
+#[spacetimedb::table(accessor = module_owner_v1, name = "module_owner_v1", private)]
 pub struct ModuleOwner {
     #[primary_key]
     pub id: u8,

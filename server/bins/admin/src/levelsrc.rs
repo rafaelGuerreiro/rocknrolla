@@ -1,13 +1,14 @@
 //! Authored level source parsing for the RocknRolla level importer.
 //!
-//! Levels are committed as compact JSON documents (`levels/src/*.json`)
-//! whose layers are ASCII tile grids. The importer renders each layer into
-//! a standalone `svg-v1` scene document (see [`crate::svggen`]) so the
-//! database stores the exact bytes the client draws.
+//! Levels are committed as compact JSON documents (`levels/src/*.json`):
+//! a placement list over the component library plus a level-owned spawn
+//! and finish. Geometry is validated against the loaded component files
+//! with the same shared checks the module applies on import.
 
 use anyhow::{Context, Result, bail};
-use rocknrolla_level::{GAMEPLAY_CELL_SIZE, GAMEPLAY_Z, LayerFacts, tile, validate_layers};
+use rocknrolla_level::{ComponentFacts, PlacementFacts, Vec2, Vec3, validate_level_geometry};
 use serde::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Deserialize)]
 struct SourceLevel {
@@ -22,32 +23,45 @@ struct SourceLevel {
     reward_lootbox_id: Option<String>,
     #[serde(default)]
     successors: Vec<String>,
-    layers: Vec<SourceLayer>,
+    spawn: SourcePoint,
+    finish: SourcePoint,
+    placements: Vec<SourcePlacement>,
+}
+
+#[derive(Deserialize, Clone, Copy)]
+struct SourcePoint {
+    x: u16,
+    y: u16,
 }
 
 #[derive(Deserialize)]
-struct SourceLayer {
-    z: u8,
-    /// Cell size in pixels; gameplay layers must use the default 64.
-    #[serde(default = "default_cell")]
-    cell: u32,
+struct SourcePlacement {
+    component: String,
+    x: u16,
+    y: u16,
+    #[serde(default)]
+    z: i8,
+    #[serde(default)]
+    flip_x: bool,
     #[serde(default = "one")]
-    parallax_x: f32,
-    #[serde(default = "one")]
-    parallax_y: f32,
-    rows: Vec<String>,
+    scale: f32,
 }
 
 fn default_true() -> bool {
     true
 }
 
-fn default_cell() -> u32 {
-    GAMEPLAY_CELL_SIZE as u32
-}
-
 fn one() -> f32 {
     1.0
+}
+
+/// One resolved placement ready for `import_level`.
+#[derive(Debug)]
+pub struct ImportedPlacement {
+    pub component_slug: String,
+    pub position: Vec3,
+    pub flip_x: bool,
+    pub scale: f32,
 }
 
 /// A fully validated level ready for `import_level`.
@@ -62,56 +76,14 @@ pub struct ImportedLevel {
     pub active: bool,
     pub reward_lootbox_id: Option<String>,
     pub successors: Vec<String>,
-    pub layers: Vec<LayerFacts>,
+    pub spawn: Vec2,
+    pub finish: Vec2,
+    pub placements: Vec<ImportedPlacement>,
 }
 
-/// Map one authoring character onto a semantic tile id.
-fn tile_for(ch: char) -> Result<u8> {
-    Ok(match ch {
-        '.' => tile::EMPTY,
-        '#' => tile::SOLID,
-        '/' => tile::SLOPE_UP,
-        '\\' => tile::SLOPE_DOWN,
-        'S' => tile::SPAWN,
-        'F' => tile::FINISH,
-        '^' => tile::LETHAL,
-        '~' => tile::WATER,
-        'f' => tile::FIRE,
-        'H' => tile::HEAVY,
-        'd' => tile::DECOR,
-        other => bail!("unknown tile character '{other}'"),
-    })
-}
-
-/// Parse the ASCII rows of one layer into a row-major tile grid.
-fn parse_grid(layer: &SourceLayer) -> Result<(Vec<u8>, u32, u32)> {
-    let rows = layer.rows.len() as u32;
-    if rows == 0 {
-        bail!("layer z {} has no rows", layer.z);
-    }
-    let cols = layer.rows[0].chars().count() as u32;
-    if cols == 0 {
-        bail!("layer z {} has empty rows", layer.z);
-    }
-    let mut tiles = Vec::with_capacity((cols * rows) as usize);
-    for (y, row) in layer.rows.iter().enumerate() {
-        if row.chars().count() as u32 != cols {
-            bail!(
-                "layer z {} row {y} has {} tiles, expected {cols}",
-                layer.z,
-                row.chars().count()
-            );
-        }
-        for (x, ch) in row.chars().enumerate() {
-            let id = tile_for(ch).with_context(|| format!("layer z {} row {y} column {x}", layer.z))?;
-            tiles.push(id);
-        }
-    }
-    Ok((tiles, cols, rows))
-}
-
-/// Parse and validate one authored level document into an importable level.
-pub fn parse_level(source: &str) -> Result<ImportedLevel> {
+/// Parse and validate one authored level document against the component
+/// library.
+pub fn parse_level(source: &str, components: &[ComponentFacts]) -> Result<ImportedLevel> {
     let level: SourceLevel = serde_json::from_str(source).context("invalid JSON")?;
     if level.id.is_empty() {
         bail!("level is missing the 'id' property");
@@ -139,29 +111,43 @@ pub fn parse_level(source: &str) -> Result<ImportedLevel> {
         }
     }
 
-    let mut layers = Vec::new();
-    for layer in &level.layers {
-        let (tiles, cols, rows) = parse_grid(layer)?;
-        if layer.z == GAMEPLAY_Z && layer.cell != GAMEPLAY_CELL_SIZE as u32 {
-            bail!("gameplay layer cell size must be {GAMEPLAY_CELL_SIZE}");
-        }
-        if layer.cell == 0 {
-            bail!("layer z {} has zero cell size", layer.z);
-        }
-        layers.push(crate::svggen::render_layer(&crate::svggen::LayerScene {
-            z: layer.z,
-            parallax_x: layer.parallax_x,
-            parallax_y: layer.parallax_y,
-            cell: layer.cell,
-            cols,
-            rows,
-            tiles,
-        }));
+    let sizes: HashMap<&str, (u32, u32)> = components
+        .iter()
+        .map(|c| (c.slug.as_str(), (c.width_px, c.height_px)))
+        .collect();
+    let mut placements = Vec::with_capacity(level.placements.len());
+    let mut facts = Vec::with_capacity(level.placements.len());
+    for placement in &level.placements {
+        let Some(&(width_px, height_px)) = sizes.get(placement.component.as_str()) else {
+            bail!("level '{}' places unknown component '{}'", level.slug, placement.component);
+        };
+        let position = Vec3 {
+            x: placement.x,
+            y: placement.y,
+            z: placement.z,
+        };
+        facts.push(PlacementFacts {
+            position,
+            scale: placement.scale,
+            component_width_px: width_px,
+            component_height_px: height_px,
+        });
+        placements.push(ImportedPlacement {
+            component_slug: placement.component.clone(),
+            position,
+            flip_x: placement.flip_x,
+            scale: placement.scale,
+        });
     }
-
-    // Full shared validation: single gameplay layer at 127, unique z,
-    // parallax rules, spawn/finish markers, and content hashes.
-    validate_layers(&layers)?;
+    let spawn = Vec2 {
+        x: level.spawn.x,
+        y: level.spawn.y,
+    };
+    let finish = Vec2 {
+        x: level.finish.x,
+        y: level.finish.y,
+    };
+    validate_level_geometry(&facts, spawn, finish).map_err(|e| anyhow::anyhow!("{e}"))?;
 
     Ok(ImportedLevel {
         id: level.id,
@@ -171,7 +157,9 @@ pub fn parse_level(source: &str) -> Result<ImportedLevel> {
         active: level.active,
         reward_lootbox_id,
         successors: level.successors,
-        layers,
+        spawn,
+        finish,
+        placements,
     })
 }
 
@@ -182,67 +170,69 @@ mod tests {
     const LEVEL_ID: &str = "0195c8f1-0000-7000-8000-000000000001";
     const NEXT_ID: &str = "0195c8f1-0000-7000-8000-000000000002";
 
-    fn sample(gameplay_z: u8) -> String {
+    fn components() -> Vec<ComponentFacts> {
+        crate::svggen::starter_library()
+    }
+
+    fn sample() -> String {
         serde_json::json!({
             "id": LEVEL_ID,
             "slug": "test-level",
             "name": "Test Level",
             "starting": true,
             "successors": [NEXT_ID],
-            "layers": [{
-                "z": gameplay_z,
-                "rows": [
-                    "S..^..F",
-                    "##/~\\##"
-                ]
-            }]
+            "spawn": { "x": 64, "y": 32 },
+            "finish": { "x": 900, "y": 80 },
+            "placements": [
+                { "component": "ground-flat", "x": 0, "y": 128 },
+                { "component": "ground-flat", "x": 512, "y": 128 },
+                { "component": "bush-cluster", "x": 100, "y": 64, "z": -40, "flip_x": true, "scale": 1.5 }
+            ]
         })
         .to_string()
     }
 
     #[test]
     fn parses_a_valid_level() {
-        let level = parse_level(&sample(127)).unwrap();
+        let level = parse_level(&sample(), &components()).unwrap();
         assert_eq!(level.id, LEVEL_ID);
         assert_eq!(level.slug, "test-level");
         assert!(level.is_starting);
         assert_eq!(level.successors, vec![NEXT_ID]);
-        assert_eq!(level.layers.len(), 1);
-        let layer = &level.layers[0];
-        assert_eq!(layer.z, 127);
-        assert_eq!(layer.width_px, 7 * 64);
-        assert_eq!(layer.height_px, 2 * 64);
-        let svg = std::str::from_utf8(&layer.data).unwrap();
-        assert!(svg.contains("data-t=\"4\""), "spawn marker missing");
-        assert!(svg.contains("data-t=\"5\""), "finish marker missing");
-        assert!(svg.contains("data-t=\"2\""), "slope marker missing");
+        assert_eq!(level.spawn, Vec2 { x: 64, y: 32 });
+        assert_eq!(level.placements.len(), 3);
+        let decor = &level.placements[2];
+        assert!(decor.flip_x);
+        assert_eq!(decor.position.z, -40);
+        assert_eq!(decor.scale, 1.5);
     }
 
     #[test]
-    fn rejects_bad_grids_and_ids() {
-        let err = parse_level(&sample(127).replace(LEVEL_ID, "tutorial-hill"))
+    fn rejects_unknown_components_and_bad_ids() {
+        let err = parse_level(&sample().replace(LEVEL_ID, "tutorial-hill"), &components())
             .unwrap_err()
             .to_string();
         assert!(err.contains("not a valid UUID"), "{err}");
 
-        let err = parse_level(&sample(127).replace("S..^..F", "S..^.."))
+        let err = parse_level(&sample().replace("ground-flat", "no-such"), &components())
             .unwrap_err()
             .to_string();
-        assert!(err.contains("expected"), "{err}");
-
-        let err = format!("{:#}", parse_level(&sample(127).replace('^', "X")).unwrap_err());
-        assert!(err.contains("unknown tile character"), "{err}");
+        assert!(err.contains("unknown component"), "{err}");
     }
 
     #[test]
-    fn rejects_missing_gameplay_layer() {
-        let err = parse_level(&sample(50)).unwrap_err().to_string();
-        assert!(err.contains("no gameplay layer"), "{err}");
-    }
+    fn rejects_out_of_bounds_spawn_and_self_successor() {
+        let err = parse_level(
+            &sample().replace(r#""spawn":{"x":64,"y":32}"#, r#""spawn":{"x":5000,"y":32}"#),
+            &components(),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("spawn"), "{err}");
 
-    #[test]
-    fn rejects_self_successor() {
-        let err = parse_level(&sample(127).replace(NEXT_ID, LEVEL_ID)).unwrap_err().to_string();
+        let err = parse_level(&sample().replace(NEXT_ID, LEVEL_ID), &components())
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("itself"), "{err}");
     }
 }

@@ -14,7 +14,7 @@ pub struct MyLootboxViewV1 {
 
 /// The caller's granted lootboxes with their display names; never another
 /// player's.
-#[view(accessor = vw_my_lootbox_v1, public)]
+#[view(accessor = vw_my_lootbox_v1, name = "vw_my_lootbox_v1", public)]
 pub fn vw_my_lootbox_v1(ctx: &ViewContext) -> Vec<MyLootboxViewV1> {
     ctx.db
         .player_lootbox_v1()

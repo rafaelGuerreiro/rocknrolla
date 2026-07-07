@@ -3,11 +3,14 @@
 use crate::{
     error::{ServiceError, ServiceResult},
     extend::stdb::UuidGen,
-    repository::level::{
-        Level, LevelLayer, LevelSuccessor, level_layer_v1, level_successor_v1, level_v1, types::LayerImportV1,
+    repository::{
+        component::services::ComponentReducerContext,
+        level::{
+            Level, LevelPlacement, LevelSuccessor, level_placement_v1, level_successor_v1, level_v1, types::PlacementImportV1,
+        },
     },
 };
-use rocknrolla_level::{LayerFacts, validate_layers};
+use rocknrolla_level::{PlacementFacts, Vec2, validate_level_geometry};
 use spacetimedb::{ReducerContext, Table, Uuid};
 use std::ops::Deref;
 
@@ -41,29 +44,37 @@ pub struct LevelImport {
     pub active: bool,
     pub reward_lootbox_id: Option<Uuid>,
     pub successors: Vec<Uuid>,
-    pub layers: Vec<LayerImportV1>,
+    pub spawn: Vec2,
+    pub finish: Vec2,
+    pub placements: Vec<PlacementImportV1>,
 }
 
 impl LevelServices<'_> {
-    /// Atomically overwrite one level's metadata, layers, and successor
-    /// edges. The stable authored UUID is the replacement key; git history of
-    /// the committed authored sources is the rollback mechanism.
+    /// Atomically overwrite one level's metadata, placements, and successor
+    /// edges. Every placement must reference an imported component slug and
+    /// spawn/finish must land inside the gameplay-plane bounds. The stable
+    /// authored UUID is the replacement key; git history of the committed
+    /// authored sources is the rollback mechanism.
     pub fn import_level(&self, import: LevelImport) -> ServiceResult<()> {
-        let facts: Vec<LayerFacts> = import
-            .layers
-            .iter()
-            .map(|layer| LayerFacts {
-                z: layer.z,
-                width_px: layer.width_px,
-                height_px: layer.height_px,
-                parallax_x: layer.parallax_x,
-                parallax_y: layer.parallax_y,
-                encoding: layer.encoding.clone(),
-                content_hash: layer.content_hash.clone(),
-                data: layer.data.clone(),
-            })
-            .collect();
-        validate_layers(&facts)?;
+        let components = self.ctx.component_services();
+        let mut resolved = Vec::with_capacity(import.placements.len());
+        let mut facts = Vec::with_capacity(import.placements.len());
+        for placement in &import.placements {
+            let component = components.find_by_slug(&placement.component_slug).ok_or_else(|| {
+                ServiceError::validation(format!(
+                    "level '{}' places unknown component '{}'",
+                    import.slug, placement.component_slug
+                ))
+            })?;
+            facts.push(PlacementFacts {
+                position: placement.position,
+                scale: placement.scale,
+                component_width_px: component.width_px,
+                component_height_px: component.height_px,
+            });
+            resolved.push(component.id);
+        }
+        validate_level_geometry(&facts, import.spawn, import.finish)?;
         for successor in &import.successors {
             if *successor == import.id {
                 return Err(ServiceError::validation(format!(
@@ -88,21 +99,20 @@ impl LevelServices<'_> {
             is_starting: import.is_starting,
             active: import.active,
             reward_lootbox_id: import.reward_lootbox_id,
+            spawn: import.spawn,
+            finish: import.finish,
         });
-        self.db.level_layer_v1().level_id().delete(import.id);
+        self.db.level_placement_v1().level_id().delete(import.id);
         self.db.level_successor_v1().level_id().delete(import.id);
-        for layer in import.layers {
-            self.db.level_layer_v1().insert(LevelLayer {
+        for (order, (placement, component_id)) in import.placements.iter().zip(resolved).enumerate() {
+            self.db.level_placement_v1().insert(LevelPlacement {
                 id: self.ctx.generate_uuid()?,
                 level_id: import.id,
-                z: layer.z,
-                width_px: layer.width_px,
-                height_px: layer.height_px,
-                parallax_x: layer.parallax_x,
-                parallax_y: layer.parallax_y,
-                encoding: layer.encoding,
-                content_hash: layer.content_hash,
-                data: layer.data,
+                component_id,
+                position: placement.position,
+                flip_x: placement.flip_x,
+                scale: placement.scale,
+                order: order as u32,
             });
         }
         for successor_id in import.successors {

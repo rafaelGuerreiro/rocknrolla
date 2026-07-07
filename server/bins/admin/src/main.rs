@@ -1,7 +1,7 @@
 //! RocknRolla content administration shell.
 //!
-//! An interactive shell that validates committed level sources and seed
-//! content, renders levels into `svg-v1` scene layers, then imports them
+//! An interactive shell that validates committed components, level
+//! sources, and seed content, then imports them
 //! through the owner-only reducers using the locally
 //! installed, already authenticated `spacetime` CLI session. This binary
 //! never reads or prints the `.env` token; run `task server:login` first.
@@ -14,6 +14,7 @@ use std::{
 };
 
 mod command;
+mod componentsrc;
 mod levelsrc;
 mod seed;
 mod svggen;
@@ -25,6 +26,7 @@ const DEFAULT_DATABASE: &str = "rocknrolladb-dev";
 const PRODUCTION_DATABASE: &str = "rocknrolladb";
 const DEFAULT_SERVER: &str = "maincloud";
 const DEFAULT_LEVELS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../levels/src");
+const DEFAULT_COMPONENTS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../levels/components");
 const DEFAULT_SEED_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../levels/seed.json");
 
 /// Target and content-path state kept alive across shell commands.
@@ -32,6 +34,7 @@ struct Session {
     server: String,
     database: String,
     levels_path: PathBuf,
+    components_path: PathBuf,
     seed_path: PathBuf,
 }
 
@@ -41,6 +44,7 @@ impl Default for Session {
             server: DEFAULT_SERVER.to_string(),
             database: DEFAULT_DATABASE.to_string(),
             levels_path: default_path(DEFAULT_LEVELS_PATH),
+            components_path: default_path(DEFAULT_COMPONENTS_PATH),
             seed_path: default_path(DEFAULT_SEED_PATH),
         }
     }
@@ -98,8 +102,13 @@ fn execute(session: &mut Session, parsed: Command, input: &mut impl Iterator<Ite
             println!("database set to '{}'", session.database);
         },
         Command::ValidateLevels(path) => {
-            let levels = load_levels(session, path.as_deref())?;
+            let components = load_components(session, None)?;
+            let levels = load_levels(session, path.as_deref(), &components)?;
             println!("{} level(s) valid; nothing imported", levels.len());
+        },
+        Command::ValidateComponents(path) => {
+            let components = load_components(session, path.as_deref())?;
+            println!("{} component(s) valid; nothing imported", components.len());
         },
         Command::ValidateSeed(path) => {
             load_seed(session, path.as_deref())?;
@@ -107,9 +116,11 @@ fn execute(session: &mut Session, parsed: Command, input: &mut impl Iterator<Ite
         },
         Command::ValidateAll => {
             let content = load_seed(session, None)?;
-            let levels = load_levels(session, None)?;
+            let components = load_components(session, None)?;
+            let levels = load_levels(session, None, &components)?;
             println!(
-                "seed content and {} level(s) valid; nothing imported ({} characters, {} pieces, {} lootboxes)",
+                "seed content, {} component(s), and {} level(s) valid; nothing imported ({} characters, {} pieces, {} lootboxes)",
+                components.len(),
                 levels.len(),
                 content.characters.len(),
                 content.pieces.len(),
@@ -117,9 +128,16 @@ fn execute(session: &mut Session, parsed: Command, input: &mut impl Iterator<Ite
             );
         },
         Command::ImportLevels(path) => {
-            let levels = load_levels(session, path.as_deref())?;
+            let components = load_components(session, None)?;
+            let levels = load_levels(session, path.as_deref(), &components)?;
             if confirm_import(session, input)? {
                 import_levels(session, &levels)?;
+            }
+        },
+        Command::ImportComponents(path) => {
+            let components = load_components(session, path.as_deref())?;
+            if confirm_import(session, input)? {
+                import_components(session, &components)?;
             }
         },
         Command::ImportSeed(path) => {
@@ -128,23 +146,22 @@ fn execute(session: &mut Session, parsed: Command, input: &mut impl Iterator<Ite
                 import_seed(session, &content)?;
             }
         },
-        Command::ExportLevels(dir) => {
-            let levels = load_levels(session, None)?;
+        Command::ExportComponents(dir) => {
             let target = PathBuf::from(&dir);
             std::fs::create_dir_all(&target).with_context(|| format!("cannot create {}", target.display()))?;
-            for level in &levels {
-                for layer in &level.layers {
-                    let file = target.join(format!("{}-z{}.svg", level.slug, layer.z));
-                    std::fs::write(&file, &layer.data).with_context(|| format!("cannot write {}", file.display()))?;
-                    println!("wrote {}", file.display());
-                }
+            for component in svggen::starter_library() {
+                let file = target.join(format!("{}.svg", component.slug));
+                std::fs::write(&file, &component.data).with_context(|| format!("cannot write {}", file.display()))?;
+                println!("wrote {}", file.display());
             }
         },
         Command::ImportAll => {
             let content = load_seed(session, None)?;
-            let levels = load_levels(session, None)?;
+            let components = load_components(session, None)?;
+            let levels = load_levels(session, None, &components)?;
             if confirm_import(session, input)? {
                 import_seed(session, &content)?;
+                import_components(session, &components)?;
                 import_levels(session, &levels)?;
             }
         },
@@ -153,10 +170,11 @@ fn execute(session: &mut Session, parsed: Command, input: &mut impl Iterator<Ite
 }
 
 fn print_status(session: &Session) {
-    println!("server:   {}", session.server);
-    println!("database: {}", session.database);
-    println!("levels:   {}", session.levels_path.display());
-    println!("seed:     {}", session.seed_path.display());
+    println!("server:     {}", session.server);
+    println!("database:   {}", session.database);
+    println!("levels:     {}", session.levels_path.display());
+    println!("components: {}", session.components_path.display());
+    println!("seed:       {}", session.seed_path.display());
 }
 
 /// Show the destination and require explicit confirmation. Importing into the
@@ -205,7 +223,29 @@ fn load_seed(session: &Session, path_override: Option<&str>) -> Result<seed::See
     Ok(content)
 }
 
-fn load_levels(session: &Session, path_override: Option<&str>) -> Result<Vec<levelsrc::ImportedLevel>> {
+fn load_components(session: &Session, path_override: Option<&str>) -> Result<Vec<rocknrolla_level::ComponentFacts>> {
+    let path = path_override
+        .map(PathBuf::from)
+        .unwrap_or_else(|| session.components_path.clone());
+    let components = componentsrc::load_components(&path)?;
+    for component in &components {
+        println!(
+            "validated component '{}' ({}x{}, {} SVG bytes, hash {})",
+            component.slug,
+            component.width_px,
+            component.height_px,
+            component.data.len(),
+            component.content_hash,
+        );
+    }
+    Ok(components)
+}
+
+fn load_levels(
+    session: &Session,
+    path_override: Option<&str>,
+    components: &[rocknrolla_level::ComponentFacts],
+) -> Result<Vec<levelsrc::ImportedLevel>> {
     let path = path_override
         .map(PathBuf::from)
         .unwrap_or_else(|| session.levels_path.clone());
@@ -213,19 +253,12 @@ fn load_levels(session: &Session, path_override: Option<&str>) -> Result<Vec<lev
     let mut levels = Vec::new();
     for file in &files {
         let source = std::fs::read_to_string(file).with_context(|| format!("cannot read {}", file.display()))?;
-        let level = levelsrc::parse_level(&source).with_context(|| file.display().to_string())?;
+        let level = levelsrc::parse_level(&source, components).with_context(|| file.display().to_string())?;
         println!(
-            "validated {}: level '{}' ({} layers, {} SVG bytes, gameplay hash {})",
+            "validated {}: level '{}' ({} placements)",
             file.display(),
             level.slug,
-            level.layers.len(),
-            level.layers.iter().map(|l| l.data.len()).sum::<usize>(),
-            level
-                .layers
-                .iter()
-                .find(|l| l.z == rocknrolla_level::GAMEPLAY_Z)
-                .map(|l| l.content_hash.as_str())
-                .unwrap_or("-"),
+            level.placements.len(),
         );
         levels.push(level);
     }
@@ -288,17 +321,37 @@ fn call_reducer(session: &Session, reducer: &str, args: &[String]) -> Result<()>
     }
 }
 
-fn layer_to_json(layer: &rocknrolla_level::LayerFacts) -> serde_json::Value {
+fn placement_to_json(placement: &levelsrc::ImportedPlacement) -> serde_json::Value {
     serde_json::json!({
-        "z": layer.z,
-        "width_px": layer.width_px,
-        "height_px": layer.height_px,
-        "parallax_x": layer.parallax_x,
-        "parallax_y": layer.parallax_y,
-        "encoding": layer.encoding,
-        "content_hash": layer.content_hash,
-        "data": layer.data,
+        "component_slug": placement.component_slug,
+        "position": {
+            "x": placement.position.x,
+            "y": placement.position.y,
+            "z": placement.position.z,
+        },
+        "flip_x": placement.flip_x,
+        "scale": placement.scale,
     })
+}
+
+fn point_json(point: rocknrolla_level::Vec2) -> String {
+    serde_json::json!({ "x": point.x, "y": point.y }).to_string()
+}
+
+fn import_components(session: &Session, components: &[rocknrolla_level::ComponentFacts]) -> Result<()> {
+    for component in components {
+        let arg = serde_json::json!({
+            "slug": component.slug,
+            "width_px": component.width_px,
+            "height_px": component.height_px,
+            "content_hash": component.content_hash,
+            "data": component.data,
+        })
+        .to_string();
+        call_reducer(session, "import_component", &[arg])?;
+        println!("imported component '{}' into {}", component.slug, session.database);
+    }
+    Ok(())
 }
 
 fn import_levels(session: &Session, levels: &[levelsrc::ImportedLevel]) -> Result<()> {
@@ -311,7 +364,9 @@ fn import_levels(session: &Session, levels: &[levelsrc::ImportedLevel]) -> Resul
             level.active.to_string(),
             crate::uuid::uuid_opt_arg(level.reward_lootbox_id.as_deref())?,
             crate::uuid::uuid_vec_arg(&level.successors)?,
-            serde_json::Value::Array(level.layers.iter().map(layer_to_json).collect()).to_string(),
+            point_json(level.spawn),
+            point_json(level.finish),
+            serde_json::Value::Array(level.placements.iter().map(placement_to_json).collect()).to_string(),
         ];
         call_reducer(session, "import_level", &args)?;
         println!("imported level '{}' into {}", level.slug, session.database);

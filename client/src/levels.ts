@@ -1,14 +1,31 @@
 import type { DbConnection } from './module_bindings';
+// Explicit extension so this module chain also loads under `node --test`.
+import { TUNING } from './tuning.ts';
 
-/** Gameplay grid cell size in pixels (authoring unit; markers may merge cells). */
-export const CELL = 64;
-export const GAMEPLAY_Z = 127;
 /** Fire hazards burn characters below this fire resistance. */
 export const FIRE_RESISTANCE_THRESHOLD = 0.5;
 /** Matter density of the heavy pushable obstacles. */
 export const HEAVY_DENSITY = 0.0035;
+/** Drawn width of the finish pole/flag in world pixels. */
+export const FINISH_WIDTH = 64;
 
-/** Semantic ids used by the `data-t` collider markers inside layer SVGs. */
+/**
+ * The depth where physics happens; other depths are scenery. Plane images
+ * draw at depth = z, so dynamic objects slot between 0 and the first
+ * foreground plane (z >= 1).
+ */
+export const GAMEPLAY_PLANE_Z = 0;
+export const DEPTH = {
+  /** Effects (dust, puffs) above the gameplay plane, below the player. */
+  EFFECTS: 0.6,
+  /** Heavy pushable blocks. */
+  HEAVY: 0.8,
+  PLAYER: 1 as number,
+  /** The upright face rig, always over its player body. */
+  FACE: 1.5,
+} as const;
+
+/** Semantic ids used by the `data-t` collider markers inside component SVGs. */
 export const TILE = {
   EMPTY: 0,
   SOLID: 1,
@@ -23,18 +40,13 @@ export const TILE = {
   DECOR: 10,
 } as const;
 
-export interface DecodedLayer {
-  z: number;
-  widthPx: number;
-  heightPx: number;
-  parallaxX: number;
-  parallaxY: number;
-  /** The standalone SVG scene document for this layer. */
-  svg: string;
-  contentHash: string;
+/** Scroll-speed depth cue derived from z; the gameplay plane scrolls 1:1. */
+export function planeParallax(z: number): number {
+  const parallax = 1 + z * TUNING.PARALLAX_PER_Z;
+  return Math.min(Math.max(parallax, 0.05), 4);
 }
 
-/** One collider marker parsed from the gameplay layer's hidden group. */
+/** One collider marker in component-local or world coordinates. */
 export interface LevelMarker {
   t: number;
   x: number;
@@ -43,24 +55,55 @@ export interface LevelMarker {
   height: number;
   /** Present for polygon markers (slopes). */
   points?: { x: number; y: number }[];
+  /** For dynamic markers (heavy): the component-art texture to draw. */
+  textureKey?: string;
+}
+
+/** How one placement maps component-local coordinates into the world. */
+export interface PlacementTransform {
+  x: number;
+  y: number;
+  flipX: boolean;
+  scale: number;
+  /** The component's natural width; flips mirror around it. */
+  componentWidth: number;
+}
+
+/** A component-supplied texture for a dynamic object (heavy block). */
+export interface DynamicTexture {
+  key: string;
+  svg: string;
+}
+
+/** One composed scenery/gameplay image at a single depth. */
+export interface DecodedPlane {
+  z: number;
+  widthPx: number;
+  heightPx: number;
+  /** Self-contained composed SVG document for this plane. */
+  svg: string;
+  textureKey: string;
 }
 
 export interface DecodedLevel {
   id: string;
   name: string;
-  layers: DecodedLayer[];
-  gameplay: DecodedLayer;
+  spawn: { x: number; y: number };
+  finish: { x: number; y: number };
+  planes: DecodedPlane[];
+  dynamicTextures: DynamicTexture[];
+  /** World-space collider markers from gameplay-plane placements. */
   markers: LevelMarker[];
   widthPx: number;
   heightPx: number;
 }
 
-/** Phaser texture key for one decoded layer's scene SVG. */
-export function layerTextureKey(layer: DecodedLayer): string {
-  return `level_layer_${layer.contentHash}`;
-}
-
-function fnv1a64(widthPx: number, heightPx: number, data: Uint8Array): string {
+/** FNV-1a64 over dimensions + bytes; mirrors the server's content hash. */
+export function contentHash(
+  widthPx: number,
+  heightPx: number,
+  data: Uint8Array,
+): string {
   let hash = 0xcbf29ce484222325n;
   const prime = 0x100000001b3n;
   const mask = 0xffffffffffffffffn;
@@ -74,11 +117,49 @@ function fnv1a64(widthPx: number, heightPx: number, data: Uint8Array): string {
   return hash.toString(16).padStart(16, '0');
 }
 
-/** Parse the `data-t` collider markers out of a gameplay layer document. */
-function parseMarkers(svg: string, z: number): LevelMarker[] {
+/**
+ * Map one component-local marker into world coordinates: uniform scale,
+ * then horizontal mirror around the component's own width, then translate.
+ * Applies identically to art (via SVG transforms) and colliders.
+ */
+export function transformMarker(
+  marker: LevelMarker,
+  transform: PlacementTransform,
+): LevelMarker {
+  const { x, y, flipX, scale, componentWidth } = transform;
+  if (marker.points) {
+    const points = marker.points.map((p) => ({
+      x: x + scale * (flipX ? componentWidth - p.x : p.x),
+      y: y + scale * p.y,
+    }));
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    return {
+      t: marker.t,
+      x: minX,
+      y: minY,
+      width: Math.max(...xs) - minX,
+      height: Math.max(...ys) - minY,
+      points,
+    };
+  }
+  return {
+    t: marker.t,
+    x:
+      x + scale * (flipX ? componentWidth - marker.x - marker.width : marker.x),
+    y: y + scale * marker.y,
+    width: scale * marker.width,
+    height: scale * marker.height,
+  };
+}
+
+/** Parse the `data-t` collider markers out of a component document. */
+export function parseMarkers(svg: string, slug: string): LevelMarker[] {
   const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
   if (doc.querySelector('parsererror')) {
-    throw new Error(`layer z ${z}: stored SVG does not parse`);
+    throw new Error(`component '${slug}': stored SVG does not parse`);
   }
   const markers: LevelMarker[] = [];
   for (const el of doc.querySelectorAll('[data-t]')) {
@@ -94,7 +175,7 @@ function parseMarkers(svg: string, z: number): LevelMarker[] {
           return { x, y };
         });
       if (list.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y))) {
-        throw new Error(`layer z ${z}: marker has malformed points`);
+        throw new Error(`component '${slug}': marker has malformed points`);
       }
       const xs = list.map((p) => p.x);
       const ys = list.map((p) => p.y);
@@ -115,73 +196,217 @@ function parseMarkers(svg: string, z: number): LevelMarker[] {
     const width = Number(el.getAttribute('width'));
     const height = Number(el.getAttribute('height'));
     if (![x, y, width, height].every(Number.isFinite)) {
-      throw new Error(`layer z ${z}: marker has malformed bounds`);
+      throw new Error(`component '${slug}': marker has malformed bounds`);
     }
     markers.push({ t, x, y, width, height });
   }
   return markers;
 }
 
+interface ComponentDef {
+  id: string;
+  slug: string;
+  widthPx: number;
+  heightPx: number;
+  contentHash: string;
+  svg: string;
+}
+
+interface DecodedPlacement {
+  component: ComponentDef;
+  x: number;
+  y: number;
+  z: number;
+  flipX: boolean;
+  scale: number;
+  order: number;
+}
+
+/** The `<use>` transform for one placement (translate + flip + scale). */
+function placementTransform(placement: DecodedPlacement): string {
+  const { x, y, flipX, scale, component } = placement;
+  if (flipX) {
+    return `translate(${x + scale * component.widthPx},${y}) scale(${-scale},${scale})`;
+  }
+  if (scale !== 1) return `translate(${x},${y}) scale(${scale})`;
+  return `translate(${x},${y})`;
+}
+
+/**
+ * Compose one plane's placements into a self-contained SVG document:
+ * each distinct component becomes a `<symbol>`, each placement a `<use>`
+ * in draw order.
+ */
+function composePlane(placements: DecodedPlacement[]): {
+  svg: string;
+  widthPx: number;
+  heightPx: number;
+} {
+  let width = 1;
+  let height = 1;
+  const symbols = new Map<string, ComponentDef>();
+  for (const p of placements) {
+    width = Math.max(width, Math.ceil(p.x + p.scale * p.component.widthPx));
+    height = Math.max(height, Math.ceil(p.y + p.scale * p.component.heightPx));
+    symbols.set(p.component.slug, p.component);
+  }
+  const defs = [...symbols.values()]
+    .map((component) => {
+      const open = component.svg.indexOf('>');
+      const close = component.svg.lastIndexOf('</svg>');
+      const inner = component.svg.slice(open + 1, close);
+      return `<symbol id="c-${component.slug}" viewBox="0 0 ${component.widthPx} ${component.heightPx}" width="${component.widthPx}" height="${component.heightPx}" overflow="visible">${inner}</symbol>`;
+    })
+    .join('');
+  const uses = placements
+    .map(
+      (p) =>
+        `<use href="#c-${p.component.slug}" xlink:href="#c-${p.component.slug}" transform="${placementTransform(p)}"/>`,
+    )
+    .join('');
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
+    `width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs>${defs}</defs>${uses}</svg>`;
+  return { svg, widthPx: width, heightPx: height };
+}
+
 const cache = new Map<string, { key: string; level: DecodedLevel }>();
 
 /**
- * Decode the level from subscribed rows, verifying encoding and content
- * hash. Decoded levels are cached in memory for instant retries; an
- * overwritten import changes the content hashes and is picked up on the
- * next load.
+ * Decode the level from subscribed rows: verify component hashes, compose
+ * one SVG document per distinct z, and transform gameplay-plane collider
+ * markers into world space. Decoded levels are cached in memory for
+ * instant retries; an overwritten import changes the content hashes and is
+ * picked up on the next load.
  */
 export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
   const meta = [...conn.db.vw_level_v1.iter()].find(
     (row) => row.id.toString() === levelId,
   );
   if (!meta) throw new Error(`level '${levelId}' is not available`);
-  const rows = [...conn.db.vw_level_layer_v1.iter()].filter(
-    (row) => row.levelId.toString() === levelId,
-  );
-  if (rows.length === 0) throw new Error(`level '${levelId}' has no layers`);
+  const rows = [...conn.db.vw_level_placement_v1.iter()]
+    .filter((row) => row.levelId.toString() === levelId)
+    .sort((a, b) => a.order - b.order);
+  if (rows.length === 0)
+    throw new Error(`level '${levelId}' has no placements`);
 
-  const key = rows
-    .map((row) => `${row.z}:${row.contentHash}`)
-    .sort()
+  const components = new Map<string, ComponentDef>();
+  for (const row of conn.db.vw_component_v1.iter()) {
+    const hash = contentHash(row.widthPx, row.heightPx, row.data);
+    if (hash !== row.contentHash) {
+      throw new Error(`component '${row.slug}': content hash mismatch`);
+    }
+    components.set(row.id.toString(), {
+      id: row.id.toString(),
+      slug: row.slug,
+      widthPx: row.widthPx,
+      heightPx: row.heightPx,
+      contentHash: row.contentHash,
+      svg: new TextDecoder().decode(row.data),
+    });
+  }
+
+  const placements: DecodedPlacement[] = rows.map((row) => {
+    const component = components.get(row.componentId.toString());
+    if (!component) {
+      throw new Error(
+        `level '${levelId}' places unknown component '${row.componentId}'`,
+      );
+    }
+    return {
+      component,
+      x: row.position.x,
+      y: row.position.y,
+      z: row.position.z,
+      flipX: row.flipX,
+      scale: row.scale,
+      order: row.order,
+    };
+  });
+
+  const key = placements
+    .map(
+      (p) =>
+        `${p.component.slug}:${p.x}:${p.y}:${p.z}:${p.flipX}:${p.scale}:${p.order}`,
+    )
     .join('|');
   const cached = cache.get(levelId);
   if (cached && cached.key === key) return cached.level;
 
-  const layers: DecodedLayer[] = rows
-    .map((row) => {
-      if (row.encoding !== 'svg-v1') {
-        throw new Error(
-          `layer z ${row.z}: unsupported encoding '${row.encoding}'`,
-        );
-      }
-      const hash = fnv1a64(row.widthPx, row.heightPx, row.data);
-      if (hash !== row.contentHash) {
-        throw new Error(`layer z ${row.z}: content hash mismatch`);
-      }
-      return {
-        z: row.z,
-        widthPx: row.widthPx,
-        heightPx: row.heightPx,
-        parallaxX: row.parallaxX,
-        parallaxY: row.parallaxY,
-        svg: new TextDecoder().decode(row.data),
-        contentHash: row.contentHash,
-      };
-    })
-    .sort((a, b) => a.z - b.z);
+  // A component carrying a HEAVY marker is a dynamic object: its art moves
+  // with the physics body, so it stays out of the composed plane and ships
+  // as its own texture instead.
+  // ponytail: the whole component is treated as dynamic; keep heavy
+  // components to just the block.
+  const componentMarkers = new Map<string, LevelMarker[]>();
+  const markersOf = (component: ComponentDef): LevelMarker[] => {
+    let local = componentMarkers.get(component.slug);
+    if (!local) {
+      local = parseMarkers(component.svg, component.slug);
+      componentMarkers.set(component.slug, local);
+    }
+    return local;
+  };
+  const isDynamic = (component: ComponentDef): boolean =>
+    markersOf(component).some((marker) => marker.t === TILE.HEAVY);
+  const dynamicTextureKey = (component: ComponentDef): string =>
+    `component_${component.contentHash}`;
 
-  const gameplay = layers.find((layer) => layer.z === GAMEPLAY_Z);
-  if (!gameplay) throw new Error(`level '${levelId}' has no gameplay layer`);
-  const markers = parseMarkers(gameplay.svg, gameplay.z);
-  if (!markers.some((m) => m.t === TILE.SPAWN)) {
-    throw new Error(`level '${levelId}' has no spawn marker`);
+  const dynamicTextures = new Map<string, DynamicTexture>();
+  const byZ = new Map<number, DecodedPlacement[]>();
+  for (const placement of placements) {
+    if (isDynamic(placement.component)) {
+      const key = dynamicTextureKey(placement.component);
+      dynamicTextures.set(key, { key, svg: placement.component.svg });
+      continue;
+    }
+    const group = byZ.get(placement.z) ?? [];
+    group.push(placement);
+    byZ.set(placement.z, group);
+  }
+  const planes: DecodedPlane[] = [...byZ.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([z, group]) => {
+      const composed = composePlane(group);
+      const bytes = new TextEncoder().encode(composed.svg);
+      return {
+        z,
+        ...composed,
+        textureKey: `level_plane_${contentHash(composed.widthPx, composed.heightPx, bytes)}`,
+      };
+    });
+
+  const markers: LevelMarker[] = [];
+  for (const placement of placements) {
+    if (placement.z !== GAMEPLAY_PLANE_Z) continue;
+    const { component } = placement;
+    for (const marker of markersOf(component)) {
+      const world = transformMarker(marker, {
+        x: placement.x,
+        y: placement.y,
+        flipX: placement.flipX,
+        scale: placement.scale,
+        componentWidth: component.widthPx,
+      });
+      if (marker.t === TILE.HEAVY) {
+        world.textureKey = dynamicTextureKey(component);
+      }
+      markers.push(world);
+    }
+  }
+
+  const gameplay = planes.find((plane) => plane.z === GAMEPLAY_PLANE_Z);
+  if (!gameplay) {
+    throw new Error(`level '${levelId}' has no gameplay-plane placement`);
   }
 
   const level: DecodedLevel = {
     id: meta.id.toString(),
     name: meta.name,
-    layers,
-    gameplay,
+    spawn: { x: meta.spawn.x, y: meta.spawn.y },
+    finish: { x: meta.finish.x, y: meta.finish.y },
+    planes,
+    dynamicTextures: [...dynamicTextures.values()],
     markers,
     widthPx: gameplay.widthPx,
     heightPx: gameplay.heightPx,

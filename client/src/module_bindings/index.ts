@@ -36,6 +36,7 @@ import {
 // Import all reducer arg schemas
 import CompleteLevelReducer from "./complete_level_reducer";
 import ImportCharacterReducer from "./import_character_reducer";
+import ImportComponentReducer from "./import_component_reducer";
 import ImportLevelReducer from "./import_level_reducer";
 import ImportLootboxReducer from "./import_lootbox_reducer";
 import ImportPieceReducer from "./import_piece_reducer";
@@ -46,7 +47,8 @@ import SelectCharacterReducer from "./select_character_reducer";
 
 // Import all table schema definitions
 import VwCharacterV1Row from "./vw_character_v_1_table";
-import VwLevelLayerV1Row from "./vw_level_layer_v_1_table";
+import VwComponentV1Row from "./vw_component_v_1_table";
+import VwLevelPlacementV1Row from "./vw_level_placement_v_1_table";
 import VwLevelV1Row from "./vw_level_v_1_table";
 import VwMeV1Row from "./vw_me_v_1_table";
 import VwMyCompletedLevelV1Row from "./vw_my_completed_level_v_1_table";
@@ -61,70 +63,77 @@ import VwPieceV1Row from "./vw_piece_v_1_table";
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
   vw_character_v1: __table({
-    name: 'vw_character_v_1',
+    name: 'vw_character_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwCharacterV1Row),
-  vw_level_layer_v1: __table({
-    name: 'vw_level_layer_v_1',
+  vw_component_v1: __table({
+    name: 'vw_component_v1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwLevelLayerV1Row),
+  }, VwComponentV1Row),
+  vw_level_placement_v1: __table({
+    name: 'vw_level_placement_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwLevelPlacementV1Row),
   vw_level_v1: __table({
-    name: 'vw_level_v_1',
+    name: 'vw_level_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwLevelV1Row),
   vw_me_v1: __table({
-    name: 'vw_me_v_1',
+    name: 'vw_me_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwMeV1Row),
   vw_my_completed_level_v1: __table({
-    name: 'vw_my_completed_level_v_1',
+    name: 'vw_my_completed_level_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwMyCompletedLevelV1Row),
   vw_my_enabled_level_v1: __table({
-    name: 'vw_my_enabled_level_v_1',
+    name: 'vw_my_enabled_level_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwMyEnabledLevelV1Row),
   vw_my_lootbox_v1: __table({
-    name: 'vw_my_lootbox_v_1',
+    name: 'vw_my_lootbox_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwMyLootboxV1Row),
   vw_my_piece_v1: __table({
-    name: 'vw_my_piece_v_1',
+    name: 'vw_my_piece_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwMyPieceV1Row),
   vw_my_unlocked_character_v1: __table({
-    name: 'vw_my_unlocked_character_v_1',
+    name: 'vw_my_unlocked_character_v1',
     indexes: [
     ],
     constraints: [
     ],
   }, VwMyUnlockedCharacterV1Row),
   vw_piece_v1: __table({
-    name: 'vw_piece_v_1',
+    name: 'vw_piece_v1',
     indexes: [
     ],
     constraints: [
@@ -136,6 +145,7 @@ const tablesSchema = __schema({
 const reducersSchema = __reducers(
   __reducerSchema("complete_level", CompleteLevelReducer),
   __reducerSchema("import_character", ImportCharacterReducer),
+  __reducerSchema("import_component", ImportComponentReducer),
   __reducerSchema("import_level", ImportLevelReducer),
   __reducerSchema("import_lootbox", ImportLootboxReducer),
   __reducerSchema("import_piece", ImportPieceReducer),

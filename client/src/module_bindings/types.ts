@@ -36,23 +36,40 @@ export const CharacterViewV1 = __t.object("CharacterViewV1", {
 });
 export type CharacterViewV1 = __Infer<typeof CharacterViewV1>;
 
+export const Component = __t.object("Component", {
+  id: __t.uuid(),
+  slug: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type Component = __Infer<typeof Component>;
+
+export const ComponentImportV1 = __t.object("ComponentImportV1", {
+  slug: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type ComponentImportV1 = __Infer<typeof ComponentImportV1>;
+
+export const ComponentViewV1 = __t.object("ComponentViewV1", {
+  id: __t.uuid(),
+  slug: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type ComponentViewV1 = __Infer<typeof ComponentViewV1>;
+
 export const DropImportV1 = __t.object("DropImportV1", {
   pieceId: __t.uuid(),
   weight: __t.u32(),
 });
 export type DropImportV1 = __Infer<typeof DropImportV1>;
-
-export const LayerImportV1 = __t.object("LayerImportV1", {
-  z: __t.u8(),
-  widthPx: __t.u32(),
-  heightPx: __t.u32(),
-  parallaxX: __t.f32(),
-  parallaxY: __t.f32(),
-  encoding: __t.string(),
-  contentHash: __t.string(),
-  data: __t.byteArray(),
-});
-export type LayerImportV1 = __Infer<typeof LayerImportV1>;
 
 export const Level = __t.object("Level", {
   id: __t.uuid(),
@@ -61,35 +78,39 @@ export const Level = __t.object("Level", {
   isStarting: __t.bool(),
   active: __t.bool(),
   rewardLootboxId: __t.option(__t.uuid()),
+  get spawn() {
+    return Vec2;
+  },
+  get finish() {
+    return Vec2;
+  },
 });
 export type Level = __Infer<typeof Level>;
 
-export const LevelLayer = __t.object("LevelLayer", {
+export const LevelPlacement = __t.object("LevelPlacement", {
   id: __t.uuid(),
   levelId: __t.uuid(),
-  z: __t.u8(),
-  widthPx: __t.u32(),
-  heightPx: __t.u32(),
-  parallaxX: __t.f32(),
-  parallaxY: __t.f32(),
-  encoding: __t.string(),
-  contentHash: __t.string(),
-  data: __t.byteArray(),
+  componentId: __t.uuid(),
+  get position() {
+    return Vec3;
+  },
+  flipX: __t.bool(),
+  scale: __t.f32(),
+  order: __t.u32(),
 });
-export type LevelLayer = __Infer<typeof LevelLayer>;
+export type LevelPlacement = __Infer<typeof LevelPlacement>;
 
-export const LevelLayerViewV1 = __t.object("LevelLayerViewV1", {
+export const LevelPlacementViewV1 = __t.object("LevelPlacementViewV1", {
   levelId: __t.uuid(),
-  z: __t.u8(),
-  widthPx: __t.u32(),
-  heightPx: __t.u32(),
-  parallaxX: __t.f32(),
-  parallaxY: __t.f32(),
-  encoding: __t.string(),
-  contentHash: __t.string(),
-  data: __t.byteArray(),
+  componentId: __t.uuid(),
+  get position() {
+    return Vec3;
+  },
+  flipX: __t.bool(),
+  scale: __t.f32(),
+  order: __t.u32(),
 });
-export type LevelLayerViewV1 = __Infer<typeof LevelLayerViewV1>;
+export type LevelPlacementViewV1 = __Infer<typeof LevelPlacementViewV1>;
 
 export const LevelSuccessor = __t.object("LevelSuccessor", {
   id: __t.uuid(),
@@ -102,6 +123,12 @@ export const LevelViewV1 = __t.object("LevelViewV1", {
   id: __t.uuid(),
   slug: __t.string(),
   name: __t.string(),
+  get spawn() {
+    return Vec2;
+  },
+  get finish() {
+    return Vec2;
+  },
 });
 export type LevelViewV1 = __Infer<typeof LevelViewV1>;
 
@@ -176,6 +203,16 @@ export const PieceViewV1 = __t.object("PieceViewV1", {
 });
 export type PieceViewV1 = __Infer<typeof PieceViewV1>;
 
+export const PlacementImportV1 = __t.object("PlacementImportV1", {
+  componentSlug: __t.string(),
+  get position() {
+    return Vec3;
+  },
+  flipX: __t.bool(),
+  scale: __t.f32(),
+});
+export type PlacementImportV1 = __Infer<typeof PlacementImportV1>;
+
 export const Player = __t.object("Player", {
   identity: __t.identity(),
   selectedCharacterId: __t.option(__t.uuid()),
@@ -221,4 +258,17 @@ export const PlayerUnlockedCharacter = __t.object("PlayerUnlockedCharacter", {
   characterId: __t.uuid(),
 });
 export type PlayerUnlockedCharacter = __Infer<typeof PlayerUnlockedCharacter>;
+
+export const Vec2 = __t.object("Vec2", {
+  x: __t.u16(),
+  y: __t.u16(),
+});
+export type Vec2 = __Infer<typeof Vec2>;
+
+export const Vec3 = __t.object("Vec3", {
+  x: __t.u16(),
+  y: __t.u16(),
+  z: __t.i8(),
+});
+export type Vec3 = __Infer<typeof Vec3>;
 

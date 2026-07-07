@@ -478,10 +478,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rocknrolla-geometry"
+version = "0.1.0"
+dependencies = [
+ "spacetimedb",
+]
+
+[[package]]
 name = "rocknrolla-level"
 version = "0.1.0"
 dependencies = [
  "rocknrolla-error",
+ "rocknrolla-geometry",
 ]
 
 [[package]]
@@ -490,6 +498,7 @@ version = "0.1.0"
 dependencies = [
  "log",
  "rocknrolla-error",
+ "rocknrolla-geometry",
  "rocknrolla-level",
  "spacetimedb",
 ]

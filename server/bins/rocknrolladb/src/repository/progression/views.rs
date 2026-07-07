@@ -17,7 +17,7 @@ pub struct MyCompletedLevelViewV1 {
 }
 
 /// The caller's enabled levels; never another player's.
-#[view(accessor = vw_my_enabled_level_v1, public)]
+#[view(accessor = vw_my_enabled_level_v1, name = "vw_my_enabled_level_v1", public)]
 pub fn vw_my_enabled_level_v1(ctx: &ViewContext) -> Vec<MyEnabledLevelViewV1> {
     ctx.db
         .player_enabled_level_v1()
@@ -28,7 +28,7 @@ pub fn vw_my_enabled_level_v1(ctx: &ViewContext) -> Vec<MyEnabledLevelViewV1> {
 }
 
 /// The caller's completed levels; never another player's.
-#[view(accessor = vw_my_completed_level_v1, public)]
+#[view(accessor = vw_my_completed_level_v1, name = "vw_my_completed_level_v1", public)]
 pub fn vw_my_completed_level_v1(ctx: &ViewContext) -> Vec<MyCompletedLevelViewV1> {
     ctx.db
         .player_completed_level_v1()

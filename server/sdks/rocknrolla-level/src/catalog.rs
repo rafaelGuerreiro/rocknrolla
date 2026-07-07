@@ -3,11 +3,8 @@
 //! Stored level data references these stable semantic IDs; art assets and
 //! Tiled global IDs map onto them but never replace them.
 
-/// Logical cell size in pixels for the gameplay layer, matching the native
-/// Kenney `Default` tile size.
+/// Logical authoring cell size in pixels for gameplay-plane components.
 pub const GAMEPLAY_CELL_SIZE: u16 = 64;
-/// The gameplay/collision layer always sits at this Z.
-pub const GAMEPLAY_Z: u8 = 127;
 
 pub mod tile {
     pub const EMPTY: u8 = 0;

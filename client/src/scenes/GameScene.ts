@@ -1,12 +1,7 @@
 import Phaser from 'phaser';
 import { characterSpriteKey } from '../assets';
 import { db } from '../db';
-import {
-  GAMEPLAY_Z,
-  layerTextureKey,
-  loadLevel,
-  type DecodedLevel,
-} from '../levels';
+import { DEPTH, loadLevel, type DecodedLevel } from '../levels';
 import {
   FACE_ASPECT,
   FACE_OFFSET_Y_RATIO,
@@ -94,17 +89,20 @@ export class GameScene extends Phaser.Scene {
       this.failToMenu(error instanceof Error ? error.message : String(error));
       return;
     }
-    // Layer scene SVGs become textures once per content hash; replays and
-    // other levels sharing a hash skip straight to the build.
-    const missing = this.level.layers.filter(
-      (layer) => !this.textures.exists(layerTextureKey(layer)),
-    );
+    // Composed plane and dynamic-object SVGs become textures once per
+    // content hash; replays and unchanged planes skip straight to the build.
+    const missing = [...this.level.planes, ...this.level.dynamicTextures]
+      .map((t) => ({
+        key: 'textureKey' in t ? t.textureKey : t.key,
+        svg: t.svg,
+      }))
+      .filter((t) => !this.textures.exists(t.key));
     if (missing.length === 0) {
       this.buildWorld();
       return;
     }
-    for (const layer of missing) {
-      this.load.svg(layerTextureKey(layer), svgDataUrl(layer.svg));
+    for (const texture of missing) {
+      this.load.svg(texture.key, svgDataUrl(texture.svg));
     }
     this.load.once(Phaser.Loader.Events.COMPLETE, () => this.buildWorld());
     this.load.start();
@@ -112,9 +110,7 @@ export class GameScene extends Phaser.Scene {
 
   private buildWorld(): void {
     if (
-      this.level.layers.some(
-        (layer) => !this.textures.exists(layerTextureKey(layer)),
-      )
+      this.level.planes.some((plane) => !this.textures.exists(plane.textureKey))
     ) {
       this.failToMenu('Level art failed to load.');
       return;
@@ -275,7 +271,7 @@ export class GameScene extends Phaser.Scene {
     this.face = this.add
       .image(spawn.x, spawn.y, faceTextureKey(this.expression))
       .setDisplaySize(width, width * FACE_ASPECT)
-      .setDepth(GAMEPLAY_Z + 2);
+      .setDepth(DEPTH.FACE);
   }
 
   private setFace(expression: FaceName): void {
@@ -310,19 +306,20 @@ export class GameScene extends Phaser.Scene {
    */
   private buildBackdrop(): void {
     ensureBackdropTextures(this);
+    // Below the deepest background plane (placement z bottoms out at -128).
     this.sky = this.add
       .image(0, 0, 'dusk-sky')
       .setDisplaySize(VIEW_W, VIEW_H)
-      .setDepth(-10);
+      .setDepth(-200);
     this.hillFar = this.add
       .tileSprite(0, 0, VIEW_W, 150, 'hill-far')
       .setTileScale(1 / DPR)
-      .setDepth(-9)
+      .setDepth(-190)
       .setAlpha(0.9);
     this.hillMid = this.add
       .tileSprite(0, 0, VIEW_W, 110, 'hill-mid')
       .setTileScale(1 / DPR)
-      .setDepth(-8);
+      .setDepth(-180);
     this.trackBackdrop();
   }
 
@@ -384,7 +381,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.player) return;
     const ring = this.add
       .image(this.player.x, this.player.y + 12, 'dust')
-      .setDepth(GAMEPLAY_Z)
+      .setDepth(DEPTH.EFFECTS)
       .setAlpha(0.7)
       .setTint(0xffe0a3);
     this.tweens.add({
@@ -406,7 +403,7 @@ export class GameScene extends Phaser.Scene {
           this.player.y + 12,
           'dust',
         )
-        .setDepth(GAMEPLAY_Z)
+        .setDepth(DEPTH.EFFECTS)
         .setAlpha(0.6)
         .setTint(0xb9a58c)
         .setScale(Phaser.Math.FloatBetween(0.4, 0.9));

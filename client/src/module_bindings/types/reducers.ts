@@ -8,6 +8,7 @@ import { type Infer as __Infer } from "spacetimedb";
 // Import all reducer arg schemas
 import CompleteLevelReducer from "../complete_level_reducer";
 import ImportCharacterReducer from "../import_character_reducer";
+import ImportComponentReducer from "../import_component_reducer";
 import ImportLevelReducer from "../import_level_reducer";
 import ImportLootboxReducer from "../import_lootbox_reducer";
 import ImportPieceReducer from "../import_piece_reducer";
@@ -16,6 +17,7 @@ import SelectCharacterReducer from "../select_character_reducer";
 
 export type CompleteLevelParams = __Infer<typeof CompleteLevelReducer>;
 export type ImportCharacterParams = __Infer<typeof ImportCharacterReducer>;
+export type ImportComponentParams = __Infer<typeof ImportComponentReducer>;
 export type ImportLevelParams = __Infer<typeof ImportLevelReducer>;
 export type ImportLootboxParams = __Infer<typeof ImportLootboxReducer>;
 export type ImportPieceParams = __Infer<typeof ImportPieceReducer>;

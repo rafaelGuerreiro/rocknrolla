@@ -24,7 +24,7 @@ pub struct MyUnlockedCharacterViewV1 {
 
 /// The caller's own player row; never another player's. Mapped through a
 /// dedicated view struct so the private table type never enters bindings.
-#[view(accessor = vw_me_v1, public)]
+#[view(accessor = vw_me_v1, name = "vw_me_v1", public)]
 pub fn vw_me_v1(ctx: &ViewContext) -> Option<MeViewV1> {
     ctx.db.player_v1().identity().find(ctx.sender()).map(
         |Player {
@@ -38,7 +38,7 @@ pub fn vw_me_v1(ctx: &ViewContext) -> Option<MeViewV1> {
 }
 
 /// The caller's piece collection; never another player's.
-#[view(accessor = vw_my_piece_v1, public)]
+#[view(accessor = vw_my_piece_v1, name = "vw_my_piece_v1", public)]
 pub fn vw_my_piece_v1(ctx: &ViewContext) -> Vec<MyPieceViewV1> {
     ctx.db
         .player_piece_v1()
@@ -49,7 +49,7 @@ pub fn vw_my_piece_v1(ctx: &ViewContext) -> Vec<MyPieceViewV1> {
 }
 
 /// The caller's unlocked characters; never another player's.
-#[view(accessor = vw_my_unlocked_character_v1, public)]
+#[view(accessor = vw_my_unlocked_character_v1, name = "vw_my_unlocked_character_v1", public)]
 pub fn vw_my_unlocked_character_v1(ctx: &ViewContext) -> Vec<MyUnlockedCharacterViewV1> {
     ctx.db
         .player_unlocked_character_v1()

@@ -25,7 +25,7 @@ pub struct PieceViewV1 {
     pub character_id: Uuid,
 }
 
-#[view(accessor = vw_character_v1, public)]
+#[view(accessor = vw_character_v1, name = "vw_character_v1", public)]
 pub fn vw_character_v1(ctx: &AnonymousViewContext) -> Vec<CharacterViewV1> {
     ctx.db
         .character_def_v1()
@@ -44,7 +44,7 @@ pub fn vw_character_v1(ctx: &AnonymousViewContext) -> Vec<CharacterViewV1> {
         .collect()
 }
 
-#[view(accessor = vw_piece_v1, public)]
+#[view(accessor = vw_piece_v1, name = "vw_piece_v1", public)]
 pub fn vw_piece_v1(ctx: &AnonymousViewContext) -> Vec<PieceViewV1> {
     ctx.db
         .piece_def_v1()

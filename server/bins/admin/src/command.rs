@@ -12,10 +12,12 @@ pub enum Command {
     SetDatabase(String),
     SetServer(String),
     ValidateLevels(Option<String>),
+    ValidateComponents(Option<String>),
     ValidateSeed(Option<String>),
     ValidateAll,
     ImportLevels(Option<String>),
-    ExportLevels(String),
+    ImportComponents(Option<String>),
+    ExportComponents(String),
     ImportSeed(Option<String>),
     ImportAll,
 }
@@ -26,13 +28,15 @@ commands:
   status                   show target server, database, and content paths
   set server <name>        change the target server
   set database <name>      change the target database
+  validate components [path]  validate authored components (no mutation)
   validate levels [path]   validate authored level sources (no mutation)
   validate seed [path]     validate seed content (no mutation)
-  validate all             validate levels and seed together (no mutation)
+  validate all             validate components, levels, and seed (no mutation)
+  import components [path] import components after confirmation
   import levels [path]     import levels after confirmation
   import seed [path]       import seed content after confirmation
-  import all               import seed then levels after confirmation
-  export levels <dir>      render level sources to SVG files for inspection
+  import all               import seed, components, then levels after confirmation
+  export components <dir>  render the starter component library to SVG files
   quit | exit              leave the shell (EOF also exits)";
 
 /// Parse one input line. `Ok(None)` means an empty line to ignore.
@@ -49,13 +53,15 @@ pub fn parse_line(line: &str) -> Result<Option<Command>> {
             bail!("'{}' needs a value", line.trim());
         },
         ["validate", "levels", rest @ ..] => Command::ValidateLevels(optional_path(rest)?),
+        ["validate", "components", rest @ ..] => Command::ValidateComponents(optional_path(rest)?),
         ["validate", "seed", rest @ ..] => Command::ValidateSeed(optional_path(rest)?),
         ["validate", "all"] => Command::ValidateAll,
         ["import", "levels", rest @ ..] => Command::ImportLevels(optional_path(rest)?),
+        ["import", "components", rest @ ..] => Command::ImportComponents(optional_path(rest)?),
         ["import", "seed", rest @ ..] => Command::ImportSeed(optional_path(rest)?),
         ["import", "all"] => Command::ImportAll,
-        ["export", "levels", dir] => Command::ExportLevels(dir.to_string()),
-        ["export", "levels"] => bail!("'export levels' needs a target directory"),
+        ["export", "components", dir] => Command::ExportComponents(dir.to_string()),
+        ["export", "components"] => bail!("'export components' needs a target directory"),
         _ => bail!("unknown command '{}'", line.trim()),
     };
     Ok(Some(command))
@@ -89,8 +95,16 @@ mod tests {
         );
         assert_eq!(parse_line("import all").unwrap(), Some(Command::ImportAll));
         assert_eq!(
-            parse_line("export levels /tmp/out").unwrap(),
-            Some(Command::ExportLevels("/tmp/out".into()))
+            parse_line("validate components ../levels/components").unwrap(),
+            Some(Command::ValidateComponents(Some("../levels/components".into())))
+        );
+        assert_eq!(
+            parse_line("import components").unwrap(),
+            Some(Command::ImportComponents(None))
+        );
+        assert_eq!(
+            parse_line("export components /tmp/out").unwrap(),
+            Some(Command::ExportComponents("/tmp/out".into()))
         );
     }
 
@@ -121,6 +135,7 @@ mod tests {
         assert!(parse_line("set database").is_err());
         assert!(parse_line("validate levels a b").is_err());
         assert!(parse_line("frobnicate").is_err());
-        assert!(parse_line("export levels").is_err());
+        assert!(parse_line("export components").is_err());
+        assert!(parse_line("export levels /tmp/out").is_err());
     }
 }

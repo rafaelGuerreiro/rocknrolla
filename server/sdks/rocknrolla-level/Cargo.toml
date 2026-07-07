@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 rocknrolla-error = { path = "../rocknrolla-error" }
+rocknrolla-geometry = { path = "../rocknrolla-geometry" }

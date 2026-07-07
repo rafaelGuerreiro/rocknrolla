@@ -1,5 +1,7 @@
 //! Level reducers: parameter/caller validation plus one service delegation.
 
+use rocknrolla_geometry::Vec2;
+
 use crate::{
     error::ServiceResult,
     extend::validate::validate_required_str,
@@ -7,7 +9,7 @@ use crate::{
         access,
         level::{
             services::{LevelImport, LevelReducerContext},
-            types::LayerImportV1,
+            types::PlacementImportV1,
         },
     },
 };
@@ -24,7 +26,9 @@ pub fn import_level(
     active: bool,
     reward_lootbox_id: Option<Uuid>,
     successors: Vec<Uuid>,
-    layers: Vec<LayerImportV1>,
+    spawn: Vec2,
+    finish: Vec2,
+    placements: Vec<PlacementImportV1>,
 ) -> ServiceResult<()> {
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&slug, "slug", 64)?;
@@ -37,6 +41,8 @@ pub fn import_level(
         active,
         reward_lootbox_id,
         successors,
-        layers,
+        spawn,
+        finish,
+        placements,
     })
 }

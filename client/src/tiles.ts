@@ -1,8 +1,8 @@
 /**
  * The few client-side prop SVGs still drawn as standalone textures. Level
- * terrain and hazards ship inside each layer's `svg-v1` scene document
- * (generated server-side); the client only draws what moves or appears
- * outside gameplay: the dynamic heavy block and the result-screen flag.
+ * terrain and hazards ship inside the component library's SVG documents;
+ * the client only draws what is level-owned rather than authored: the
+ * finish pole/flag. Dynamic heavy blocks use their component's art.
  */
 
 /** Data URL consumable by Phaser's SVG loader (which base64-decodes it). */
@@ -14,13 +14,6 @@ const tile = (body: string): string =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${body}</svg>`;
 
 export const TILE_SVG: Record<string, string> = {
-  tile_heavy: tile(
-    '<rect x="3" y="3" width="94" height="94" rx="14" fill="#7d786e" stroke="#55514a" stroke-width="5"/>' +
-      '<rect x="12" y="12" width="76" height="34" rx="10" fill="#98938a" opacity=".55"/>' +
-      '<circle cx="17" cy="17" r="4" fill="#4a463f"/><circle cx="83" cy="17" r="4" fill="#4a463f"/>' +
-      '<circle cx="17" cy="83" r="4" fill="#4a463f"/><circle cx="83" cy="83" r="4" fill="#4a463f"/>' +
-      '<path d="M38 62 h24 M50 52 v20" stroke="#55514a" stroke-width="6" stroke-linecap="round"/>',
-  ),
   tile_finish: tile(
     '<rect x="22" y="6" width="7" height="94" rx="3.5" fill="#241d16"/>' +
       '<rect x="29" y="10" width="60" height="36" fill="#f5ecd8"/>' +
