@@ -1,9 +1,11 @@
 /**
- * Dev-only component gallery (components.html). Renders every SVG in
+ * Dev-only asset gallery (components.html). Renders every SVG in
  * `levels/components/` straight from disk so saving a file in the IDE
- * live-reloads the page. A viewer, not an editor.
+ * live-reloads the page, plus the roller character bodies from
+ * `rollers.ts`. A viewer, not an editor.
  */
 import { TILE, contentHash } from './levels';
+import { ROLLER_BODY_SVG } from './rollers';
 
 const files = import.meta.glob('../../levels/components/*.svg', {
   query: '?raw',
@@ -40,6 +42,15 @@ function slugOf(path: string): string {
     .split('/')
     .pop()!
     .replace(/\.svg$/, '');
+}
+
+/** Component SVGs carry explicit width/height; roller bodies only have a viewBox. */
+function dimensionsOf(root: SVGSVGElement): { width: number; height: number } {
+  const width = Number(root.getAttribute('width'));
+  const height = Number(root.getAttribute('height'));
+  if (width && height) return { width, height };
+  const viewBox = root.getAttribute('viewBox')?.split(/\s+/).map(Number);
+  return viewBox ? { width: viewBox[2], height: viewBox[3] } : { width: 0, height: 0 };
 }
 
 function buildOverlay(svg: SVGSVGElement): SVGGElement {
@@ -82,8 +93,11 @@ function addCard(gallery: HTMLElement, path: string, raw: string): void {
   }
   const svg = document.importNode(doc.documentElement, true) as unknown;
   const root = svg as SVGSVGElement;
-  const width = Number(root.getAttribute('width'));
-  const height = Number(root.getAttribute('height'));
+  const { width, height } = dimensionsOf(root);
+  // Roller bodies only carry a viewBox; give every card an explicit
+  // intrinsic size so it doesn't stretch to fill the flex row.
+  root.setAttribute('width', String(width));
+  root.setAttribute('height', String(height));
   const overlay = buildOverlay(root);
   const hash = contentHash(width, height, new TextEncoder().encode(raw));
 
@@ -119,6 +133,11 @@ if (paths.length === 0) {
   gallery.innerHTML = `<div class="empty">No components found in <code>levels/components/</code>.</div>`;
 }
 for (const path of paths) addCard(gallery, path, files[path]);
+
+const characters = document.querySelector<HTMLElement>('#characters')!;
+for (const style of Object.keys(ROLLER_BODY_SVG).sort()) {
+  addCard(characters, `characters/${style}.svg`, ROLLER_BODY_SVG[style]);
+}
 
 const zoom = document.querySelector<HTMLSelectElement>('#zoom')!;
 zoom.addEventListener('change', () => applyZoom(Number(zoom.value)));

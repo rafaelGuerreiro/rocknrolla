@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RocknRolla — Component Gallery</title>
+    <title>RocknRolla — Asset Gallery</title>
     <style>
       :root {
         --card-bg: #ffffff;
@@ -38,7 +38,8 @@
         align-items: center;
         font-size: 0.85rem;
       }
-      #gallery {
+      #gallery,
+      #characters {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
@@ -91,6 +92,14 @@
         font-size: 1.1rem;
         opacity: 0.7;
       }
+      .section-label {
+        padding: 1rem 1rem 0;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.6;
+      }
       svg [data-overlay] {
         pointer-events: none;
       }
@@ -98,7 +107,7 @@
   </head>
   <body class="bg-light">
     <header>
-      <h1>Component Gallery</h1>
+      <h1>Asset Gallery</h1>
       <label>
         zoom
         <select id="zoom">
@@ -121,7 +130,10 @@
         </select>
       </label>
     </header>
+    <div class="section-label">Components</div>
     <div id="gallery"></div>
+    <div class="section-label">Characters</div>
+    <div id="characters"></div>
     <script type="module" src="/src/gallery.ts"></script>
   </body>
 </html>

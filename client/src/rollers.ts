@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import { svgDataUrl } from './tiles';
 
 /**
- * The five two-layer rollers, copied verbatim from the approved design
- * (design_handoff_rocknrolla/source/RocknRolla-Characters.dc.html).
+ * The five two-layer rollers, originally copied from the approved design
+ * (design_handoff_rocknrolla/source/RocknRolla-Characters.dc.html); body
+ * silhouettes tuned since (rock/paper less round, gem/egg widened).
  *
  * Bodies are faceless and rotate with the physics; faces are a shared set
  * of expressions layered on top, kept upright and swapped on events. Keys
@@ -16,28 +17,28 @@ const face = (art: string): string =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50">${art}</svg>`;
 
 export const ROLLER_BODY_SVG: Record<string, string> = {
-  // Rock · angular ten-sided boulder
+  // Rock · irregular nine-sided boulder
   rock: body(
     '<radialGradient id="c-rock" cx="36%" cy="28%"><stop offset="0" stop-color="#bcb1a1"/><stop offset=".6" stop-color="#736a5c"/><stop offset="1" stop-color="#463f36"/></radialGradient>',
-    '<polygon points="58,9 86,17 109,43 106,73 90,100 60,113 33,104 11,77 17,44 33,19" fill="url(#c-rock)"/>' +
-      '<polygon points="58,9 33,19 17,44 33,52 60,30" fill="#ffffff" opacity=".14"/>' +
-      '<polygon points="106,73 90,100 60,113 60,72" fill="#000000" opacity=".16"/>' +
-      '<path d="M26 62 l14 -5 l9 6" fill="none" stroke="#40382f" stroke-width="2.4" stroke-linecap="round" opacity=".5"/>' +
+    '<polygon points="107,69 83,96 55,94 18,93 28,63 16,36 45,24 81,11 87,47" fill="url(#c-rock)"/>' +
+      '<polygon points="81,11 45,24 16,36 28,63 55,40" fill="#ffffff" opacity=".14"/>' +
+      '<polygon points="107,69 83,96 55,94 70,60" fill="#000000" opacity=".16"/>' +
+      '<path d="M36 64 l14 -5 l9 6" fill="none" stroke="#40382f" stroke-width="2.4" stroke-linecap="round" opacity=".5"/>' +
       '<path d="M78 34 l-10 8" fill="none" stroke="#40382f" stroke-width="2" stroke-linecap="round" opacity=".4"/>',
   ),
-  // Gem Shard · long-axis crystal
+  // Gem Shard · faceted crystal, blunt tips
   gem: body(
     '<linearGradient id="c-gem" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#8ff0f0"/><stop offset=".5" stop-color="#3fb6bd"/><stop offset="1" stop-color="#237580"/></linearGradient>',
-    '<polygon points="66,4 90,40 78,88 58,116 42,80 38,40 52,16" fill="url(#c-gem)"/>' +
-      '<polygon points="66,4 52,16 38,40 58,44" fill="#c6fbfb" opacity=".55"/>' +
-      '<polygon points="66,4 90,40 58,44" fill="#ffffff" opacity=".28"/>' +
-      '<path d="M38 40 L78 44 M58 44 L58 116 M58 44 L42 80 M58 44 L78 88" stroke="#ffffff" stroke-width="1.4" opacity=".4" fill="none"/>' +
-      '<polygon points="78,88 58,116 58,72" fill="#12525a" opacity=".35"/>',
+    '<polygon points="54,10 72,9 97,42 82,90 66,116 52,114 39,82 33,42" fill="url(#c-gem)"/>' +
+      '<polygon points="54,10 33,42 62,46" fill="#c6fbfb" opacity=".55"/>' +
+      '<polygon points="72,9 97,42 62,46" fill="#ffffff" opacity=".28"/>' +
+      '<path d="M33 42 L97 42 M62 46 L59 115 M62 46 L39 82 M62 46 L82 90" stroke="#ffffff" stroke-width="1.4" opacity=".4" fill="none"/>' +
+      '<polygon points="82,90 66,116 52,114 62,72" fill="#12525a" opacity=".35"/>',
   ),
-  // Egg · off-center weight
+  // Egg · wide, off-center weight
   egg: body(
     '<radialGradient id="c-egg" cx="40%" cy="30%"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#e9d6ba"/></radialGradient>',
-    '<path d="M60 8 C42 8 31 36 31 62 C31 92 44 114 60 114 C76 114 89 92 89 62 C89 36 78 8 60 8 Z" fill="url(#c-egg)"/>' +
+    '<path d="M60 6 C86 6 96 32 96 60 C96 88 84 116 60 116 C36 116 24 88 24 60 C24 32 34 6 60 6 Z" fill="url(#c-egg)"/>' +
       '<ellipse cx="47" cy="38" rx="12" ry="17" fill="#ffffff" opacity=".5"/>' +
       '<circle cx="76" cy="70" r="4" fill="#f6b8c4" opacity=".55"/><circle cx="42" cy="74" r="4" fill="#f6b8c4" opacity=".55"/>',
   ),
@@ -49,14 +50,14 @@ export const ROLLER_BODY_SVG: Record<string, string> = {
       '<ellipse cx="43" cy="30" rx="13" ry="8" fill="#ffffff" opacity=".14"/>' +
       '<circle cx="86" cy="86" r="2.6" fill="#33200f" opacity=".6"/><circle cx="96" cy="74" r="2.4" fill="#33200f" opacity=".5"/><circle cx="90" cy="96" r="2.2" fill="#33200f" opacity=".5"/>',
   ),
-  // Paper Ball · crumpled featherweight
+  // Paper Ball · crumpled, irregular facets
   paper: body(
     '<radialGradient id="c-paper" cx="40%" cy="32%"><stop offset="0" stop-color="#fbf6ea"/><stop offset="1" stop-color="#d8cdb8"/></radialGradient>',
-    '<polygon points="60,8 74,15 87,10 93,26 107,33 100,49 110,62 97,74 102,92 85,93 74,106 60,99 45,107 37,92 20,91 27,73 12,60 25,49 17,33 33,28 39,13 53,19" fill="url(#c-paper)"/>' +
-      '<path d="M60 20 L62 58 L50 84 M92 30 L62 58 L100 66 M22 58 L62 58 L34 90 M78 96 L62 58" fill="none" stroke="#b7ac94" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>' +
-      '<path d="M40 32 L62 58 M84 78 L62 58" fill="none" stroke="#fffdf7" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>' +
-      '<polygon points="60,8 53,19 39,13 60,20" fill="#ffffff" opacity=".3"/>' +
-      '<polygon points="85,93 74,106 60,99 78,88" fill="#b7ac94" opacity=".28"/>',
+    '<polygon points="110,58 73,94 41,111 17,66 20,25 64,18 101,23" fill="url(#c-paper)"/>' +
+      '<path d="M64 18 L60 58 L41 111 M110 58 L60 58 L73 94 M17 66 L60 58" fill="none" stroke="#b7ac94" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>' +
+      '<path d="M20 25 L60 58 M101 23 L60 58" fill="none" stroke="#fffdf7" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>' +
+      '<polygon points="20,25 64,18 101,23 60,45" fill="#ffffff" opacity=".3"/>' +
+      '<polygon points="73,94 41,111 17,66 55,70" fill="#b7ac94" opacity=".28"/>',
   ),
 };
 
