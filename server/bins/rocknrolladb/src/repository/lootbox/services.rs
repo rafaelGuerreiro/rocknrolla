@@ -4,19 +4,19 @@ use crate::{
     error::ServiceResult,
     extend::{access::ensure_owner, make_service::make_service, stdb::UuidGen},
     repository::{
-        character::services::CharacterReducerContext,
+        character::services::CharacterServicesTrait,
         lootbox::{
             LootboxDef, LootboxDrop, PlayerLootbox, errors::LootboxError, lootbox_def_v1, lootbox_drop_v1, player_lootbox_v1,
             types::DropImportV1,
         },
-        player::services::PlayerReducerContext,
+        player::services::PlayerServicesTrait,
     },
 };
 use spacetimedb::{Identity, Table, Uuid, rand::Rng};
 
-make_service!(LootboxReducerContext, lootbox_services, LootboxServices);
+make_service!(lootbox_services);
 
-impl LootboxServices<'_> {
+impl LootboxServicesImpl<'_> {
     /// Overwrite one authored lootbox definition and its drop table,
     /// verifying every referenced piece and weight.
     pub fn import_lootbox(&self, id: Uuid, name: String, drops: Vec<DropImportV1>) -> ServiceResult<()> {

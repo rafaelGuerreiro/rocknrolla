@@ -7,9 +7,9 @@ use crate::{
 };
 use rocknrolla_level::{ComponentFacts, validate_component};
 
-make_service!(ComponentReducerContext, component_services, ComponentServices);
+make_service!(component_services);
 
-impl ComponentServices<'_> {
+impl ComponentServicesImpl<'_> {
     /// Atomically overwrite one component by slug. The slug is the authored
     /// identity (filename); the UUID is generated on first import and kept
     /// stable across overwrites so placements never dangle.

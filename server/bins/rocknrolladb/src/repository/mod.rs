@@ -3,8 +3,8 @@
 use crate::{
     error::ServiceResult,
     repository::{
-        character::services::CharacterReducerContext, level::services::LevelReducerContext,
-        player::services::PlayerReducerContext, progression::services::ProgressionReducerContext,
+        character::services::CharacterServicesTrait, level::services::LevelServicesTrait,
+        player::services::PlayerServicesTrait, progression::services::ProgressionServicesTrait,
     },
 };
 use spacetimedb::ReducerContext;

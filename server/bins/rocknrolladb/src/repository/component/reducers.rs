@@ -5,7 +5,7 @@ use crate::{
     extend::validate::validate_required_str,
     repository::{
         access,
-        component::{services::ComponentReducerContext, types::ComponentImportV1},
+        component::{services::ComponentServicesTrait, types::ComponentImportV1},
     },
 };
 use spacetimedb::ReducerContext;

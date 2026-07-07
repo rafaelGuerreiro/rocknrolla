@@ -1,6 +1,6 @@
 //! Progression reducers: parameter/caller validation plus one service delegation.
 
-use crate::{error::ServiceResult, repository::progression::services::ProgressionReducerContext};
+use crate::{error::ServiceResult, repository::progression::services::ProgressionServicesTrait};
 use spacetimedb::{ReducerContext, Uuid};
 
 #[spacetimedb::reducer(name = "complete_level_v1")]

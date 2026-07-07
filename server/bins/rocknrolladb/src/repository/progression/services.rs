@@ -4,8 +4,8 @@ use crate::{
     error::ServiceResult,
     extend::{make_service::make_service, stdb::UuidGen},
     repository::{
-        level::services::LevelReducerContext,
-        lootbox::services::LootboxReducerContext,
+        level::services::LevelServicesTrait,
+        lootbox::services::LootboxServicesTrait,
         progression::{
             PlayerCompletedLevel, PlayerEnabledLevel, PlayerSelectedLevel, errors::ProgressionError, player_completed_level_v1,
             player_enabled_level_v1, player_selected_level_v1,
@@ -14,9 +14,9 @@ use crate::{
 };
 use spacetimedb::{Identity, Table, Uuid};
 
-make_service!(ProgressionReducerContext, progression_services, ProgressionServices);
+make_service!(progression_services);
 
-impl ProgressionServices<'_> {
+impl ProgressionServicesImpl<'_> {
     /// Idempotently enable each of the given levels for `owner`.
     pub fn enable_levels_if_absent(&self, owner: Identity, level_ids: &[Uuid]) -> ServiceResult<()> {
         let enabled = self.enabled_level_ids(owner);

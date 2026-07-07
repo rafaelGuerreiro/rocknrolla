@@ -7,9 +7,9 @@ use crate::{
 };
 use spacetimedb::Uuid;
 
-make_service!(CharacterReducerContext, character_services, CharacterServices);
+make_service!(character_services);
 
-impl CharacterServices<'_> {
+impl CharacterServicesImpl<'_> {
     /// Overwrite one authored character definition by its stable UUID.
     pub fn import_character(&self, row: CharacterDef) -> ServiceResult<()> {
         self.db.character_def_v1().id().insert_or_update(row);

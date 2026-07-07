@@ -11,9 +11,9 @@ use crate::{
 };
 use spacetimedb::{Identity, Table, Uuid};
 
-make_service!(PlayerReducerContext, player_services, PlayerServices);
+make_service!(player_services);
 
-impl PlayerServices<'_> {
+impl PlayerServicesImpl<'_> {
     /// Idempotently ensure `owner` has a player row, every starter character,
     /// and a selected character. Safe to re-run so content imported after a
     /// player's first connection is picked up.

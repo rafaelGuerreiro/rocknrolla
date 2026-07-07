@@ -6,6 +6,7 @@ resolver = "2"
 spacetimedb = { version = "2.6", features = ["unstable"] }
 log = "^0.4"
 thiserror = "^2.0"
+paste = "^1.0"
 
 [profile.release]
 lto = true

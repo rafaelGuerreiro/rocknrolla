@@ -5,7 +5,7 @@ use crate::{
     extend::validate::{validate_f32_range, validate_positive_u32, validate_required_str},
     repository::{
         access,
-        character::{CharacterDef, PieceDef, services::CharacterReducerContext},
+        character::{CharacterDef, PieceDef, services::CharacterServicesTrait},
     },
 };
 use spacetimedb::{ReducerContext, Uuid};

@@ -4,7 +4,7 @@ use crate::{
     error::ServiceResult,
     extend::{make_service::make_service, stdb::UuidGen},
     repository::{
-        component::services::ComponentReducerContext,
+        component::services::ComponentServicesTrait,
         level::{
             Level, LevelPlacement, LevelSuccessor, errors::LevelError, level_placement_v1, level_successor_v1, level_v1,
             types::PlacementImportV1,
@@ -14,7 +14,7 @@ use crate::{
 use rocknrolla_level::{PlacementFacts, Vec2, validate_level_geometry};
 use spacetimedb::{Table, Uuid};
 
-make_service!(LevelReducerContext, level_services, LevelServices);
+make_service!(level_services);
 
 /// A validated request to overwrite one authored level.
 pub struct LevelImport {
@@ -30,7 +30,7 @@ pub struct LevelImport {
     pub placements: Vec<PlacementImportV1>,
 }
 
-impl LevelServices<'_> {
+impl LevelServicesImpl<'_> {
     /// Atomically overwrite one level's metadata, placements, and successor
     /// edges. Every placement must reference an imported component slug and
     /// spawn/finish must land inside the gameplay-plane bounds. The stable

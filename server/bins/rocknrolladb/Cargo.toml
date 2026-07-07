@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 spacetimedb = { workspace = true }
 log = { workspace = true }
 thiserror = { workspace = true }
+paste = { workspace = true }
 rocknrolla-error = { path = "../../sdks/rocknrolla-error" }
 rocknrolla-level = { path = "../../sdks/rocknrolla-level" }
 rocknrolla-geometry = { path = "../../sdks/rocknrolla-geometry" }

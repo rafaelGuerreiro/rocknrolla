@@ -8,7 +8,7 @@ use crate::{
     repository::{
         access,
         level::{
-            services::{LevelImport, LevelReducerContext},
+            services::{LevelImport, LevelServicesTrait},
             types::PlacementImportV1,
         },
     },

@@ -1,6 +1,6 @@
 //! Player reducers: parameter/caller validation plus one service delegation.
 
-use crate::{error::ServiceResult, repository::player::services::PlayerReducerContext};
+use crate::{error::ServiceResult, repository::player::services::PlayerServicesTrait};
 use spacetimedb::{ReducerContext, Uuid};
 
 #[spacetimedb::reducer(name = "select_character_v1")]

@@ -5,7 +5,7 @@ use crate::{
     extend::validate::validate_required_str,
     repository::{
         access,
-        lootbox::{services::LootboxReducerContext, types::DropImportV1},
+        lootbox::{services::LootboxServicesTrait, types::DropImportV1},
     },
 };
 use spacetimedb::{ReducerContext, Uuid};
