@@ -15,9 +15,9 @@ use crate::{
 };
 use spacetimedb::{ReducerContext, Uuid};
 
-#[spacetimedb::reducer]
+#[spacetimedb::reducer(name = "import_level_v1")]
 #[allow(clippy::too_many_arguments)]
-pub fn import_level(
+pub fn import_level_v1(
     ctx: &ReducerContext,
     id: Uuid,
     slug: String,

@@ -2,33 +2,12 @@
 
 use crate::{
     error::ServiceResult,
-    extend::stdb::UuidGen,
+    extend::{make_service::make_service, stdb::UuidGen},
     repository::component::{Component, component_v1, types::ComponentImportV1},
 };
 use rocknrolla_level::{ComponentFacts, validate_component};
-use spacetimedb::ReducerContext;
-use std::ops::Deref;
 
-pub trait ComponentReducerContext {
-    fn component_services(&self) -> ComponentServices<'_>;
-}
-
-impl ComponentReducerContext for ReducerContext {
-    fn component_services(&self) -> ComponentServices<'_> {
-        ComponentServices { ctx: self }
-    }
-}
-
-pub struct ComponentServices<'a> {
-    ctx: &'a ReducerContext,
-}
-
-impl Deref for ComponentServices<'_> {
-    type Target = ReducerContext;
-    fn deref(&self) -> &Self::Target {
-        self.ctx
-    }
-}
+make_service!(ComponentReducerContext, component_services, ComponentServices);
 
 impl ComponentServices<'_> {
     /// Atomically overwrite one component by slug. The slug is the authored

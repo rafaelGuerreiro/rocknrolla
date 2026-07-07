@@ -501,6 +501,7 @@ dependencies = [
  "rocknrolla-geometry",
  "rocknrolla-level",
  "spacetimedb",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

@@ -1,37 +1,20 @@
 //! Progression services: level enabling and the first-completion workflow.
 
 use crate::{
-    error::{ServiceError, ServiceResult},
-    extend::stdb::UuidGen,
+    error::ServiceResult,
+    extend::{make_service::make_service, stdb::UuidGen},
     repository::{
         level::services::LevelReducerContext,
         lootbox::services::LootboxReducerContext,
-        progression::{PlayerCompletedLevel, PlayerEnabledLevel, player_completed_level_v1, player_enabled_level_v1},
+        progression::{
+            PlayerCompletedLevel, PlayerEnabledLevel, PlayerSelectedLevel, errors::ProgressionError, player_completed_level_v1,
+            player_enabled_level_v1, player_selected_level_v1,
+        },
     },
 };
-use spacetimedb::{Identity, ReducerContext, Table, Uuid};
-use std::ops::Deref;
+use spacetimedb::{Identity, Table, Uuid};
 
-pub trait ProgressionReducerContext {
-    fn progression_services(&self) -> ProgressionServices<'_>;
-}
-
-impl ProgressionReducerContext for ReducerContext {
-    fn progression_services(&self) -> ProgressionServices<'_> {
-        ProgressionServices { ctx: self }
-    }
-}
-
-pub struct ProgressionServices<'a> {
-    ctx: &'a ReducerContext,
-}
-
-impl Deref for ProgressionServices<'_> {
-    type Target = ReducerContext;
-    fn deref(&self) -> &Self::Target {
-        self.ctx
-    }
-}
+make_service!(ProgressionReducerContext, progression_services, ProgressionServices);
 
 impl ProgressionServices<'_> {
     /// Idempotently enable each of the given levels for `owner`.
@@ -61,10 +44,7 @@ impl ProgressionServices<'_> {
             .next()
             .is_none()
         {
-            return Err(ServiceError::forbidden(
-                owner,
-                format!("level '{}' is not enabled for this player", level.slug),
-            ));
+            return Err(ProgressionError::level_not_enabled(owner, &level.slug));
         }
         let already_completed = self
             .db
@@ -92,6 +72,27 @@ impl ProgressionServices<'_> {
         {
             self.lootbox_services().grant_lootbox(owner, reward_lootbox_id)?;
         }
+        Ok(())
+    }
+
+    /// Select one of the caller's enabled levels to play, replacing any
+    /// previous selection. Gates what `vw_level_placement_v1` exposes.
+    pub fn select_level(&self, owner: Identity, level_id: Uuid) -> ServiceResult<()> {
+        let level = self.level_services().find_active_level(level_id)?;
+        if self
+            .db
+            .player_enabled_level_v1()
+            .by_owner_level()
+            .filter((owner, level_id))
+            .next()
+            .is_none()
+        {
+            return Err(ProgressionError::level_not_enabled(owner, &level.slug));
+        }
+        self.db
+            .player_selected_level_v1()
+            .owner()
+            .insert_or_update(PlayerSelectedLevel { owner, level_id });
         Ok(())
     }
 

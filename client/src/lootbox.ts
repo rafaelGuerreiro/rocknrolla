@@ -40,7 +40,7 @@ export function openLootboxAndAwaitPiece(playerLootboxId: Uuid): Promise<Uuid> {
     );
     conn.db.vw_my_lootbox_v1.onInsert(onInsert);
     conn.db.vw_my_lootbox_v1.onUpdate(onUpdate);
-    conn.reducers.openLootbox({ playerLootboxId }).catch((error: unknown) => {
+    conn.reducers.openLootboxV1({ playerLootboxId }).catch((error: unknown) => {
       settle(() =>
         reject(error instanceof Error ? error : new Error(String(error))),
       );

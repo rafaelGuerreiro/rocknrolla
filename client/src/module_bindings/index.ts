@@ -34,14 +34,15 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
-import CompleteLevelReducer from "./complete_level_reducer";
-import ImportCharacterReducer from "./import_character_reducer";
-import ImportComponentReducer from "./import_component_reducer";
-import ImportLevelReducer from "./import_level_reducer";
-import ImportLootboxReducer from "./import_lootbox_reducer";
-import ImportPieceReducer from "./import_piece_reducer";
-import OpenLootboxReducer from "./open_lootbox_reducer";
-import SelectCharacterReducer from "./select_character_reducer";
+import CompleteLevelV1Reducer from "./complete_level_v_1_reducer";
+import ImportCharacterV1Reducer from "./import_character_v_1_reducer";
+import ImportComponentV1Reducer from "./import_component_v_1_reducer";
+import ImportLevelV1Reducer from "./import_level_v_1_reducer";
+import ImportLootboxV1Reducer from "./import_lootbox_v_1_reducer";
+import ImportPieceV1Reducer from "./import_piece_v_1_reducer";
+import OpenLootboxV1Reducer from "./open_lootbox_v_1_reducer";
+import SelectCharacterV1Reducer from "./select_character_v_1_reducer";
+import SelectLevelV1Reducer from "./select_level_v_1_reducer";
 
 // Import all procedure arg schemas
 
@@ -143,14 +144,15 @@ const tablesSchema = __schema({
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
-  __reducerSchema("complete_level", CompleteLevelReducer),
-  __reducerSchema("import_character", ImportCharacterReducer),
-  __reducerSchema("import_component", ImportComponentReducer),
-  __reducerSchema("import_level", ImportLevelReducer),
-  __reducerSchema("import_lootbox", ImportLootboxReducer),
-  __reducerSchema("import_piece", ImportPieceReducer),
-  __reducerSchema("open_lootbox", OpenLootboxReducer),
-  __reducerSchema("select_character", SelectCharacterReducer),
+  __reducerSchema("complete_level_v1", CompleteLevelV1Reducer),
+  __reducerSchema("import_character_v1", ImportCharacterV1Reducer),
+  __reducerSchema("import_component_v1", ImportComponentV1Reducer),
+  __reducerSchema("import_level_v1", ImportLevelV1Reducer),
+  __reducerSchema("import_lootbox_v1", ImportLootboxV1Reducer),
+  __reducerSchema("import_piece_v1", ImportPieceV1Reducer),
+  __reducerSchema("open_lootbox_v1", OpenLootboxV1Reducer),
+  __reducerSchema("select_character_v1", SelectCharacterV1Reducer),
+  __reducerSchema("select_level_v1", SelectLevelV1Reducer),
 );
 
 /** The schema information for all procedures in this module. This is defined the same way as the procedures would have been defined in the server. */

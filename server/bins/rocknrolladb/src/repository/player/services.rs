@@ -2,35 +2,16 @@
 //! and character unlocks.
 
 use crate::{
-    error::{ServiceError, ServiceResult},
-    extend::stdb::UuidGen,
+    error::ServiceResult,
+    extend::{make_service::make_service, stdb::UuidGen},
     repository::player::{
-        Player, PlayerPiece, PlayerUnlockedCharacter, player_piece_v1, player_unlocked_character_v1, player_v1,
+        Player, PlayerPiece, PlayerUnlockedCharacter, errors::PlayerError, player_piece_v1, player_unlocked_character_v1,
+        player_v1,
     },
 };
-use spacetimedb::{Identity, ReducerContext, Table, Uuid};
-use std::ops::Deref;
+use spacetimedb::{Identity, Table, Uuid};
 
-pub trait PlayerReducerContext {
-    fn player_services(&self) -> PlayerServices<'_>;
-}
-
-impl PlayerReducerContext for ReducerContext {
-    fn player_services(&self) -> PlayerServices<'_> {
-        PlayerServices { ctx: self }
-    }
-}
-
-pub struct PlayerServices<'a> {
-    ctx: &'a ReducerContext,
-}
-
-impl Deref for PlayerServices<'_> {
-    type Target = ReducerContext;
-    fn deref(&self) -> &Self::Target {
-        self.ctx
-    }
-}
+make_service!(PlayerReducerContext, player_services, PlayerServices);
 
 impl PlayerServices<'_> {
     /// Idempotently ensure `owner` has a player row, every starter character,
@@ -70,12 +51,9 @@ impl PlayerServices<'_> {
             .player_v1()
             .identity()
             .find(owner)
-            .ok_or_else(|| ServiceError::conflict("player not initialized"))?;
+            .ok_or_else(PlayerError::not_initialized)?;
         if !self.has_unlocked(owner, character_id) {
-            return Err(ServiceError::forbidden(
-                owner,
-                format!("character '{character_id}' is not unlocked"),
-            ));
+            return Err(PlayerError::character_not_unlocked(owner, character_id));
         }
         self.db.player_v1().identity().update(Player {
             selected_character_id: Some(character_id),

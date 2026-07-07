@@ -83,7 +83,7 @@ export class RunOutcome {
     );
     conn.db.vw_my_completed_level_v1.onInsert(this.confirmListener);
     conn.reducers
-      .completeLevel({ levelId: Uuid.parse(this.config.levelId) })
+      .completeLevelV1({ levelId: Uuid.parse(this.config.levelId) })
       .catch((error) => {
         if (!this.scene.scene.isActive()) return;
         this.cleanup();

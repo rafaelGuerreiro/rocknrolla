@@ -1,39 +1,20 @@
 //! Level repository services: content import and level lookups.
 
 use crate::{
-    error::{ServiceError, ServiceResult},
-    extend::stdb::UuidGen,
+    error::ServiceResult,
+    extend::{make_service::make_service, stdb::UuidGen},
     repository::{
         component::services::ComponentReducerContext,
         level::{
-            Level, LevelPlacement, LevelSuccessor, level_placement_v1, level_successor_v1, level_v1, types::PlacementImportV1,
+            Level, LevelPlacement, LevelSuccessor, errors::LevelError, level_placement_v1, level_successor_v1, level_v1,
+            types::PlacementImportV1,
         },
     },
 };
 use rocknrolla_level::{PlacementFacts, Vec2, validate_level_geometry};
-use spacetimedb::{ReducerContext, Table, Uuid};
-use std::ops::Deref;
+use spacetimedb::{Table, Uuid};
 
-pub trait LevelReducerContext {
-    fn level_services(&self) -> LevelServices<'_>;
-}
-
-impl LevelReducerContext for ReducerContext {
-    fn level_services(&self) -> LevelServices<'_> {
-        LevelServices { ctx: self }
-    }
-}
-
-pub struct LevelServices<'a> {
-    ctx: &'a ReducerContext,
-}
-
-impl Deref for LevelServices<'_> {
-    type Target = ReducerContext;
-    fn deref(&self) -> &Self::Target {
-        self.ctx
-    }
-}
+make_service!(LevelReducerContext, level_services, LevelServices);
 
 /// A validated request to overwrite one authored level.
 pub struct LevelImport {
@@ -60,12 +41,9 @@ impl LevelServices<'_> {
         let mut resolved = Vec::with_capacity(import.placements.len());
         let mut facts = Vec::with_capacity(import.placements.len());
         for placement in &import.placements {
-            let component = components.find_by_slug(&placement.component_slug).ok_or_else(|| {
-                ServiceError::validation(format!(
-                    "level '{}' places unknown component '{}'",
-                    import.slug, placement.component_slug
-                ))
-            })?;
+            let component = components
+                .find_by_slug(&placement.component_slug)
+                .ok_or_else(|| LevelError::unknown_component(&import.slug, &placement.component_slug))?;
             facts.push(PlacementFacts {
                 position: placement.position,
                 scale: placement.scale,
@@ -77,19 +55,13 @@ impl LevelServices<'_> {
         validate_level_geometry(&facts, import.spawn, import.finish)?;
         for successor in &import.successors {
             if *successor == import.id {
-                return Err(ServiceError::validation(format!(
-                    "level '{}' lists itself as a successor",
-                    import.slug
-                )));
+                return Err(LevelError::self_successor(&import.slug));
             }
         }
         if let Some(other) = self.db.level_v1().slug().find(&import.slug)
             && other.id != import.id
         {
-            return Err(ServiceError::conflict(format!(
-                "slug '{}' already belongs to level {}",
-                import.slug, other.id
-            )));
+            return Err(LevelError::slug_conflict(&import.slug, other.id));
         }
 
         self.db.level_v1().id().insert_or_update(Level {
@@ -131,9 +103,9 @@ impl LevelServices<'_> {
             .level_v1()
             .id()
             .find(level_id)
-            .ok_or_else(|| ServiceError::not_found(format!("unknown level '{level_id}'")))?;
+            .ok_or_else(|| LevelError::unknown_level(level_id))?;
         if !level.active {
-            return Err(ServiceError::conflict(format!("level '{}' is not active", level.slug)));
+            return Err(LevelError::inactive(&level.slug));
         }
         Ok(level)
     }

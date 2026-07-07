@@ -10,8 +10,8 @@ use crate::{
 };
 use spacetimedb::ReducerContext;
 
-#[spacetimedb::reducer]
-pub fn import_component(ctx: &ReducerContext, component: ComponentImportV1) -> ServiceResult<()> {
+#[spacetimedb::reducer(name = "import_component_v1")]
+pub fn import_component_v1(ctx: &ReducerContext, component: ComponentImportV1) -> ServiceResult<()> {
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&component.slug, "slug", 64)?;
     ctx.component_services().import_component(component)

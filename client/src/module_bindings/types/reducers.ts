@@ -6,21 +6,23 @@
 import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
-import CompleteLevelReducer from "../complete_level_reducer";
-import ImportCharacterReducer from "../import_character_reducer";
-import ImportComponentReducer from "../import_component_reducer";
-import ImportLevelReducer from "../import_level_reducer";
-import ImportLootboxReducer from "../import_lootbox_reducer";
-import ImportPieceReducer from "../import_piece_reducer";
-import OpenLootboxReducer from "../open_lootbox_reducer";
-import SelectCharacterReducer from "../select_character_reducer";
+import CompleteLevelV1Reducer from "../complete_level_v_1_reducer";
+import ImportCharacterV1Reducer from "../import_character_v_1_reducer";
+import ImportComponentV1Reducer from "../import_component_v_1_reducer";
+import ImportLevelV1Reducer from "../import_level_v_1_reducer";
+import ImportLootboxV1Reducer from "../import_lootbox_v_1_reducer";
+import ImportPieceV1Reducer from "../import_piece_v_1_reducer";
+import OpenLootboxV1Reducer from "../open_lootbox_v_1_reducer";
+import SelectCharacterV1Reducer from "../select_character_v_1_reducer";
+import SelectLevelV1Reducer from "../select_level_v_1_reducer";
 
-export type CompleteLevelParams = __Infer<typeof CompleteLevelReducer>;
-export type ImportCharacterParams = __Infer<typeof ImportCharacterReducer>;
-export type ImportComponentParams = __Infer<typeof ImportComponentReducer>;
-export type ImportLevelParams = __Infer<typeof ImportLevelReducer>;
-export type ImportLootboxParams = __Infer<typeof ImportLootboxReducer>;
-export type ImportPieceParams = __Infer<typeof ImportPieceReducer>;
-export type OpenLootboxParams = __Infer<typeof OpenLootboxReducer>;
-export type SelectCharacterParams = __Infer<typeof SelectCharacterReducer>;
+export type CompleteLevelV1Params = __Infer<typeof CompleteLevelV1Reducer>;
+export type ImportCharacterV1Params = __Infer<typeof ImportCharacterV1Reducer>;
+export type ImportComponentV1Params = __Infer<typeof ImportComponentV1Reducer>;
+export type ImportLevelV1Params = __Infer<typeof ImportLevelV1Reducer>;
+export type ImportLootboxV1Params = __Infer<typeof ImportLootboxV1Reducer>;
+export type ImportPieceV1Params = __Infer<typeof ImportPieceV1Reducer>;
+export type OpenLootboxV1Params = __Infer<typeof OpenLootboxV1Reducer>;
+export type SelectCharacterV1Params = __Infer<typeof SelectCharacterV1Reducer>;
+export type SelectLevelV1Params = __Infer<typeof SelectLevelV1Reducer>;
 

@@ -1,59 +1,34 @@
 //! Lootbox repository services: import, granting, and the opening workflow.
 
 use crate::{
-    error::{ServiceError, ServiceResult},
-    extend::{access::ensure_owner, stdb::UuidGen},
+    error::ServiceResult,
+    extend::{access::ensure_owner, make_service::make_service, stdb::UuidGen},
     repository::{
         character::services::CharacterReducerContext,
         lootbox::{
-            LootboxDef, LootboxDrop, PlayerLootbox, lootbox_def_v1, lootbox_drop_v1, player_lootbox_v1, types::DropImportV1,
+            LootboxDef, LootboxDrop, PlayerLootbox, errors::LootboxError, lootbox_def_v1, lootbox_drop_v1, player_lootbox_v1,
+            types::DropImportV1,
         },
         player::services::PlayerReducerContext,
     },
 };
-use spacetimedb::{Identity, ReducerContext, Table, Uuid, rand::Rng};
-use std::ops::Deref;
+use spacetimedb::{Identity, Table, Uuid, rand::Rng};
 
-pub trait LootboxReducerContext {
-    fn lootbox_services(&self) -> LootboxServices<'_>;
-}
-
-impl LootboxReducerContext for ReducerContext {
-    fn lootbox_services(&self) -> LootboxServices<'_> {
-        LootboxServices { ctx: self }
-    }
-}
-
-pub struct LootboxServices<'a> {
-    ctx: &'a ReducerContext,
-}
-
-impl Deref for LootboxServices<'_> {
-    type Target = ReducerContext;
-    fn deref(&self) -> &Self::Target {
-        self.ctx
-    }
-}
+make_service!(LootboxReducerContext, lootbox_services, LootboxServices);
 
 impl LootboxServices<'_> {
     /// Overwrite one authored lootbox definition and its drop table,
     /// verifying every referenced piece and weight.
     pub fn import_lootbox(&self, id: Uuid, name: String, drops: Vec<DropImportV1>) -> ServiceResult<()> {
         if drops.is_empty() {
-            return Err(ServiceError::validation("lootbox must configure at least one drop"));
+            return Err(LootboxError::no_drops());
         }
         for drop in &drops {
             if drop.weight == 0 {
-                return Err(ServiceError::validation(format!(
-                    "drop '{}' must have a positive weight",
-                    drop.piece_id
-                )));
+                return Err(LootboxError::zero_weight(drop.piece_id));
             }
             if !self.character_services().piece_exists(drop.piece_id) {
-                return Err(ServiceError::not_found(format!(
-                    "drop references unknown piece '{}'",
-                    drop.piece_id
-                )));
+                return Err(LootboxError::unknown_drop_piece(drop.piece_id));
             }
         }
         self.db.lootbox_def_v1().id().insert_or_update(LootboxDef { id, name });
@@ -97,10 +72,10 @@ impl LootboxServices<'_> {
             .player_lootbox_v1()
             .id()
             .find(player_lootbox_id)
-            .ok_or_else(|| ServiceError::not_found("unknown lootbox"))?;
+            .ok_or_else(LootboxError::unknown_lootbox)?;
         ensure_owner(sender, lootbox.owner)?;
         if lootbox.opened {
-            return Err(ServiceError::conflict("lootbox already opened"));
+            return Err(LootboxError::already_opened());
         }
 
         let mut weighted: Vec<(Uuid, u64)> = Vec::new();
@@ -110,13 +85,10 @@ impl LootboxServices<'_> {
         }
         let total: u64 = weighted.iter().map(|(_, w)| w).sum();
         if total == 0 {
-            return Err(ServiceError::validation(format!(
-                "lootbox '{}' has no weighted drops",
-                lootbox.lootbox_id
-            )));
+            return Err(LootboxError::no_weighted_drops(lootbox.lootbox_id));
         }
         let roll = self.rng().gen_range(0..total);
-        let piece_id = pick_weighted(&weighted, roll).ok_or_else(|| ServiceError::internal("weighted pick failed"))?;
+        let piece_id = pick_weighted(&weighted, roll).ok_or_else(LootboxError::weighted_pick_failed)?;
 
         let count = self.player_services().grant_piece(sender, piece_id)?;
         log::info!("player {sender} got piece {piece_id} (count {count})");

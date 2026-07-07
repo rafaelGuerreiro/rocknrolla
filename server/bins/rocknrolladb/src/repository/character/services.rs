@@ -1,32 +1,13 @@
 //! Character repository services: content import and piece/character lookups.
 
 use crate::{
-    error::{ServiceError, ServiceResult},
-    repository::character::{CharacterDef, PieceDef, character_def_v1, piece_def_v1},
+    error::ServiceResult,
+    extend::make_service::make_service,
+    repository::character::{CharacterDef, PieceDef, character_def_v1, errors::CharacterError, piece_def_v1},
 };
-use spacetimedb::{ReducerContext, Uuid};
-use std::ops::Deref;
+use spacetimedb::Uuid;
 
-pub trait CharacterReducerContext {
-    fn character_services(&self) -> CharacterServices<'_>;
-}
-
-impl CharacterReducerContext for ReducerContext {
-    fn character_services(&self) -> CharacterServices<'_> {
-        CharacterServices { ctx: self }
-    }
-}
-
-pub struct CharacterServices<'a> {
-    ctx: &'a ReducerContext,
-}
-
-impl Deref for CharacterServices<'_> {
-    type Target = ReducerContext;
-    fn deref(&self) -> &Self::Target {
-        self.ctx
-    }
-}
+make_service!(CharacterReducerContext, character_services, CharacterServices);
 
 impl CharacterServices<'_> {
     /// Overwrite one authored character definition by its stable UUID.
@@ -38,10 +19,7 @@ impl CharacterServices<'_> {
     /// Overwrite one authored piece definition, verifying its character.
     pub fn import_piece(&self, row: PieceDef) -> ServiceResult<()> {
         if self.db.character_def_v1().id().find(row.character_id).is_none() {
-            return Err(ServiceError::not_found(format!(
-                "piece references unknown character '{}'",
-                row.character_id
-            )));
+            return Err(CharacterError::unknown_character_for_piece(row.character_id));
         }
         self.db.piece_def_v1().id().insert_or_update(row);
         Ok(())
@@ -62,17 +40,19 @@ impl CharacterServices<'_> {
             .piece_def_v1()
             .id()
             .find(piece_id)
-            .ok_or_else(|| ServiceError::not_found(format!("unknown piece '{piece_id}'")))
+            .ok_or_else(|| CharacterError::unknown_piece(piece_id))
     }
 
     /// The rarity weight of the character owning `piece_id`, used to scale
     /// lootbox drop weights.
     pub fn piece_rarity_weight(&self, piece_id: Uuid) -> ServiceResult<u32> {
         let piece = self.find_piece(piece_id)?;
-        let character =
-            self.db.character_def_v1().id().find(piece.character_id).ok_or_else(|| {
-                ServiceError::not_found(format!("piece references unknown character '{}'", piece.character_id))
-            })?;
+        let character = self
+            .db
+            .character_def_v1()
+            .id()
+            .find(piece.character_id)
+            .ok_or_else(|| CharacterError::unknown_character_for_piece(piece.character_id))?;
         Ok(character.rarity_weight)
     }
 

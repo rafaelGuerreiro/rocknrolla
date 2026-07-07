@@ -3,6 +3,7 @@
 use rocknrolla_geometry::{Vec2, Vec3};
 use spacetimedb::Uuid;
 
+pub mod errors;
 pub mod reducers;
 pub mod services;
 pub mod types;

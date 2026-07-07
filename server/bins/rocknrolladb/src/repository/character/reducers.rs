@@ -10,9 +10,9 @@ use crate::{
 };
 use spacetimedb::{ReducerContext, Uuid};
 
-#[spacetimedb::reducer]
+#[spacetimedb::reducer(name = "import_character_v1")]
 #[allow(clippy::too_many_arguments)]
-pub fn import_character(
+pub fn import_character_v1(
     ctx: &ReducerContext,
     id: Uuid,
     name: String,
@@ -47,8 +47,8 @@ pub fn import_character(
     })
 }
 
-#[spacetimedb::reducer]
-pub fn import_piece(ctx: &ReducerContext, id: Uuid, name: String, character_id: Uuid) -> ServiceResult<()> {
+#[spacetimedb::reducer(name = "import_piece_v1")]
+pub fn import_piece_v1(ctx: &ReducerContext, id: Uuid, name: String, character_id: Uuid) -> ServiceResult<()> {
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&name, "name", 128)?;
     ctx.character_services().import_piece(PieceDef { id, name, character_id })

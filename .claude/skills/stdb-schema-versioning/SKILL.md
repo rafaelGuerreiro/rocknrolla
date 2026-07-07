@@ -1,6 +1,6 @@
 ---
 name: stdb-schema-versioning
-description: RocknRolla SpacetimeDB schema naming and versioning rules. Read before adding or renaming any table, view, or public-facing type in server/, and when planning a breaking schema change. Explains the _v1/V1 suffix convention and the pre-live overwrite flow.
+description: RocknRolla SpacetimeDB schema naming and versioning rules. Read before adding or renaming any table, view, reducer, procedure, or public-facing type in server/, and when planning a breaking schema change. Explains the _v1/V1 suffix convention and the pre-live overwrite flow.
 ---
 
 # SpacetimeDB Schema Versioning
@@ -23,7 +23,16 @@ breaking deployed clients.
   never enter bindings. Only the accessor name is versioned.
 - Views never return a table struct directly; map to a dedicated `*ViewV1`
   struct so the private table type never enters bindings (see `vw_me_v1`).
-- Reducer names are not versioned.
+- Reducer and procedure function names end in `_v1` AND carry an explicit
+  matching `name`: `#[spacetimedb::reducer(name = "buy_item_v1")] pub fn buy_item_v1(...)`,
+  `#[spacetimedb::procedure(name = "grant_reward_v1")] pub fn grant_reward_v1(...)`.
+  The Rust macro itself exports the identifier verbatim (no word-splitting),
+  but `spacetime generate` re-derives the TypeScript wire name from the
+  PascalCase type it generates and splits `V1` into `V_1` unless the raw
+  `name` string is given explicitly — same failure mode as tables/views, just
+  triggered by the codegen step instead of the macro.
+  This reserves the same v2 upgrade path (add `_v2` alongside `_v1`) for
+  reducer/procedure signature changes once the game is live.
 
 ## Why
 

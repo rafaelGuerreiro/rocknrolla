@@ -252,6 +252,12 @@ export const PlayerPiece = __t.object("PlayerPiece", {
 });
 export type PlayerPiece = __Infer<typeof PlayerPiece>;
 
+export const PlayerSelectedLevel = __t.object("PlayerSelectedLevel", {
+  owner: __t.identity(),
+  levelId: __t.uuid(),
+});
+export type PlayerSelectedLevel = __Infer<typeof PlayerSelectedLevel>;
+
 export const PlayerUnlockedCharacter = __t.object("PlayerUnlockedCharacter", {
   id: __t.uuid(),
   owner: __t.identity(),

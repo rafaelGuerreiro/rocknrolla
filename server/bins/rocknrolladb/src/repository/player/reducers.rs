@@ -3,7 +3,7 @@
 use crate::{error::ServiceResult, repository::player::services::PlayerReducerContext};
 use spacetimedb::{ReducerContext, Uuid};
 
-#[spacetimedb::reducer]
-pub fn select_character(ctx: &ReducerContext, character_id: Uuid) -> ServiceResult<()> {
+#[spacetimedb::reducer(name = "select_character_v1")]
+pub fn select_character_v1(ctx: &ReducerContext, character_id: Uuid) -> ServiceResult<()> {
     ctx.player_services().select_character(ctx.sender(), character_id)
 }

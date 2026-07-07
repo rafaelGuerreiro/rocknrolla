@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Uuid } from 'spacetimedb';
 import { addRoller } from '../rollers';
 import { db } from '../db';
 import { ensureBackdropTextures } from '../textures';
@@ -212,14 +213,16 @@ export class LevelSelectScene extends Phaser.Scene {
     }
 
     if (state.enabled || state.completed) {
+      const levelId = level.id.toString();
       this.add
         .rectangle(at.x, at.y, NODE_SIZE + 12, NODE_SIZE + 12, 0xffffff, 0.0001)
         .setInteractive({ useHandCursor: true })
-        .on('pointerup', () =>
-          this.scene.start('character-select', {
-            levelId: level.id.toString(),
-          }),
-        );
+        .on('pointerup', () => {
+          db()
+            .reducers.selectLevelV1({ levelId: Uuid.parse(levelId) })
+            .catch((error) => console.error('selectLevelV1 failed:', error));
+          this.scene.start('character-select', { levelId });
+        });
     }
   }
 

@@ -232,8 +232,8 @@ export class CharacterSelectScene extends Phaser.Scene {
   private startRun(characterId: string): void {
     const conn = db();
     conn.reducers
-      .selectCharacter({ characterId: Uuid.parse(characterId) })
-      .catch((error) => console.error('selectCharacter failed:', error));
+      .selectCharacterV1({ characterId: Uuid.parse(characterId) })
+      .catch((error) => console.error('selectCharacterV1 failed:', error));
     this.scene.start('game', { levelId: this.levelId, characterId });
   }
 }

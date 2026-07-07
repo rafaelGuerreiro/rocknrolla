@@ -2,6 +2,7 @@
 
 use spacetimedb::{Identity, Uuid};
 
+pub mod errors;
 pub mod reducers;
 pub mod services;
 pub mod views;

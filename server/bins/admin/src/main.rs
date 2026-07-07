@@ -348,7 +348,7 @@ fn import_components(session: &Session, components: &[rocknrolla_level::Componen
             "data": component.data,
         })
         .to_string();
-        call_reducer(session, "import_component", &[arg])?;
+        call_reducer(session, "import_component_v1", &[arg])?;
         println!("imported component '{}' into {}", component.slug, session.database);
     }
     Ok(())
@@ -368,7 +368,7 @@ fn import_levels(session: &Session, levels: &[levelsrc::ImportedLevel]) -> Resul
             point_json(level.finish),
             serde_json::Value::Array(level.placements.iter().map(placement_to_json).collect()).to_string(),
         ];
-        call_reducer(session, "import_level", &args)?;
+        call_reducer(session, "import_level_v1", &args)?;
         println!("imported level '{}' into {}", level.slug, session.database);
     }
     Ok(())
@@ -388,7 +388,7 @@ fn import_seed(session: &Session, content: &seed::SeedContent) -> Result<()> {
             character.fire_resistance.to_string(),
             character.starter.to_string(),
         ];
-        call_reducer(session, "import_character", &args)?;
+        call_reducer(session, "import_character_v1", &args)?;
         println!("imported character '{}'", character.name);
     }
     for piece in &content.pieces {
@@ -397,7 +397,7 @@ fn import_seed(session: &Session, content: &seed::SeedContent) -> Result<()> {
             serde_json::json!(piece.name).to_string(),
             crate::uuid::uuid_arg(&piece.character_id)?,
         ];
-        call_reducer(session, "import_piece", &args)?;
+        call_reducer(session, "import_piece_v1", &args)?;
         println!("imported piece '{}'", piece.name);
     }
     for lootbox in &content.lootboxes {
@@ -417,7 +417,7 @@ fn import_seed(session: &Session, content: &seed::SeedContent) -> Result<()> {
             serde_json::json!(lootbox.name).to_string(),
             format!("[{}]", drops.join(",")),
         ];
-        call_reducer(session, "import_lootbox", &args)?;
+        call_reducer(session, "import_lootbox_v1", &args)?;
         println!("imported lootbox '{}'", lootbox.name);
     }
     Ok(())
