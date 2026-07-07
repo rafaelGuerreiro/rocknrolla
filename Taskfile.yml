@@ -60,6 +60,6 @@ tasks:
       - task server:publish-prod
 
   unsafe-overwrite:
-    desc: Publish rocknrolladb-dev and delete existing data
+    desc: Publish rocknrolladb-dev, delete existing data, and reseed content
     cmds:
       - task server:unsafe-overwrite

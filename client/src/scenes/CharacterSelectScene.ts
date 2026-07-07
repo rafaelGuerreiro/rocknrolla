@@ -55,11 +55,11 @@ export class CharacterSelectScene extends Phaser.Scene {
       .setDisplaySize(width, height);
 
     const unlocked = new Set(
-      [...conn.db.vw_my_unlocked_character.iter()].map((row) =>
+      [...conn.db.vw_my_unlocked_character_v1.iter()].map((row) =>
         row.characterId.toString(),
       ),
     );
-    const characters = [...conn.db.vw_character.iter()].sort((a, b) =>
+    const characters = [...conn.db.vw_character_v1.iter()].sort((a, b) =>
       a.id.toString().localeCompare(b.id.toString()),
     );
     const eligible = characters.filter((character) =>
@@ -81,7 +81,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       return;
     }
 
-    const me = [...conn.db.vw_me.iter()][0];
+    const me = [...conn.db.vw_me_v1.iter()][0];
     const remembered = me?.selectedCharacterId?.toString();
     const selected =
       eligible.find((c) => c.id.toString() === this.selectedId) ??

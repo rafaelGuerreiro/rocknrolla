@@ -186,8 +186,8 @@ export class BootScene extends Phaser.Scene {
       .then((conn) => {
         this.setProgress(0.7);
         if (
-          conn.db.vw_level.count() === 0n ||
-          conn.db.vw_character.count() === 0n
+          conn.db.vw_level_v1.count() === 0n ||
+          conn.db.vw_character_v1.count() === 0n
         ) {
           this.fail(
             'CONNECTED, BUT NO CONTENT IS IMPORTED.\nRUN task server:admin AND IMPORT, THEN TAP TO RETRY.',
@@ -195,7 +195,9 @@ export class BootScene extends Phaser.Scene {
           return;
         }
         // Roller textures for every server style (unknown styles fall back).
-        const styles = [...conn.db.vw_character.iter()].map((row) => row.style);
+        const styles = [...conn.db.vw_character_v1.iter()].map(
+          (row) => row.style,
+        );
         for (const style of styles) {
           if (!this.textures.exists(characterSpriteKey(style))) {
             this.load.svg(characterSpriteKey(style), rollerBodyDataUrl(style), {

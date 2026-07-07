@@ -3,7 +3,7 @@
 use spacetimedb::{SpacetimeType, Uuid};
 
 #[derive(SpacetimeType)]
-pub struct DropImport {
+pub struct DropImportV1 {
     pub piece_id: Uuid,
     pub weight: u32,
 }

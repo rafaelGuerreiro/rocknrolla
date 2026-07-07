@@ -7,7 +7,7 @@ pub mod services;
 pub mod types;
 pub mod views;
 
-#[spacetimedb::table(accessor = level, private)]
+#[spacetimedb::table(accessor = level_v1, private)]
 pub struct Level {
     #[primary_key]
     pub id: Uuid,
@@ -21,7 +21,7 @@ pub struct Level {
     pub reward_lootbox_id: Option<Uuid>,
 }
 
-#[spacetimedb::table(accessor = level_layer, private)]
+#[spacetimedb::table(accessor = level_layer_v1, private)]
 pub struct LevelLayer {
     #[primary_key]
     pub id: Uuid,
@@ -38,7 +38,7 @@ pub struct LevelLayer {
     pub data: Vec<u8>,
 }
 
-#[spacetimedb::table(accessor = level_successor, private)]
+#[spacetimedb::table(accessor = level_successor_v1, private)]
 pub struct LevelSuccessor {
     #[primary_key]
     pub id: Uuid,

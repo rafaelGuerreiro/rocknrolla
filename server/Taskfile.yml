@@ -64,7 +64,8 @@ tasks:
       - spacetime publish -p bins/rocknrolladb -s maincloud -y rocknrolladb
 
   unsafe-overwrite:
-    desc: Publish rocknrolladb-dev and delete existing data
+    desc: Publish rocknrolladb-dev, delete existing data, and reseed content
     deps: [login, build]
     cmds:
       - spacetime publish -p bins/rocknrolladb -s maincloud -y rocknrolladb-dev --delete-data
+      - printf 'import all\nyes\nquit\n' | cargo run -q -p admin

@@ -5,7 +5,9 @@ use crate::{
     extend::{access::ensure_owner, stdb::UuidGen},
     repository::{
         character::services::CharacterReducerContext,
-        lootbox::{LootboxDef, LootboxDrop, PlayerLootbox, lootbox_def, lootbox_drop, player_lootbox, types::DropImport},
+        lootbox::{
+            LootboxDef, LootboxDrop, PlayerLootbox, lootbox_def_v1, lootbox_drop_v1, player_lootbox_v1, types::DropImportV1,
+        },
         player::services::PlayerReducerContext,
     },
 };
@@ -36,7 +38,7 @@ impl Deref for LootboxServices<'_> {
 impl LootboxServices<'_> {
     /// Overwrite one authored lootbox definition and its drop table,
     /// verifying every referenced piece and weight.
-    pub fn import_lootbox(&self, id: Uuid, name: String, drops: Vec<DropImport>) -> ServiceResult<()> {
+    pub fn import_lootbox(&self, id: Uuid, name: String, drops: Vec<DropImportV1>) -> ServiceResult<()> {
         if drops.is_empty() {
             return Err(ServiceError::validation("lootbox must configure at least one drop"));
         }
@@ -54,10 +56,10 @@ impl LootboxServices<'_> {
                 )));
             }
         }
-        self.db.lootbox_def().id().insert_or_update(LootboxDef { id, name });
-        self.db.lootbox_drop().lootbox_id().delete(id);
+        self.db.lootbox_def_v1().id().insert_or_update(LootboxDef { id, name });
+        self.db.lootbox_drop_v1().lootbox_id().delete(id);
         for drop in drops {
-            self.db.lootbox_drop().insert(LootboxDrop {
+            self.db.lootbox_drop_v1().insert(LootboxDrop {
                 id: self.ctx.generate_uuid()?,
                 lootbox_id: id,
                 piece_id: drop.piece_id,
@@ -68,12 +70,12 @@ impl LootboxServices<'_> {
     }
 
     pub fn lootbox_exists(&self, lootbox_id: Uuid) -> bool {
-        self.db.lootbox_def().id().find(lootbox_id).is_some()
+        self.db.lootbox_def_v1().id().find(lootbox_id).is_some()
     }
 
     /// Grant `owner` one unopened lootbox of the given definition.
     pub fn grant_lootbox(&self, owner: Identity, lootbox_id: Uuid) -> ServiceResult<()> {
-        self.db.player_lootbox().insert(PlayerLootbox {
+        self.db.player_lootbox_v1().insert(PlayerLootbox {
             id: self.ctx.generate_uuid()?,
             owner,
             lootbox_id,
@@ -92,7 +94,7 @@ impl LootboxServices<'_> {
     pub fn open_lootbox(&self, sender: Identity, player_lootbox_id: Uuid) -> ServiceResult<()> {
         let lootbox = self
             .db
-            .player_lootbox()
+            .player_lootbox_v1()
             .id()
             .find(player_lootbox_id)
             .ok_or_else(|| ServiceError::not_found("unknown lootbox"))?;
@@ -102,7 +104,7 @@ impl LootboxServices<'_> {
         }
 
         let mut weighted: Vec<(Uuid, u64)> = Vec::new();
-        for drop in self.db.lootbox_drop().lootbox_id().filter(lootbox.lootbox_id) {
+        for drop in self.db.lootbox_drop_v1().lootbox_id().filter(lootbox.lootbox_id) {
             let rarity = self.character_services().piece_rarity_weight(drop.piece_id)?;
             weighted.push((drop.piece_id, drop.weight as u64 * rarity as u64));
         }
@@ -119,7 +121,7 @@ impl LootboxServices<'_> {
         let count = self.player_services().grant_piece(sender, piece_id)?;
         log::info!("player {sender} got piece {piece_id} (count {count})");
 
-        self.db.player_lootbox().id().update(PlayerLootbox {
+        self.db.player_lootbox_v1().id().update(PlayerLootbox {
             opened: true,
             awarded_piece_id: Some(piece_id),
             ..lootbox

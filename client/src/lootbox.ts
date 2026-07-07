@@ -9,7 +9,7 @@ type LootboxRow = { id: Uuid; opened: boolean; awardedPieceId?: Uuid };
 /**
  * Ask the server to open a lootbox and resolve with the awarded piece id.
  * The client never chooses the piece; rejection covers reducer errors and
- * a confirmation timeout. `vw_my_lootbox` is a computed view without a
+ * a confirmation timeout. `vw_my_lootbox_v1` is a computed view without a
  * primary key, so the opened row arrives as a delete + insert — listen on
  * inserts (plus updates, in case the SDK ever diffs by value).
  */
@@ -17,8 +17,8 @@ export function openLootboxAndAwaitPiece(playerLootboxId: Uuid): Promise<Uuid> {
   const conn = db();
   return new Promise((resolve, reject) => {
     const settle = (fn: () => void) => {
-      conn.db.vw_my_lootbox.removeOnInsert(onInsert);
-      conn.db.vw_my_lootbox.removeOnUpdate(onUpdate);
+      conn.db.vw_my_lootbox_v1.removeOnInsert(onInsert);
+      conn.db.vw_my_lootbox_v1.removeOnUpdate(onUpdate);
       clearTimeout(timer);
       fn();
     };
@@ -38,8 +38,8 @@ export function openLootboxAndAwaitPiece(playerLootboxId: Uuid): Promise<Uuid> {
         ),
       OPEN_TIMEOUT_MS,
     );
-    conn.db.vw_my_lootbox.onInsert(onInsert);
-    conn.db.vw_my_lootbox.onUpdate(onUpdate);
+    conn.db.vw_my_lootbox_v1.onInsert(onInsert);
+    conn.db.vw_my_lootbox_v1.onUpdate(onUpdate);
     conn.reducers.openLootbox({ playerLootboxId }).catch((error: unknown) => {
       settle(() =>
         reject(error instanceof Error ? error : new Error(String(error))),

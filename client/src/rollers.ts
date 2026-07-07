@@ -7,7 +7,7 @@ import { svgDataUrl } from './tiles';
  *
  * Bodies are faceless and rotate with the physics; faces are a shared set
  * of expressions layered on top, kept upright and swapped on events. Keys
- * are the backend `vw_character.style` values and expression names.
+ * are the backend `vw_character_v1.style` values and expression names.
  */
 const body = (defs: string, art: string): string =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs>${defs}</defs>${art}</svg>`;

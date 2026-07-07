@@ -131,11 +131,11 @@ const cache = new Map<string, { key: string; level: DecodedLevel }>();
  * next load.
  */
 export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
-  const meta = [...conn.db.vw_level.iter()].find(
+  const meta = [...conn.db.vw_level_v1.iter()].find(
     (row) => row.id.toString() === levelId,
   );
   if (!meta) throw new Error(`level '${levelId}' is not available`);
-  const rows = [...conn.db.vw_level_layer.iter()].filter(
+  const rows = [...conn.db.vw_level_layer_v1.iter()].filter(
     (row) => row.levelId.toString() === levelId,
   );
   if (rows.length === 0) throw new Error(`level '${levelId}' has no layers`);

@@ -24,7 +24,7 @@ export const CharacterDef = __t.object("CharacterDef", {
 });
 export type CharacterDef = __Infer<typeof CharacterDef>;
 
-export const CharacterView = __t.object("CharacterView", {
+export const CharacterViewV1 = __t.object("CharacterViewV1", {
   id: __t.uuid(),
   name: __t.string(),
   style: __t.string(),
@@ -34,15 +34,15 @@ export const CharacterView = __t.object("CharacterView", {
   buoyancy: __t.f32(),
   fireResistance: __t.f32(),
 });
-export type CharacterView = __Infer<typeof CharacterView>;
+export type CharacterViewV1 = __Infer<typeof CharacterViewV1>;
 
-export const DropImport = __t.object("DropImport", {
+export const DropImportV1 = __t.object("DropImportV1", {
   pieceId: __t.uuid(),
   weight: __t.u32(),
 });
-export type DropImport = __Infer<typeof DropImport>;
+export type DropImportV1 = __Infer<typeof DropImportV1>;
 
-export const LayerImport = __t.object("LayerImport", {
+export const LayerImportV1 = __t.object("LayerImportV1", {
   z: __t.u8(),
   widthPx: __t.u32(),
   heightPx: __t.u32(),
@@ -52,7 +52,7 @@ export const LayerImport = __t.object("LayerImport", {
   contentHash: __t.string(),
   data: __t.byteArray(),
 });
-export type LayerImport = __Infer<typeof LayerImport>;
+export type LayerImportV1 = __Infer<typeof LayerImportV1>;
 
 export const Level = __t.object("Level", {
   id: __t.uuid(),
@@ -78,7 +78,7 @@ export const LevelLayer = __t.object("LevelLayer", {
 });
 export type LevelLayer = __Infer<typeof LevelLayer>;
 
-export const LevelLayerView = __t.object("LevelLayerView", {
+export const LevelLayerViewV1 = __t.object("LevelLayerViewV1", {
   levelId: __t.uuid(),
   z: __t.u8(),
   widthPx: __t.u32(),
@@ -89,7 +89,7 @@ export const LevelLayerView = __t.object("LevelLayerView", {
   contentHash: __t.string(),
   data: __t.byteArray(),
 });
-export type LevelLayerView = __Infer<typeof LevelLayerView>;
+export type LevelLayerViewV1 = __Infer<typeof LevelLayerViewV1>;
 
 export const LevelSuccessor = __t.object("LevelSuccessor", {
   id: __t.uuid(),
@@ -98,12 +98,12 @@ export const LevelSuccessor = __t.object("LevelSuccessor", {
 });
 export type LevelSuccessor = __Infer<typeof LevelSuccessor>;
 
-export const LevelView = __t.object("LevelView", {
+export const LevelViewV1 = __t.object("LevelViewV1", {
   id: __t.uuid(),
   slug: __t.string(),
   name: __t.string(),
 });
-export type LevelView = __Infer<typeof LevelView>;
+export type LevelViewV1 = __Infer<typeof LevelViewV1>;
 
 export const LootboxDef = __t.object("LootboxDef", {
   id: __t.uuid(),
@@ -119,42 +119,48 @@ export const LootboxDrop = __t.object("LootboxDrop", {
 });
 export type LootboxDrop = __Infer<typeof LootboxDrop>;
 
+export const MeViewV1 = __t.object("MeViewV1", {
+  identity: __t.identity(),
+  selectedCharacterId: __t.option(__t.uuid()),
+});
+export type MeViewV1 = __Infer<typeof MeViewV1>;
+
 export const ModuleOwner = __t.object("ModuleOwner", {
   id: __t.u8(),
   owner: __t.identity(),
 });
 export type ModuleOwner = __Infer<typeof ModuleOwner>;
 
-export const MyCompletedLevelView = __t.object("MyCompletedLevelView", {
+export const MyCompletedLevelViewV1 = __t.object("MyCompletedLevelViewV1", {
   levelId: __t.uuid(),
   completedAt: __t.timestamp(),
 });
-export type MyCompletedLevelView = __Infer<typeof MyCompletedLevelView>;
+export type MyCompletedLevelViewV1 = __Infer<typeof MyCompletedLevelViewV1>;
 
-export const MyEnabledLevelView = __t.object("MyEnabledLevelView", {
+export const MyEnabledLevelViewV1 = __t.object("MyEnabledLevelViewV1", {
   levelId: __t.uuid(),
 });
-export type MyEnabledLevelView = __Infer<typeof MyEnabledLevelView>;
+export type MyEnabledLevelViewV1 = __Infer<typeof MyEnabledLevelViewV1>;
 
-export const MyLootboxView = __t.object("MyLootboxView", {
+export const MyLootboxViewV1 = __t.object("MyLootboxViewV1", {
   id: __t.uuid(),
   lootboxId: __t.uuid(),
   name: __t.string(),
   opened: __t.bool(),
   awardedPieceId: __t.option(__t.uuid()),
 });
-export type MyLootboxView = __Infer<typeof MyLootboxView>;
+export type MyLootboxViewV1 = __Infer<typeof MyLootboxViewV1>;
 
-export const MyPieceView = __t.object("MyPieceView", {
+export const MyPieceViewV1 = __t.object("MyPieceViewV1", {
   pieceId: __t.uuid(),
   count: __t.u32(),
 });
-export type MyPieceView = __Infer<typeof MyPieceView>;
+export type MyPieceViewV1 = __Infer<typeof MyPieceViewV1>;
 
-export const MyUnlockedCharacterView = __t.object("MyUnlockedCharacterView", {
+export const MyUnlockedCharacterViewV1 = __t.object("MyUnlockedCharacterViewV1", {
   characterId: __t.uuid(),
 });
-export type MyUnlockedCharacterView = __Infer<typeof MyUnlockedCharacterView>;
+export type MyUnlockedCharacterViewV1 = __Infer<typeof MyUnlockedCharacterViewV1>;
 
 export const PieceDef = __t.object("PieceDef", {
   id: __t.uuid(),
@@ -163,12 +169,12 @@ export const PieceDef = __t.object("PieceDef", {
 });
 export type PieceDef = __Infer<typeof PieceDef>;
 
-export const PieceView = __t.object("PieceView", {
+export const PieceViewV1 = __t.object("PieceViewV1", {
   id: __t.uuid(),
   name: __t.string(),
   characterId: __t.uuid(),
 });
-export type PieceView = __Infer<typeof PieceView>;
+export type PieceViewV1 = __Infer<typeof PieceViewV1>;
 
 export const Player = __t.object("Player", {
   identity: __t.identity(),

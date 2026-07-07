@@ -12,6 +12,12 @@ import {
 const LETHAL_INSET = 12;
 const FIRE_INSET = 8;
 
+/**
+ * The finish sensor spans this far above and below the drawn pole so the
+ * run ends even when the player sails over it or clips under it.
+ */
+const FINISH_SENSOR_HEIGHT_PX = 100_000;
+
 export interface BuiltLevel {
   spawn: Phaser.Math.Vector2;
   waterRects: Phaser.Geom.Rectangle[];
@@ -79,7 +85,13 @@ function buildMarker(
       );
       break;
     case TILE.FINISH:
-      addSensor(scene, marker, 'finish', 0);
+      scene.matter.add.rectangle(
+        marker.x + marker.width / 2,
+        marker.y + marker.height / 2,
+        marker.width,
+        FINISH_SENSOR_HEIGHT_PX,
+        { isStatic: true, isSensor: true, label: 'finish' },
+      );
       break;
     case TILE.LETHAL:
       addSensor(scene, marker, 'lethal', LETHAL_INSET);

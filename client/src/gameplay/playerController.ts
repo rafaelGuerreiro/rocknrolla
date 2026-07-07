@@ -44,9 +44,17 @@ export class PlayerController {
   ) {
     scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.onPointerDown);
     scene.input.on(Phaser.Input.Events.POINTER_UP, this.onPointerUp);
+    // START catches bouncy landings whose contact lasts a single step and
+    // never fires ACTIVE — missing those left stale jump counts, so a tap
+    // right after touchdown burned the double jump. ACTIVE keeps the coyote
+    // window refreshed through sustained contact.
+    scene.matter.world.on(
+      Phaser.Physics.Matter.Events.COLLISION_START,
+      this.onGroundContact,
+    );
     scene.matter.world.on(
       Phaser.Physics.Matter.Events.COLLISION_ACTIVE,
-      this.onCollisionActive,
+      this.onGroundContact,
     );
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, this.destroy);
   }
@@ -87,9 +95,10 @@ export class PlayerController {
     }
     this.wasGrounded = grounded;
 
-    // Contact friction is near zero (it must not brake forward velocity),
-    // so the rolling rotation is driven from the forward speed instead.
-    if (grounded && TUNING.ROLL_SPIN > 0) {
+    // Contact friction is zero, so spin comes purely from horizontal speed:
+    // faster on X = faster spin, scaled by the ROLL_SPIN knob (1 = a wheel
+    // rolling without slip at the display radius).
+    if (TUNING.ROLL_SPIN > 0) {
       const vx = this.player.getVelocity().x ?? 0;
       this.player.setAngularVelocity(
         (vx / (PLAYER_DISPLAY_PX / 2)) * TUNING.ROLL_SPIN,
@@ -149,8 +158,12 @@ export class PlayerController {
     this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.onPointerDown);
     this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.onPointerUp);
     this.scene.matter.world?.off(
+      Phaser.Physics.Matter.Events.COLLISION_START,
+      this.onGroundContact,
+    );
+    this.scene.matter.world?.off(
       Phaser.Physics.Matter.Events.COLLISION_ACTIVE,
-      this.onCollisionActive,
+      this.onGroundContact,
     );
   };
 
@@ -172,8 +185,10 @@ export class PlayerController {
     }
   };
 
-  private onCollisionActive = (
-    event: Phaser.Physics.Matter.Events.CollisionActiveEvent,
+  private onGroundContact = (
+    event:
+      | Phaser.Physics.Matter.Events.CollisionStartEvent
+      | Phaser.Physics.Matter.Events.CollisionActiveEvent,
   ): void => {
     const playerBody = this.player.body as MatterJS.BodyType;
     for (const pair of event.pairs) {

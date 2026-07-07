@@ -5,13 +5,13 @@ use crate::{
     extend::validate::validate_required_str,
     repository::{
         access,
-        lootbox::{services::LootboxReducerContext, types::DropImport},
+        lootbox::{services::LootboxReducerContext, types::DropImportV1},
     },
 };
 use spacetimedb::{ReducerContext, Uuid};
 
 #[spacetimedb::reducer]
-pub fn import_lootbox(ctx: &ReducerContext, id: Uuid, name: String, drops: Vec<DropImport>) -> ServiceResult<()> {
+pub fn import_lootbox(ctx: &ReducerContext, id: Uuid, name: String, drops: Vec<DropImportV1>) -> ServiceResult<()> {
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&name, "name", 128)?;
     ctx.lootbox_services().import_lootbox(id, name, drops)

@@ -45,91 +45,91 @@ import SelectCharacterReducer from "./select_character_reducer";
 // Import all procedure arg schemas
 
 // Import all table schema definitions
-import VwCharacterRow from "./vw_character_table";
-import VwLevelRow from "./vw_level_table";
-import VwLevelLayerRow from "./vw_level_layer_table";
-import VwMeRow from "./vw_me_table";
-import VwMyCompletedLevelRow from "./vw_my_completed_level_table";
-import VwMyEnabledLevelRow from "./vw_my_enabled_level_table";
-import VwMyLootboxRow from "./vw_my_lootbox_table";
-import VwMyPieceRow from "./vw_my_piece_table";
-import VwMyUnlockedCharacterRow from "./vw_my_unlocked_character_table";
-import VwPieceRow from "./vw_piece_table";
+import VwCharacterV1Row from "./vw_character_v_1_table";
+import VwLevelLayerV1Row from "./vw_level_layer_v_1_table";
+import VwLevelV1Row from "./vw_level_v_1_table";
+import VwMeV1Row from "./vw_me_v_1_table";
+import VwMyCompletedLevelV1Row from "./vw_my_completed_level_v_1_table";
+import VwMyEnabledLevelV1Row from "./vw_my_enabled_level_v_1_table";
+import VwMyLootboxV1Row from "./vw_my_lootbox_v_1_table";
+import VwMyPieceV1Row from "./vw_my_piece_v_1_table";
+import VwMyUnlockedCharacterV1Row from "./vw_my_unlocked_character_v_1_table";
+import VwPieceV1Row from "./vw_piece_v_1_table";
 
 /** Type-only namespace exports for generated type groups. */
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
-  vw_character: __table({
-    name: 'vw_character',
+  vw_character_v1: __table({
+    name: 'vw_character_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwCharacterRow),
-  vw_level: __table({
-    name: 'vw_level',
+  }, VwCharacterV1Row),
+  vw_level_layer_v1: __table({
+    name: 'vw_level_layer_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwLevelRow),
-  vw_level_layer: __table({
-    name: 'vw_level_layer',
+  }, VwLevelLayerV1Row),
+  vw_level_v1: __table({
+    name: 'vw_level_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwLevelLayerRow),
-  vw_me: __table({
-    name: 'vw_me',
+  }, VwLevelV1Row),
+  vw_me_v1: __table({
+    name: 'vw_me_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwMeRow),
-  vw_my_completed_level: __table({
-    name: 'vw_my_completed_level',
+  }, VwMeV1Row),
+  vw_my_completed_level_v1: __table({
+    name: 'vw_my_completed_level_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwMyCompletedLevelRow),
-  vw_my_enabled_level: __table({
-    name: 'vw_my_enabled_level',
+  }, VwMyCompletedLevelV1Row),
+  vw_my_enabled_level_v1: __table({
+    name: 'vw_my_enabled_level_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwMyEnabledLevelRow),
-  vw_my_lootbox: __table({
-    name: 'vw_my_lootbox',
+  }, VwMyEnabledLevelV1Row),
+  vw_my_lootbox_v1: __table({
+    name: 'vw_my_lootbox_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwMyLootboxRow),
-  vw_my_piece: __table({
-    name: 'vw_my_piece',
+  }, VwMyLootboxV1Row),
+  vw_my_piece_v1: __table({
+    name: 'vw_my_piece_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwMyPieceRow),
-  vw_my_unlocked_character: __table({
-    name: 'vw_my_unlocked_character',
+  }, VwMyPieceV1Row),
+  vw_my_unlocked_character_v1: __table({
+    name: 'vw_my_unlocked_character_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwMyUnlockedCharacterRow),
-  vw_piece: __table({
-    name: 'vw_piece',
+  }, VwMyUnlockedCharacterV1Row),
+  vw_piece_v1: __table({
+    name: 'vw_piece_v_1',
     indexes: [
     ],
     constraints: [
     ],
-  }, VwPieceRow),
+  }, VwPieceV1Row),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */

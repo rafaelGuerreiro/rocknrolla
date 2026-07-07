@@ -7,7 +7,7 @@ use crate::{
         access,
         level::{
             services::{LevelImport, LevelReducerContext},
-            types::LayerImport,
+            types::LayerImportV1,
         },
     },
 };
@@ -24,7 +24,7 @@ pub fn import_level(
     active: bool,
     reward_lootbox_id: Option<Uuid>,
     successors: Vec<Uuid>,
-    layers: Vec<LayerImport>,
+    layers: Vec<LayerImportV1>,
 ) -> ServiceResult<()> {
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&slug, "slug", 64)?;

@@ -3,7 +3,7 @@
 use crate::error::{ServiceError, ServiceResult};
 use spacetimedb::{Identity, ReducerContext, Table};
 
-#[spacetimedb::table(accessor = module_owner, private)]
+#[spacetimedb::table(accessor = module_owner_v1, private)]
 pub struct ModuleOwner {
     #[primary_key]
     pub id: u8,
@@ -12,14 +12,14 @@ pub struct ModuleOwner {
 
 /// Record the publishing identity as the module owner during `init`.
 pub fn record_module_owner(ctx: &ReducerContext, owner: Identity) {
-    ctx.db.module_owner().insert(ModuleOwner { id: 0, owner });
+    ctx.db.module_owner_v1().insert(ModuleOwner { id: 0, owner });
 }
 
 /// Owner-only guard for content import reducers.
 pub fn require_module_owner(ctx: &ReducerContext, sender: Identity) -> ServiceResult<()> {
     let record = ctx
         .db
-        .module_owner()
+        .module_owner_v1()
         .id()
         .find(0)
         .ok_or_else(|| ServiceError::internal("module owner not initialized"))?;

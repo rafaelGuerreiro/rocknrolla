@@ -47,16 +47,16 @@ export function connect(): Promise<DbConnection> {
           .onApplied(() => resolve(connection))
           .onError((ctx) => fail(ctx.event))
           .subscribe([
-            tables.vw_level,
-            tables.vw_level_layer,
-            tables.vw_character,
-            tables.vw_piece,
-            tables.vw_me,
-            tables.vw_my_enabled_level,
-            tables.vw_my_completed_level,
-            tables.vw_my_lootbox,
-            tables.vw_my_piece,
-            tables.vw_my_unlocked_character,
+            tables.vw_level_v1,
+            tables.vw_level_layer_v1,
+            tables.vw_character_v1,
+            tables.vw_piece_v1,
+            tables.vw_me_v1,
+            tables.vw_my_enabled_level_v1,
+            tables.vw_my_completed_level_v1,
+            tables.vw_my_lootbox_v1,
+            tables.vw_my_piece_v1,
+            tables.vw_my_unlocked_character_v1,
           ]);
       })
       .onConnectError((_ctx, error) => fail(error))

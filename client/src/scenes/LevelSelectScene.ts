@@ -42,12 +42,12 @@ export class LevelSelectScene extends Phaser.Scene {
     this.collectionPill();
 
     const enabledIds = new Set(
-      [...conn.db.vw_my_enabled_level.iter()].map((row) =>
+      [...conn.db.vw_my_enabled_level_v1.iter()].map((row) =>
         row.levelId.toString(),
       ),
     );
     const completedAt = new Map(
-      [...conn.db.vw_my_completed_level.iter()].map((row) => [
+      [...conn.db.vw_my_completed_level_v1.iter()].map((row) => [
         row.levelId.toString(),
         row.completedAt,
       ]),
@@ -58,7 +58,7 @@ export class LevelSelectScene extends Phaser.Scene {
     // ordering, so player progress is the best progression signal we have.
     const rank = (id: string) =>
       completedIds.has(id) ? 0 : enabledIds.has(id) ? 1 : 2;
-    const levels = [...conn.db.vw_level.iter()].sort((a, b) => {
+    const levels = [...conn.db.vw_level_v1.iter()].sort((a, b) => {
       const aId = a.id.toString();
       const bId = b.id.toString();
       if (rank(aId) !== rank(bId)) return rank(aId) - rank(bId);
@@ -226,19 +226,20 @@ export class LevelSelectScene extends Phaser.Scene {
   /** Top-right pill: current roller, unlock count, lootbox badge → collection. */
   private collectionPill(): void {
     const conn = db();
-    const unlockedCount = [...conn.db.vw_my_unlocked_character.iter()].length;
-    const total = Number(conn.db.vw_character.count());
-    const unopened = [...conn.db.vw_my_lootbox.iter()].filter(
+    const unlockedCount = [...conn.db.vw_my_unlocked_character_v1.iter()]
+      .length;
+    const total = Number(conn.db.vw_character_v1.count());
+    const unopened = [...conn.db.vw_my_lootbox_v1.iter()].filter(
       (row) => !row.opened,
     ).length;
 
-    const me = [...conn.db.vw_me.iter()][0];
+    const me = [...conn.db.vw_me_v1.iter()][0];
     const selected = me?.selectedCharacterId
-      ? [...conn.db.vw_character.iter()].find(
+      ? [...conn.db.vw_character_v1.iter()].find(
           (row) => row.id.toString() === me.selectedCharacterId?.toString(),
         )
       : undefined;
-    const style = (selected ?? [...conn.db.vw_character.iter()][0])?.style;
+    const style = (selected ?? [...conn.db.vw_character_v1.iter()][0])?.style;
 
     const x = VIEW_W - 110;
     const container = pill(this, x, 48, 150, 44);

@@ -74,13 +74,15 @@ export class ResultScene extends Phaser.Scene {
   /** Style of the roller the player just ran with. */
   private heroStyle(): string {
     const conn = db();
-    const me = [...conn.db.vw_me.iter()][0];
+    const me = [...conn.db.vw_me_v1.iter()][0];
     const selected = me?.selectedCharacterId
-      ? [...conn.db.vw_character.iter()].find(
+      ? [...conn.db.vw_character_v1.iter()].find(
           (row) => row.id.toString() === me.selectedCharacterId?.toString(),
         )
       : undefined;
-    return (selected ?? [...conn.db.vw_character.iter()][0])?.style ?? 'rock';
+    return (
+      (selected ?? [...conn.db.vw_character_v1.iter()][0])?.style ?? 'rock'
+    );
   }
 
   // -- Success ---------------------------------------------------------------
@@ -138,7 +140,7 @@ export class ResultScene extends Phaser.Scene {
     this.timeChip();
     this.heroWithFlag();
 
-    const unopened = [...db().db.vw_my_lootbox.iter()]
+    const unopened = [...db().db.vw_my_lootbox_v1.iter()]
       .filter((row) => !row.opened)
       .sort((a, b) => a.id.compareTo(b.id));
     if (unopened.length > 0) {
@@ -263,11 +265,11 @@ export class ResultScene extends Phaser.Scene {
 
   private revealBeat(pieceId: Uuid): void {
     const conn = db();
-    const piece = [...conn.db.vw_piece.iter()].find(
+    const piece = [...conn.db.vw_piece_v1.iter()].find(
       (row) => pieceId.compareTo(row.id) === 0,
     );
     const character = piece
-      ? [...conn.db.vw_character.iter()].find(
+      ? [...conn.db.vw_character_v1.iter()].find(
           (row) => row.id.compareTo(piece.characterId) === 0,
         )
       : undefined;
@@ -369,11 +371,11 @@ export class ResultScene extends Phaser.Scene {
   /** Filled/empty piece squares + "n / m PIECES"; escalates on unlock. */
   private pieceProgress(characterId: Uuid, x: number, y: number): void {
     const conn = db();
-    const pieces = [...conn.db.vw_piece.iter()].filter(
+    const pieces = [...conn.db.vw_piece_v1.iter()].filter(
       (row) => characterId.compareTo(row.characterId) === 0,
     );
     const owned = new Set(
-      [...conn.db.vw_my_piece.iter()]
+      [...conn.db.vw_my_piece_v1.iter()]
         .filter((row) => row.count > 0)
         .map((row) => row.pieceId.toString()),
     );

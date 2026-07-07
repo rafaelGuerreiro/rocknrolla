@@ -3,7 +3,9 @@
 use crate::{
     error::{ServiceError, ServiceResult},
     extend::stdb::UuidGen,
-    repository::level::{Level, LevelLayer, LevelSuccessor, level, level_layer, level_successor, types::LayerImport},
+    repository::level::{
+        Level, LevelLayer, LevelSuccessor, level_layer_v1, level_successor_v1, level_v1, types::LayerImportV1,
+    },
 };
 use rocknrolla_level::{LayerFacts, validate_layers};
 use spacetimedb::{ReducerContext, Table, Uuid};
@@ -39,7 +41,7 @@ pub struct LevelImport {
     pub active: bool,
     pub reward_lootbox_id: Option<Uuid>,
     pub successors: Vec<Uuid>,
-    pub layers: Vec<LayerImport>,
+    pub layers: Vec<LayerImportV1>,
 }
 
 impl LevelServices<'_> {
@@ -70,7 +72,7 @@ impl LevelServices<'_> {
                 )));
             }
         }
-        if let Some(other) = self.db.level().slug().find(&import.slug)
+        if let Some(other) = self.db.level_v1().slug().find(&import.slug)
             && other.id != import.id
         {
             return Err(ServiceError::conflict(format!(
@@ -79,7 +81,7 @@ impl LevelServices<'_> {
             )));
         }
 
-        self.db.level().id().insert_or_update(Level {
+        self.db.level_v1().id().insert_or_update(Level {
             id: import.id,
             slug: import.slug,
             name: import.name,
@@ -87,10 +89,10 @@ impl LevelServices<'_> {
             active: import.active,
             reward_lootbox_id: import.reward_lootbox_id,
         });
-        self.db.level_layer().level_id().delete(import.id);
-        self.db.level_successor().level_id().delete(import.id);
+        self.db.level_layer_v1().level_id().delete(import.id);
+        self.db.level_successor_v1().level_id().delete(import.id);
         for layer in import.layers {
-            self.db.level_layer().insert(LevelLayer {
+            self.db.level_layer_v1().insert(LevelLayer {
                 id: self.ctx.generate_uuid()?,
                 level_id: import.id,
                 z: layer.z,
@@ -104,7 +106,7 @@ impl LevelServices<'_> {
             });
         }
         for successor_id in import.successors {
-            self.db.level_successor().insert(LevelSuccessor {
+            self.db.level_successor_v1().insert(LevelSuccessor {
                 id: self.ctx.generate_uuid()?,
                 level_id: import.id,
                 successor_id,
@@ -116,7 +118,7 @@ impl LevelServices<'_> {
     pub fn find_active_level(&self, level_id: Uuid) -> ServiceResult<Level> {
         let level = self
             .db
-            .level()
+            .level_v1()
             .id()
             .find(level_id)
             .ok_or_else(|| ServiceError::not_found(format!("unknown level '{level_id}'")))?;
@@ -128,7 +130,7 @@ impl LevelServices<'_> {
 
     pub fn active_starting_level_ids(&self) -> Vec<Uuid> {
         self.db
-            .level()
+            .level_v1()
             .iter()
             .filter(|l| l.active && l.is_starting)
             .map(|l| l.id)
@@ -137,7 +139,7 @@ impl LevelServices<'_> {
 
     pub fn successor_ids(&self, level_id: Uuid) -> Vec<Uuid> {
         self.db
-            .level_successor()
+            .level_successor_v1()
             .level_id()
             .filter(level_id)
             .map(|edge| edge.successor_id)

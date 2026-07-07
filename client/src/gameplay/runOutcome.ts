@@ -48,7 +48,7 @@ export class RunOutcome {
     this.config.onSettled('success');
     const conn = db();
 
-    const alreadyCompleted = [...conn.db.vw_my_completed_level.iter()].some(
+    const alreadyCompleted = [...conn.db.vw_my_completed_level_v1.iter()].some(
       (row) => row.levelId.toString() === this.config.levelId,
     );
     if (alreadyCompleted) {
@@ -81,7 +81,7 @@ export class RunOutcome {
         this.showDefeat('The server did not confirm the run.');
       },
     );
-    conn.db.vw_my_completed_level.onInsert(this.confirmListener);
+    conn.db.vw_my_completed_level_v1.onInsert(this.confirmListener);
     conn.reducers
       .completeLevel({ levelId: Uuid.parse(this.config.levelId) })
       .catch((error) => {
@@ -128,7 +128,7 @@ export class RunOutcome {
 
   private cleanup = (): void => {
     if (this.confirmListener) {
-      db().db.vw_my_completed_level.removeOnInsert(this.confirmListener);
+      db().db.vw_my_completed_level_v1.removeOnInsert(this.confirmListener);
       this.confirmListener = undefined;
     }
     this.confirmTimeout?.remove();

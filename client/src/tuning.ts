@@ -29,13 +29,9 @@ export const TUNING = {
   JUMP_BUFFER_MS: 50,
 
   /**
-   * Matter contact friction. Kept near zero so touching the ground never
-   * brakes forward velocity — the rolling look comes from ROLL_SPIN below.
-   */
-  BODY_FRICTION: 0.05,
-  /**
-   * How strongly the body's spin follows its forward speed while grounded
+   * How strongly the body's spin follows its horizontal speed
    * (1 = wheel-perfect rolling, 0 = the body never visually rolls).
+   * Contact friction is zero, so this is the only source of spin.
    */
   ROLL_SPIN: 1.0,
   /** Air drag per step: momentum bleed on flats and in flight. Keep tiny. */

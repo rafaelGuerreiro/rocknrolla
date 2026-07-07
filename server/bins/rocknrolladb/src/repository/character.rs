@@ -6,7 +6,7 @@ pub mod reducers;
 pub mod services;
 pub mod views;
 
-#[spacetimedb::table(accessor = character_def, private)]
+#[spacetimedb::table(accessor = character_def_v1, private)]
 pub struct CharacterDef {
     #[primary_key]
     pub id: Uuid,
@@ -23,7 +23,7 @@ pub struct CharacterDef {
     pub starter: bool,
 }
 
-#[spacetimedb::table(accessor = piece_def, private)]
+#[spacetimedb::table(accessor = piece_def_v1, private)]
 pub struct PieceDef {
     #[primary_key]
     pub id: Uuid,

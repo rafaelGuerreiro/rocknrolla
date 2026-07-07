@@ -11,7 +11,7 @@ import {
 } from "spacetimedb";
 
 import {
-  LayerImport,
+  LayerImportV1,
 } from "./types";
 
 export default {
@@ -23,6 +23,6 @@ export default {
   rewardLootboxId: __t.option(__t.uuid()),
   successors: __t.array(__t.uuid()),
   get layers() {
-    return __t.array(LayerImport);
+    return __t.array(LayerImportV1);
   },
 };

@@ -49,10 +49,11 @@ export function createPlayerBody(
     {
       label: 'player',
       density: stats.density,
-      // High contact friction keeps the body spinning instead of sliding;
-      // near-zero air drag lets downhill momentum carry across flats and
-      // gaps — the game's only propulsion is gravity on slopes.
-      friction: TUNING.BODY_FRICTION,
+      // Zero contact friction: the ground never brakes forward velocity and
+      // never induces spin — rotation is driven from horizontal speed by the
+      // controller (ROLL_SPIN). Near-zero air drag lets downhill momentum
+      // carry across flats and gaps.
+      friction: 0,
       frictionAir: TUNING.BODY_FRICTION_AIR,
       restitution: TUNING.BODY_RESTITUTION,
     },

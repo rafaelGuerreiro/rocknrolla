@@ -11,13 +11,13 @@ import {
 } from "spacetimedb";
 
 import {
-  DropImport,
+  DropImportV1,
 } from "./types";
 
 export default {
   id: __t.uuid(),
   name: __t.string(),
   get drops() {
-    return __t.array(DropImport);
+    return __t.array(DropImportV1);
   },
 };

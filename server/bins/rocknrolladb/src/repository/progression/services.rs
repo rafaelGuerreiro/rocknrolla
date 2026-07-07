@@ -6,7 +6,7 @@ use crate::{
     repository::{
         level::services::LevelReducerContext,
         lootbox::services::LootboxReducerContext,
-        progression::{PlayerCompletedLevel, PlayerEnabledLevel, player_completed_level, player_enabled_level},
+        progression::{PlayerCompletedLevel, PlayerEnabledLevel, player_completed_level_v1, player_enabled_level_v1},
     },
 };
 use spacetimedb::{Identity, ReducerContext, Table, Uuid};
@@ -38,7 +38,7 @@ impl ProgressionServices<'_> {
     pub fn enable_levels_if_absent(&self, owner: Identity, level_ids: &[Uuid]) -> ServiceResult<()> {
         let enabled = self.enabled_level_ids(owner);
         for level_id in successor_inserts(level_ids, &enabled) {
-            self.db.player_enabled_level().insert(PlayerEnabledLevel {
+            self.db.player_enabled_level_v1().insert(PlayerEnabledLevel {
                 id: self.ctx.generate_uuid()?,
                 owner,
                 level_id,
@@ -55,7 +55,7 @@ impl ProgressionServices<'_> {
         let level = self.level_services().find_active_level(level_id)?;
         if self
             .db
-            .player_enabled_level()
+            .player_enabled_level_v1()
             .by_owner_level()
             .filter((owner, level_id))
             .next()
@@ -68,7 +68,7 @@ impl ProgressionServices<'_> {
         }
         let already_completed = self
             .db
-            .player_completed_level()
+            .player_completed_level_v1()
             .by_owner_level()
             .filter((owner, level_id))
             .next()
@@ -77,7 +77,7 @@ impl ProgressionServices<'_> {
             return Ok(());
         }
 
-        self.db.player_completed_level().insert(PlayerCompletedLevel {
+        self.db.player_completed_level_v1().insert(PlayerCompletedLevel {
             id: self.ctx.generate_uuid()?,
             owner,
             level_id,
@@ -97,7 +97,7 @@ impl ProgressionServices<'_> {
 
     fn enabled_level_ids(&self, owner: Identity) -> Vec<Uuid> {
         self.db
-            .player_enabled_level()
+            .player_enabled_level_v1()
             .by_owner_level()
             .filter(owner)
             .map(|row| row.level_id)

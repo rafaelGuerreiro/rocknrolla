@@ -29,6 +29,10 @@ import { DPR, UI_FONT, VIEW_H, VIEW_W, setupCamera } from '../ui';
 
 /** Falling this far below the level ends the run in defeat. */
 const FALL_MARGIN_PX = 90;
+/** Below this horizontal speed the player counts as stopped (float jitter). */
+const STALL_SPEED = 0.1;
+/** Being stopped this long straight ends the run in defeat. */
+const STALL_TIMEOUT_MS = 2000;
 /** Impact speed against a heavy block that triggers a camera shake. */
 const HEAVY_SHAKE_SPEED = 6;
 /** On-screen character size the face proportions are computed against. */
@@ -54,6 +58,7 @@ export class GameScene extends Phaser.Scene {
   private surprisedUntil = 0;
   private hillFar?: Phaser.GameObjects.TileSprite;
   private hillMid?: Phaser.GameObjects.TileSprite;
+  private stallMs = 0;
 
   constructor() {
     super('game');
@@ -67,6 +72,7 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.paused = false;
     this.player = undefined;
+    this.stallMs = 0;
     // Live feel-tuning: gravity is re-read on every run start.
     this.matter.world.setGravity(0, TUNING.GRAVITY_Y);
     setupCamera(this);
@@ -74,7 +80,7 @@ export class GameScene extends Phaser.Scene {
     this.buildBackdrop();
 
     const conn = db();
-    const character = [...conn.db.vw_character.iter()].find(
+    const character = [...conn.db.vw_character_v1.iter()].find(
       (row) => row.id.toString() === this.characterId,
     );
     if (!character) {
@@ -232,13 +238,26 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  update(time: number): void {
+  update(time: number, delta: number): void {
     this.trackBackdrop();
     this.trackFace(time);
     if (!this.player || this.paused || this.outcome.settled) return;
     if (this.player.y > this.level.heightPx + FALL_MARGIN_PX) {
       this.outcome.defeat('You fell out of the level.');
       return;
+    }
+    // Gravity on slopes is the only propulsion, so a run with no horizontal
+    // speed can never recover — end it instead of leaving the player stuck.
+    // Accumulating delta here (after the paused guard) keeps pauses from
+    // counting toward the timeout.
+    if (Math.abs(this.player.getVelocity().x ?? 0) < STALL_SPEED) {
+      this.stallMs += delta;
+      if (this.stallMs >= STALL_TIMEOUT_MS) {
+        this.outcome.defeat('Stuck — nowhere left to roll.');
+        return;
+      }
+    } else {
+      this.stallMs = 0;
     }
     this.controller.update(time);
   }

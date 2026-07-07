@@ -4,7 +4,9 @@
 use crate::{
     error::{ServiceError, ServiceResult},
     extend::stdb::UuidGen,
-    repository::player::{Player, PlayerPiece, PlayerUnlockedCharacter, player, player_piece, player_unlocked_character},
+    repository::player::{
+        Player, PlayerPiece, PlayerUnlockedCharacter, player_piece_v1, player_unlocked_character_v1, player_v1,
+    },
 };
 use spacetimedb::{Identity, ReducerContext, Table, Uuid};
 use std::ops::Deref;
@@ -43,15 +45,15 @@ impl PlayerServices<'_> {
         for character_id in starter_character_ids {
             self.unlock_character_if_absent(owner, *character_id)?;
         }
-        match self.db.player().identity().find(owner) {
+        match self.db.player_v1().identity().find(owner) {
             None => {
-                self.db.player().insert(Player {
+                self.db.player_v1().insert(Player {
                     identity: owner,
                     selected_character_id: default_character_id,
                 });
             },
             Some(existing) if existing.selected_character_id.is_none() => {
-                self.db.player().identity().update(Player {
+                self.db.player_v1().identity().update(Player {
                     selected_character_id: default_character_id,
                     ..existing
                 });
@@ -65,7 +67,7 @@ impl PlayerServices<'_> {
     pub fn select_character(&self, owner: Identity, character_id: Uuid) -> ServiceResult<()> {
         let player = self
             .db
-            .player()
+            .player_v1()
             .identity()
             .find(owner)
             .ok_or_else(|| ServiceError::conflict("player not initialized"))?;
@@ -75,7 +77,7 @@ impl PlayerServices<'_> {
                 format!("character '{character_id}' is not unlocked"),
             ));
         }
-        self.db.player().identity().update(Player {
+        self.db.player_v1().identity().update(Player {
             selected_character_id: Some(character_id),
             ..player
         });
@@ -85,14 +87,14 @@ impl PlayerServices<'_> {
     /// Add one copy of `piece_id` to the owner's collection and return the
     /// new count. Duplicates are allowed.
     pub fn grant_piece(&self, owner: Identity, piece_id: Uuid) -> ServiceResult<u32> {
-        match self.db.player_piece().by_owner_piece().filter((owner, piece_id)).next() {
+        match self.db.player_piece_v1().by_owner_piece().filter((owner, piece_id)).next() {
             Some(existing) => {
                 let count = existing.count + 1;
-                self.db.player_piece().id().update(PlayerPiece { count, ..existing });
+                self.db.player_piece_v1().id().update(PlayerPiece { count, ..existing });
                 Ok(count)
             },
             None => {
-                self.db.player_piece().insert(PlayerPiece {
+                self.db.player_piece_v1().insert(PlayerPiece {
                     id: self.ctx.generate_uuid()?,
                     owner,
                     piece_id,
@@ -112,7 +114,7 @@ impl PlayerServices<'_> {
     ) -> ServiceResult<()> {
         let owned: Vec<Uuid> = self
             .db
-            .player_piece()
+            .player_piece_v1()
             .by_owner_piece()
             .filter(owner)
             .filter(|row| row.count > 0)
@@ -126,7 +128,7 @@ impl PlayerServices<'_> {
 
     pub fn unlock_character_if_absent(&self, owner: Identity, character_id: Uuid) -> ServiceResult<()> {
         if !self.has_unlocked(owner, character_id) {
-            self.db.player_unlocked_character().insert(PlayerUnlockedCharacter {
+            self.db.player_unlocked_character_v1().insert(PlayerUnlockedCharacter {
                 id: self.ctx.generate_uuid()?,
                 owner,
                 character_id,
@@ -137,7 +139,7 @@ impl PlayerServices<'_> {
 
     fn has_unlocked(&self, owner: Identity, character_id: Uuid) -> bool {
         self.db
-            .player_unlocked_character()
+            .player_unlocked_character_v1()
             .by_owner_character()
             .filter((owner, character_id))
             .next()

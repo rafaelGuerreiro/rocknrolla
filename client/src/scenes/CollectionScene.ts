@@ -60,11 +60,11 @@ export class CollectionScene extends Phaser.Scene {
       .setShadow(0, 3, 'rgba(36,29,22,0.55)', 4);
 
     const unlocked = new Set(
-      [...conn.db.vw_my_unlocked_character.iter()].map((row) =>
+      [...conn.db.vw_my_unlocked_character_v1.iter()].map((row) =>
         row.characterId.toString(),
       ),
     );
-    const characters = [...conn.db.vw_character.iter()].sort((a, b) =>
+    const characters = [...conn.db.vw_character_v1.iter()].sort((a, b) =>
       a.id.compareTo(b.id),
     );
     pill(
@@ -76,7 +76,7 @@ export class CollectionScene extends Phaser.Scene {
       `${unlocked.size} / ${characters.length} unlocked`,
     );
 
-    const unopened = [...conn.db.vw_my_lootbox.iter()]
+    const unopened = [...conn.db.vw_my_lootbox_v1.iter()]
       .filter((row) => !row.opened)
       .sort((a, b) => a.id.compareTo(b.id));
     if (unopened.length > 0) {
@@ -207,11 +207,11 @@ export class CollectionScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const pieces = [...conn.db.vw_piece.iter()].filter(
+    const pieces = [...conn.db.vw_piece_v1.iter()].filter(
       (row) => row.characterId.compareTo(character.id) === 0,
     );
     const owned = new Set(
-      [...conn.db.vw_my_piece.iter()]
+      [...conn.db.vw_my_piece_v1.iter()]
         .filter((row) => row.count > 0)
         .map((row) => row.pieceId.toString()),
     );
@@ -253,11 +253,11 @@ export class CollectionScene extends Phaser.Scene {
   /** Animate the server-decided award; the client never chooses the piece. */
   private reveal(pieceId: Uuid): void {
     const conn = db();
-    const piece = [...conn.db.vw_piece.iter()].find(
+    const piece = [...conn.db.vw_piece_v1.iter()].find(
       (row) => row.id.compareTo(pieceId) === 0,
     );
     const character = piece
-      ? [...conn.db.vw_character.iter()].find(
+      ? [...conn.db.vw_character_v1.iter()].find(
           (row) => row.id.compareTo(piece.characterId) === 0,
         )
       : undefined;

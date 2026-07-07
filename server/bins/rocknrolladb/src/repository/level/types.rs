@@ -3,7 +3,7 @@
 use spacetimedb::SpacetimeType;
 
 #[derive(SpacetimeType)]
-pub struct LayerImport {
+pub struct LayerImportV1 {
     pub z: u8,
     pub width_px: u32,
     pub height_px: u32,
