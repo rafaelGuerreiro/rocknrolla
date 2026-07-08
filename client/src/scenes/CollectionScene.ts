@@ -1,9 +1,13 @@
 import Phaser from 'phaser';
 import { Uuid } from 'spacetimedb';
-import { addRoller, silhouetteTextureKey } from '../rollers';
+import {
+  backdropBySlug,
+  characterSilhouetteKey,
+  DEFAULT_BACKDROP_SLUG,
+} from '../content';
+import { addRoller } from '../rollers';
 import { db } from '../db';
 import { openLootboxAndAwaitPiece } from '../lootbox';
-import { ensureBackdropTextures } from '../textures';
 import {
   BODY_FONT,
   button,
@@ -38,9 +42,12 @@ export class CollectionScene extends Phaser.Scene {
     const width = VIEW_W;
     const height = VIEW_H;
     setupCamera(this);
-    ensureBackdropTextures(this);
     this.add
-      .image(width / 2, height / 2, 'dusk-sky')
+      .image(
+        width / 2,
+        height / 2,
+        backdropBySlug(DEFAULT_BACKDROP_SLUG).sky.key,
+      )
       .setDisplaySize(width, height);
 
     const conn = db();
@@ -105,8 +112,8 @@ export class CollectionScene extends Phaser.Scene {
 
   private unlockedCard(
     character: {
+      id: Uuid;
       name: string;
-      style: string;
       density: number;
       jumpSpeed: number;
       buoyancy: number;
@@ -127,7 +134,7 @@ export class CollectionScene extends Phaser.Scene {
     g.fillStyle(0xf5ecd8, 1);
     g.fillRoundedRect(x - CARD_W / 2, y - CARD_H / 2, CARD_W, CARD_H, 18);
 
-    addRoller(this, x - CARD_W / 2 + 48, y - 22, 58, character.style);
+    addRoller(this, x - CARD_W / 2 + 48, y - 22, 58, character.id.toString());
     this.add
       .text(x - CARD_W / 2 + 88, y - CARD_H / 2 + 30, character.name, {
         fontFamily: UI_FONT,
@@ -183,7 +190,7 @@ export class CollectionScene extends Phaser.Scene {
   }
 
   private lockedCard(
-    character: { id: Uuid; name: string; style: string },
+    character: { id: Uuid; name: string },
     x: number,
     y: number,
   ): void {
@@ -195,7 +202,7 @@ export class CollectionScene extends Phaser.Scene {
     g.strokeRoundedRect(x - CARD_W / 2, y - CARD_H / 2, CARD_W, CARD_H, 18);
 
     this.add
-      .image(x, y - 28, silhouetteTextureKey(character.style))
+      .image(x, y - 28, characterSilhouetteKey(character.id.toString()))
       .setDisplaySize(58, 58)
       .setAlpha(0.8);
     this.add
@@ -269,7 +276,13 @@ export class CollectionScene extends Phaser.Scene {
       .setDepth(10)
       .setInteractive();
     if (character) {
-      addRoller(this, centerX, centerY - 96, 84, character.style).setDepth(11);
+      addRoller(
+        this,
+        centerX,
+        centerY - 96,
+        84,
+        character.id.toString(),
+      ).setDepth(11);
     }
     const label = this.add
       .text(centerX, centerY - 20, piece?.name ?? pieceId.toString(), {

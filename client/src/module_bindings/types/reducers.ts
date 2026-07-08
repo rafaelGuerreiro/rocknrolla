@@ -7,8 +7,11 @@ import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
 import CompleteLevelV1Reducer from "../complete_level_v_1_reducer";
+import ImportBackdropV1Reducer from "../import_backdrop_v_1_reducer";
+import ImportCharacterArtV1Reducer from "../import_character_art_v_1_reducer";
 import ImportCharacterV1Reducer from "../import_character_v_1_reducer";
 import ImportComponentV1Reducer from "../import_component_v_1_reducer";
+import ImportFaceV1Reducer from "../import_face_v_1_reducer";
 import ImportLevelV1Reducer from "../import_level_v_1_reducer";
 import ImportLootboxV1Reducer from "../import_lootbox_v_1_reducer";
 import ImportPieceV1Reducer from "../import_piece_v_1_reducer";
@@ -17,8 +20,11 @@ import SelectCharacterV1Reducer from "../select_character_v_1_reducer";
 import SelectLevelV1Reducer from "../select_level_v_1_reducer";
 
 export type CompleteLevelV1Params = __Infer<typeof CompleteLevelV1Reducer>;
+export type ImportBackdropV1Params = __Infer<typeof ImportBackdropV1Reducer>;
+export type ImportCharacterArtV1Params = __Infer<typeof ImportCharacterArtV1Reducer>;
 export type ImportCharacterV1Params = __Infer<typeof ImportCharacterV1Reducer>;
 export type ImportComponentV1Params = __Infer<typeof ImportComponentV1Reducer>;
+export type ImportFaceV1Params = __Infer<typeof ImportFaceV1Reducer>;
 export type ImportLevelV1Params = __Infer<typeof ImportLevelV1Reducer>;
 export type ImportLootboxV1Params = __Infer<typeof ImportLootboxV1Reducer>;
 export type ImportPieceV1Params = __Infer<typeof ImportPieceV1Reducer>;

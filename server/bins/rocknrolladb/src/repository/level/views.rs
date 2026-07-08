@@ -13,6 +13,7 @@ pub struct LevelViewV1 {
     pub id: Uuid,
     pub slug: String,
     pub name: String,
+    pub backdrop_id: Uuid,
     pub spawn: Vec2,
     pub finish: Vec2,
 }
@@ -37,6 +38,7 @@ pub fn vw_level_v1(ctx: &AnonymousViewContext) -> Vec<LevelViewV1> {
             id: level.id,
             slug: level.slug,
             name: level.name,
+            backdrop_id: level.backdrop_id,
             spawn: level.spawn,
             finish: level.finish,
         })

@@ -1,0 +1,446 @@
+{
+  "id": "50eb69b9-d527-5360-bfda-8adbea0840c4",
+  "slug": "firewater-gorge",
+  "name": "Firewater Gorge",
+  "backdrop": "dusk",
+  "starting": false,
+  "active": true,
+  "reward_lootbox_id": "122789c5-1e95-429e-bd29-442219cf3c8c",
+  "successors": [
+    "ca82c3e0-a898-5331-b8fc-257baeb6b354"
+  ],
+  "spawn": {
+    "x": 544,
+    "y": 160
+  },
+  "finish": {
+    "x": 10520,
+    "y": 2784
+  },
+  "placements": [
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 10240,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 10240,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 10240,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 10240,
+      "y": 1920,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 2432,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 2432,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 2432,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 2432,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 8192,
+      "y": 2432,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 10240,
+      "y": 2432,
+      "z": -120
+    },
+    {
+      "component": "ground-flat",
+      "x": 0,
+      "y": 256
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 384
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 640
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 896
+    },
+    {
+      "component": "slope-down-30",
+      "x": 512,
+      "y": 256
+    },
+    {
+      "component": "bank",
+      "x": 1408,
+      "y": 768,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 1408,
+      "y": 768
+    },
+    {
+      "component": "dirt-slab",
+      "x": 1408,
+      "y": 832
+    },
+    {
+      "component": "bank",
+      "x": 1600,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 1664,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 2176,
+      "y": 768
+    },
+    {
+      "component": "fire",
+      "x": 2400,
+      "y": 704
+    },
+    {
+      "component": "dirt-fill",
+      "x": 2176,
+      "y": 896
+    },
+    {
+      "component": "slope-down-45",
+      "x": 2688,
+      "y": 768
+    },
+    {
+      "component": "bank",
+      "x": 3200,
+      "y": 1280,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 3200,
+      "y": 1280
+    },
+    {
+      "component": "dirt-slab",
+      "x": 3200,
+      "y": 1344
+    },
+    {
+      "component": "bank",
+      "x": 3392,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 3456,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 3968,
+      "y": 1280
+    },
+    {
+      "component": "fire",
+      "x": 4192,
+      "y": 1216
+    },
+    {
+      "component": "dirt-fill",
+      "x": 3968,
+      "y": 1408
+    },
+    {
+      "component": "slope-down-45",
+      "x": 4480,
+      "y": 1280
+    },
+    {
+      "component": "bank",
+      "x": 4992,
+      "y": 1792,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 4992,
+      "y": 1792
+    },
+    {
+      "component": "dirt-slab",
+      "x": 4992,
+      "y": 1856
+    },
+    {
+      "component": "bank",
+      "x": 5184,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 5248,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 5760,
+      "y": 1792
+    },
+    {
+      "component": "dirt-fill",
+      "x": 5760,
+      "y": 1920
+    },
+    {
+      "component": "slope-down-60",
+      "x": 6272,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 6560,
+      "y": 2304
+    },
+    {
+      "component": "ground-flat",
+      "x": 7072,
+      "y": 2304
+    },
+    {
+      "component": "fire",
+      "x": 7296,
+      "y": 2240
+    },
+    {
+      "component": "ground-flat",
+      "x": 7584,
+      "y": 2304
+    },
+    {
+      "component": "spikes",
+      "x": 7808,
+      "y": 2240
+    },
+    {
+      "component": "ground-flat",
+      "x": 8096,
+      "y": 2304
+    },
+    {
+      "component": "dirt-fill",
+      "x": 8096,
+      "y": 2432
+    },
+    {
+      "component": "slope-down-45",
+      "x": 8608,
+      "y": 2304
+    },
+    {
+      "component": "ground-flat",
+      "x": 9120,
+      "y": 2816
+    },
+    {
+      "component": "ground-flat",
+      "x": 9632,
+      "y": 2816
+    },
+    {
+      "component": "bush-cluster",
+      "x": 9856,
+      "y": 2752
+    },
+    {
+      "component": "ground-flat",
+      "x": 10144,
+      "y": 2816
+    },
+    {
+      "component": "ground-flat",
+      "x": 10656,
+      "y": 2816
+    },
+    {
+      "component": "bush-cluster",
+      "x": 3350,
+      "y": 1200,
+      "z": 40,
+      "scale": 2
+    },
+    {
+      "component": "bush-cluster",
+      "x": 6700,
+      "y": 2224,
+      "z": 40,
+      "scale": 2
+    },
+    {
+      "component": "bush-cluster",
+      "x": 9492,
+      "y": 2736,
+      "z": 40,
+      "scale": 2
+    }
+  ]
+}

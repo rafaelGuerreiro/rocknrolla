@@ -38,7 +38,7 @@ Optimize for a playable prototype, not a future platform. Apply YAGNI: prefer Ph
 - `task client:dev`: run the browser client.
 - `task client:sync`: build and sync Capacitor platforms.
 - `task server:publish`: publish the development database.
-- `task server:admin`: interactive admin shell to validate and import levels and seed content.
+- `task server:admin`: interactive admin shell to validate and import authored content (components, characters, faces, backdrops, levels, seed) from `content/`.
 
 ## Verification
 

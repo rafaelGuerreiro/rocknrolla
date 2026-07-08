@@ -21,6 +21,9 @@ pub struct Level {
     #[index(btree)]
     pub active: bool,
     pub reward_lootbox_id: Option<Uuid>,
+    /// The level's scenery theme; resolved from the authored backdrop slug
+    /// at import.
+    pub backdrop_id: Uuid,
     pub spawn: Vec2,
     pub finish: Vec2,
 }

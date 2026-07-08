@@ -51,10 +51,16 @@ pub fn parse_seed(source: &str) -> Result<SeedContent> {
     let content: SeedContent = serde_json::from_str(source).context("invalid JSON")?;
 
     let mut character_ids = HashSet::new();
+    let mut character_styles = HashSet::new();
     for character in &content.characters {
         crate::uuid::validate_uuid(&character.id, "character id")?;
         if !character_ids.insert(character.id.as_str()) {
             bail!("duplicate character id '{}'", character.id);
+        }
+        // Styles are the filename link to content/characters/<style>.svg,
+        // so ambiguity must fail at validate time.
+        if !character_styles.insert(character.style.as_str()) {
+            bail!("duplicate character style '{}'", character.style);
         }
         if character.rarity_weight == 0 {
             bail!("character '{}' has zero rarity_weight", character.id);
@@ -153,5 +159,15 @@ mod tests {
         assert!(parse_seed(&broken).unwrap_err().to_string().contains("zero weight"));
         let broken = VALID.replace("\"starter\": true", "\"starter\": false");
         assert!(parse_seed(&broken).unwrap_err().to_string().contains("starter"));
+    }
+
+    #[test]
+    fn rejects_duplicate_styles() {
+        let mut duplicated: serde_json::Value = serde_json::from_str(VALID).unwrap();
+        let mut twin = duplicated["characters"][0].clone();
+        twin["id"] = "0195c8f1-0000-7000-8000-0000000000c2".into();
+        duplicated["characters"].as_array_mut().unwrap().push(twin);
+        let err = parse_seed(&duplicated.to_string()).unwrap_err().to_string();
+        assert!(err.contains("duplicate character style"), "{err}");
     }
 }

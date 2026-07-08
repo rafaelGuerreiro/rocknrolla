@@ -6,7 +6,7 @@
 //! hidden group of collider markers (`data-t="<tile id>"`) the client turns
 //! into Matter bodies. Heavy blocks are marker-only: the client draws them
 //! as dynamic sprites. `export components <dir>` dumps the starter library;
-//! the committed files in `levels/components/` are the source of truth.
+//! the committed files in `content/components/` are the source of truth.
 
 use anyhow::{Context, Result, bail};
 use rocknrolla_level::{ComponentFacts, GAMEPLAY_CELL_SIZE, content_hash, tile};

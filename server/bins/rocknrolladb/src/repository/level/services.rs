@@ -4,6 +4,7 @@ use crate::{
     error::ServiceResult,
     extend::{make_service::make_service, stdb::UuidGen},
     repository::{
+        backdrop::services::BackdropServicesTrait,
         component::services::ComponentServicesTrait,
         level::{
             Level, LevelPlacement, LevelSuccessor, errors::LevelError, level_placement_v1, level_successor_v1, level_v1,
@@ -25,6 +26,8 @@ pub struct LevelImport {
     pub active: bool,
     pub reward_lootbox_id: Option<Uuid>,
     pub successors: Vec<Uuid>,
+    /// The backdrop's authored identity; resolved to its UUID at import.
+    pub backdrop_slug: String,
     pub spawn: Vec2,
     pub finish: Vec2,
     pub placements: Vec<PlacementImportV1>,
@@ -53,6 +56,11 @@ impl LevelServicesImpl<'_> {
             resolved.push(component.id);
         }
         validate_level_geometry(&facts, import.spawn, import.finish)?;
+        let backdrop = self
+            .ctx
+            .backdrop_services()
+            .find_by_slug(&import.backdrop_slug)
+            .ok_or_else(|| LevelError::unknown_backdrop(&import.slug, &import.backdrop_slug))?;
         for successor in &import.successors {
             if *successor == import.id {
                 return Err(LevelError::self_successor(&import.slug));
@@ -71,6 +79,7 @@ impl LevelServicesImpl<'_> {
             is_starting: import.is_starting,
             active: import.active,
             reward_lootbox_id: import.reward_lootbox_id,
+            backdrop_id: backdrop.id,
             spawn: import.spawn,
             finish: import.finish,
         });

@@ -13,7 +13,6 @@ import {
 export default __t.row({
   id: __t.uuid(),
   name: __t.string(),
-  style: __t.string(),
   density: __t.f32(),
   jumpSpeed: __t.f32().name("jump_speed"),
   flightTimeMs: __t.u32().name("flight_time_ms"),

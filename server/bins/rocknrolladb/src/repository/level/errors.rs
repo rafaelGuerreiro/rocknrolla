@@ -8,6 +8,8 @@ use thiserror::Error;
 pub enum LevelError {
     #[error("level '{level_slug}' places unknown component '{component_slug}'")]
     UnknownComponent { level_slug: String, component_slug: String },
+    #[error("level '{level_slug}' references unknown backdrop '{backdrop_slug}'")]
+    UnknownBackdrop { level_slug: String, backdrop_slug: String },
     #[error("level '{level_slug}' lists itself as a successor")]
     SelfSuccessor { level_slug: String },
     #[error("slug '{slug}' already belongs to level {existing_id}")]
@@ -23,6 +25,14 @@ impl LevelError {
         LevelError::UnknownComponent {
             level_slug: level_slug.to_string(),
             component_slug: component_slug.to_string(),
+        }
+        .into()
+    }
+
+    pub fn unknown_backdrop(level_slug: &str, backdrop_slug: &str) -> ServiceError {
+        LevelError::UnknownBackdrop {
+            level_slug: level_slug.to_string(),
+            backdrop_slug: backdrop_slug.to_string(),
         }
         .into()
     }
@@ -55,7 +65,9 @@ impl From<LevelError> for ServiceError {
     fn from(err: LevelError) -> Self {
         let message = err.to_string();
         match err {
-            LevelError::UnknownComponent { .. } | LevelError::SelfSuccessor { .. } => ServiceError::validation(message),
+            LevelError::UnknownComponent { .. } | LevelError::UnknownBackdrop { .. } | LevelError::SelfSuccessor { .. } => {
+                ServiceError::validation(message)
+            },
             LevelError::SlugConflict { .. } | LevelError::Inactive { .. } => ServiceError::conflict(message),
             LevelError::UnknownLevel { .. } => ServiceError::not_found(message),
         }

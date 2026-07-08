@@ -15,7 +15,7 @@ import {
 interface HudData {
   levelName: string;
   rollerName: string;
-  style: string;
+  characterId: string;
 }
 
 /**
@@ -61,7 +61,14 @@ export class GameHudScene extends Phaser.Scene {
     roller.setX(textX);
     const badge = pill(this, 18 + pillWidth / 2, 40, pillWidth, 52);
     badge.add(
-      addRoller(this, -pillWidth / 2 + 30, 0, 38, this.hud.style, 'determined'),
+      addRoller(
+        this,
+        -pillWidth / 2 + 30,
+        0,
+        38,
+        this.hud.characterId,
+        'determined',
+      ),
     );
     badge.add([name, roller]);
 

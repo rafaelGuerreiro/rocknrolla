@@ -2,15 +2,18 @@
 //!
 //! - [`catalog`]: semantic tile IDs and gameplay constants.
 //! - [`hash`]: deterministic content hashing.
+//! - [`asset`]: generic standalone-SVG validation for all content assets.
 //! - [`component`]: [`ComponentFacts`] and validation for library SVG
 //!   components (standalone SVG documents with hidden collider markers).
 //! - [`placement`]: [`PlacementFacts`] and whole-level geometry validation.
 
+pub mod asset;
 pub mod catalog;
 pub mod component;
 pub mod hash;
 pub mod placement;
 
+pub use asset::validate_svg_asset;
 pub use catalog::{GAMEPLAY_CELL_SIZE, tile};
 pub use component::{ComponentFacts, MAX_SVG_BYTES, validate_component};
 pub use hash::content_hash;

@@ -1,15 +1,6 @@
 import Phaser from 'phaser';
-import { characterSpriteKey } from '../assets';
+import { buildContentIndex, rasterSize } from '../content';
 import { connect } from '../db';
-import {
-  FACE_SVG,
-  ROLLER_BODY_SVG,
-  addRoller,
-  rollerBodyDataUrl,
-  rollerSilhouetteDataUrl,
-  silhouetteTextureKey,
-} from '../rollers';
-import { ensureBackdropTextures } from '../textures';
 import { svgDataUrl, TILE_SVG } from '../tiles';
 import {
   CREAM_TEXT,
@@ -28,20 +19,22 @@ const FONT_FACES = [
   '400 14px "Space Mono"',
 ];
 
-/** SVG raster sizes: 2× their max on-screen size so they stay retina-crisp. */
+/** Raster size for the client-owned finish flag (2× on-screen size). */
 const TILE_RASTER = 128;
-const ROLLER_RASTER = 320;
-const FACE_RASTER_W = 176;
-const FACE_RASTER_H = 110;
 
 const BAR_WIDTH = 320;
 const BAR_HEIGHT = 18;
 
+/**
+ * Plain solid-color loading screen: no art exists before the subscription
+ * applies — every texture (characters, faces, backdrops, components) comes
+ * from the database. The scene connects, indexes the content rows, and
+ * rasterizes the content textures before handing off to the menu.
+ */
 export class BootScene extends Phaser.Scene {
   private failedFiles: string[] = [];
   private status?: Phaser.GameObjects.Text;
   private barFill?: Phaser.GameObjects.Graphics;
-  private barRider?: Phaser.GameObjects.Image;
 
   constructor() {
     super('boot');
@@ -49,27 +42,11 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     this.failedFiles = [];
+    // The finish flag is level-owned client chrome, not authored content.
     for (const [key, svg] of Object.entries(TILE_SVG)) {
       this.load.svg(key, svgDataUrl(svg), {
         width: TILE_RASTER,
         height: TILE_RASTER,
-      });
-    }
-    for (const style of Object.keys(ROLLER_BODY_SVG)) {
-      this.load.svg(characterSpriteKey(style), rollerBodyDataUrl(style), {
-        width: ROLLER_RASTER,
-        height: ROLLER_RASTER,
-      });
-      this.load.svg(
-        silhouetteTextureKey(style),
-        rollerSilhouetteDataUrl(style),
-        { width: 128, height: 128 },
-      );
-    }
-    for (const [name, svg] of Object.entries(FACE_SVG)) {
-      this.load.svg(`face_${name}`, svgDataUrl(svg), {
-        width: FACE_RASTER_W,
-        height: FACE_RASTER_H,
       });
     }
     this.load.on(
@@ -82,34 +59,9 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     setupCamera(this);
-    this.drawBackdrop();
     void Promise.all(FONT_FACES.map((face) => document.fonts.load(face)))
       .catch(() => undefined) // offline: fall back to system fonts
       .then(() => this.buildUiAndConnect());
-  }
-
-  private drawBackdrop(): void {
-    ensureBackdropTextures(this);
-    this.add
-      .image(VIEW_W / 2, VIEW_H / 2, 'dusk-sky')
-      .setDisplaySize(VIEW_W, VIEW_H);
-    this.add
-      .image(VIEW_W / 2, VIEW_H - 60, 'hill-far')
-      .setDisplaySize(VIEW_W, 150)
-      .setAlpha(0.9);
-    this.add
-      .image(VIEW_W / 2, VIEW_H - 30, 'hill-mid')
-      .setDisplaySize(VIEW_W, 110);
-
-    const rocco = addRoller(this, VIEW_W / 2, VIEW_H / 2 - 96, 92, 'rock');
-    this.tweens.add({
-      targets: rocco,
-      y: rocco.y - 9,
-      duration: 1500,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
   }
 
   private buildUiAndConnect(): void {
@@ -144,9 +96,6 @@ export class BootScene extends Phaser.Scene {
       BAR_HEIGHT / 2,
     );
     this.barFill = this.add.graphics();
-    this.barRider = this.add
-      .image(centerX - BAR_WIDTH / 2, barY - 18, characterSpriteKey('rock'))
-      .setDisplaySize(26, 26);
     this.status = this.add
       .text(centerX, barY + 32, 'CONNECTING TO BASECAMP…', {
         fontFamily: MONO_FONT,
@@ -166,7 +115,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   private setProgress(t: number): void {
-    if (!this.barFill || !this.barRider) return;
+    if (!this.barFill) return;
     const barY = VIEW_H / 2 + 78;
     const w = Math.max(BAR_HEIGHT, BAR_WIDTH * Phaser.Math.Clamp(t, 0, 1));
     this.barFill.clear();
@@ -178,7 +127,6 @@ export class BootScene extends Phaser.Scene {
       BAR_HEIGHT,
       BAR_HEIGHT / 2,
     );
-    this.barRider.setX(VIEW_W / 2 - BAR_WIDTH / 2 + w);
   }
 
   private connectAndLoad(): void {
@@ -187,48 +135,55 @@ export class BootScene extends Phaser.Scene {
         this.setProgress(0.7);
         if (
           conn.db.vw_level_v1.count() === 0n ||
-          conn.db.vw_character_v1.count() === 0n
+          conn.db.vw_character_v1.count() === 0n ||
+          conn.db.vw_character_art_v1.count() === 0n ||
+          conn.db.vw_face_v1.count() === 0n ||
+          conn.db.vw_backdrop_v1.count() === 0n
         ) {
           this.fail(
             'CONNECTED, BUT NO CONTENT IS IMPORTED.\nRUN task server:admin AND IMPORT, THEN TAP TO RETRY.',
           );
           return;
         }
-        // Roller textures for every server style (unknown styles fall back).
-        const styles = [...conn.db.vw_character_v1.iter()].map(
-          (row) => row.style,
-        );
-        for (const style of styles) {
-          if (!this.textures.exists(characterSpriteKey(style))) {
-            this.load.svg(characterSpriteKey(style), rollerBodyDataUrl(style), {
-              width: ROLLER_RASTER,
-              height: ROLLER_RASTER,
-            });
-            this.load.svg(
-              silhouetteTextureKey(style),
-              rollerSilhouetteDataUrl(style),
-              { width: 128, height: 128 },
-            );
-          }
+        let textures;
+        try {
+          textures = buildContentIndex(conn).textures;
+        } catch (error) {
+          this.fail(
+            `BAD CONTENT: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          return;
+        }
+        const missing = textures.filter((t) => !this.textures.exists(t.key));
+        if (missing.length === 0) {
+          this.finishLoading();
+          return;
+        }
+        for (const texture of missing) {
+          this.load.svg(texture.key, svgDataUrl(texture.svg), {
+            ...rasterSize(texture),
+          });
         }
         this.load.on(Phaser.Loader.Events.PROGRESS, (t: number) =>
           this.setProgress(0.7 + 0.3 * t),
         );
-        this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-          if (this.failedFiles.length > 0) {
-            this.fail(
-              `FAILED TO LOAD CHARACTER ART: ${this.failedFiles.join(', ')}`,
-            );
-            return;
-          }
-          this.setProgress(1);
-          this.scene.start('level-select');
-        });
+        this.load.once(Phaser.Loader.Events.COMPLETE, () =>
+          this.finishLoading(),
+        );
         this.load.start();
       })
       .catch((error: Error) => {
         this.fail(`CONNECTION FAILED: ${error.message}`);
       });
+  }
+
+  private finishLoading(): void {
+    if (this.failedFiles.length > 0) {
+      this.fail(`FAILED TO LOAD CONTENT ART: ${this.failedFiles.join(', ')}`);
+      return;
+    }
+    this.setProgress(1);
+    this.scene.start('level-select');
   }
 
   private fail(message: string): void {

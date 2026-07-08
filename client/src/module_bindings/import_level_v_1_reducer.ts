@@ -23,6 +23,7 @@ export default {
   active: __t.bool(),
   rewardLootboxId: __t.option(__t.uuid()),
   successors: __t.array(__t.uuid()),
+  backdropSlug: __t.string(),
   get spawn() {
     return Vec2;
   },

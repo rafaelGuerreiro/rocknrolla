@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Uuid } from 'spacetimedb';
 import { addRoller } from '../rollers';
 import { db } from '../db';
-import { ensureBackdropTextures } from '../textures';
+import { ensureChromeTextures } from '../textures';
 import {
   BODY_FONT,
   button,
@@ -23,7 +23,6 @@ import {
 interface CharacterRow {
   id: { toString(): string };
   name: string;
-  style: string;
   density: number;
   jumpSpeed: number;
   flightTimeMs: number;
@@ -49,7 +48,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     const height = VIEW_H;
     setupCamera(this);
     const conn = db();
-    ensureBackdropTextures(this);
+    ensureChromeTextures(this);
     this.add
       .image(width / 2, height / 2, 'spotlight')
       .setDisplaySize(width, height);
@@ -123,7 +122,7 @@ export class CharacterSelectScene extends Phaser.Scene {
         g.strokeRoundedRect(x - 28, y - 28, 56, 56, 15);
       }
       if (isUnlocked) {
-        addRoller(this, x, y, 44, character.style);
+        addRoller(this, x, y, 44, id);
         this.add
           .rectangle(x, y, 56, 56, 0xffffff, 0.0001)
           .setInteractive({ useHandCursor: true })
@@ -151,7 +150,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     glow.fillCircle(x, y, 110);
     this.add.ellipse(x, y + 84, 130, 26, 0x241d16, 0.35);
 
-    const sprite = addRoller(this, x, y, 140, character.style);
+    const sprite = addRoller(this, x, y, 140, character.id.toString());
     this.tweens.add({
       targets: sprite,
       y: y - 9,

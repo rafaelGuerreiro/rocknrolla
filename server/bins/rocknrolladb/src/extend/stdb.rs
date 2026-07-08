@@ -20,3 +20,9 @@ impl UuidGen for ReducerContext {
 pub fn all_uuids() -> std::ops::RangeFrom<Uuid> {
     Uuid::from_u128(0)..
 }
+
+/// Full-range bound covering every string slug, for index scans in views
+/// over slug-keyed content tables.
+pub fn all_slugs() -> std::ops::RangeFrom<&'static str> {
+    ""..
+}

@@ -44,6 +44,6 @@ This file extends the repository root `AGENTS.md` for work under `server/`.
 - `task sdk-ts`: regenerate client bindings.
 - `task build`: regenerate bindings and build `rocknrolladb` for WASM.
 - `task publish`: publish the development database.
-- `task admin`: interactive shell to validate and import levels and seed content.
+- `task admin`: interactive shell to validate and import authored content (components, characters, faces, backdrops, levels, seed) from `content/`.
 
 Run `task lint` after any Rust change, `task test` for behavior changes, and `task build` when the public module interface changes. `task lint` denies warnings workspace-wide — a warning in code you didn't touch still fails it; fix it rather than scoping around it.

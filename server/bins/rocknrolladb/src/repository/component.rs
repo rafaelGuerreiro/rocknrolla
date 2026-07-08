@@ -12,7 +12,7 @@ pub mod views;
 pub struct Component {
     #[primary_key]
     pub id: Uuid,
-    /// Authored identity: the component's filename in `levels/components/`.
+    /// Authored identity: the component's filename in `content/components/`.
     #[unique]
     pub slug: String,
     pub width_px: u32,

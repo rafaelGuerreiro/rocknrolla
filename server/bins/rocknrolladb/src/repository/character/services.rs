@@ -2,8 +2,13 @@
 
 use crate::{
     error::ServiceResult,
-    extend::make_service::make_service,
-    repository::character::{CharacterDef, PieceDef, character_def_v1, errors::CharacterError, piece_def_v1},
+    extend::{make_service::make_service, stdb::UuidGen},
+    repository::character::{
+        CharacterArt, CharacterDef, Face, PieceDef, character_art_v1, character_def_v1,
+        errors::CharacterError,
+        face_v1, piece_def_v1,
+        types::{CharacterArtImportV1, FaceImportV1},
+    },
 };
 use spacetimedb::Uuid;
 
@@ -22,6 +27,54 @@ impl CharacterServicesImpl<'_> {
             return Err(CharacterError::unknown_character_for_piece(row.character_id));
         }
         self.db.piece_def_v1().id().insert_or_update(row);
+        Ok(())
+    }
+
+    /// Atomically overwrite one character's art blob for one kind, verifying
+    /// the character. The row UUID is generated on first import and kept
+    /// stable by (character, kind) across overwrites.
+    pub fn import_character_art(&self, import: CharacterArtImportV1) -> ServiceResult<()> {
+        if self.db.character_def_v1().id().find(import.character_id).is_none() {
+            return Err(CharacterError::unknown_character_for_art(import.character_id));
+        }
+        let existing = self
+            .db
+            .character_art_v1()
+            .character_id()
+            .filter(import.character_id)
+            .find(|row| row.kind == import.kind);
+        let id = match existing {
+            Some(row) => row.id,
+            None => self.ctx.generate_uuid()?,
+        };
+        self.db.character_art_v1().id().insert_or_update(CharacterArt {
+            id,
+            character_id: import.character_id,
+            kind: import.kind,
+            width_px: import.width_px,
+            height_px: import.height_px,
+            content_hash: import.content_hash,
+            data: import.data,
+        });
+        Ok(())
+    }
+
+    /// Atomically overwrite one face expression by slug. The slug is the
+    /// authored identity (filename); the UUID is generated on first import
+    /// and kept stable across overwrites.
+    pub fn import_face(&self, import: FaceImportV1) -> ServiceResult<()> {
+        let id = match self.db.face_v1().slug().filter(&import.slug).next() {
+            Some(existing) => existing.id,
+            None => self.ctx.generate_uuid()?,
+        };
+        self.db.face_v1().id().insert_or_update(Face {
+            id,
+            slug: import.slug,
+            width_px: import.width_px,
+            height_px: import.height_px,
+            content_hash: import.content_hash,
+            data: import.data,
+        });
         Ok(())
     }
 

@@ -49,6 +49,10 @@ export const TUNING = {
    */
   PARALLAX_PER_Z: 0.005,
 
+  /** Backdrop strip scroll factors relative to the camera (far < mid < 1). */
+  BACKDROP_FAR_PARALLAX: 0.1,
+  BACKDROP_MID_PARALLAX: 0.25,
+
   /** Landing speed that triggers the dust burst. */
   HARD_LANDING_SPEED: 9,
 };

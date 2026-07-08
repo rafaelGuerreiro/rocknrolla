@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
-import { characterSpriteKey } from '../assets';
+import {
+  BACKDROP_RASTER_SCALE,
+  backdropById,
+  characterBodyKey,
+  faceKey,
+  type FaceName,
+} from '../content';
 import { db } from '../db';
 import { DEPTH, loadLevel, type DecodedLevel } from '../levels';
-import {
-  FACE_ASPECT,
-  FACE_OFFSET_Y_RATIO,
-  FACE_WIDTH_RATIO,
-  faceTextureKey,
-  type FaceName,
-} from '../rollers';
+import { FACE_ASPECT, FACE_OFFSET_Y_RATIO, FACE_WIDTH_RATIO } from '../rollers';
 import { svgDataUrl } from '../tiles';
 import { TUNING } from '../tuning';
 import { CameraFollow } from '../gameplay/cameraFollow';
@@ -19,8 +19,8 @@ import {
   type CharacterStats,
 } from '../gameplay/playerController';
 import { RunOutcome } from '../gameplay/runOutcome';
-import { ensureBackdropTextures, ensureParticleTextures } from '../textures';
-import { DPR, UI_FONT, VIEW_H, VIEW_W, setupCamera } from '../ui';
+import { ensureParticleTextures } from '../textures';
+import { UI_FONT, VIEW_H, VIEW_W, setupCamera } from '../ui';
 
 /** Falling this far below the level ends the run in defeat. */
 const FALL_MARGIN_PX = 90;
@@ -72,7 +72,6 @@ export class GameScene extends Phaser.Scene {
     this.matter.world.setGravity(0, TUNING.GRAVITY_Y);
     setupCamera(this);
     ensureParticleTextures(this);
-    this.buildBackdrop();
 
     const conn = db();
     const character = [...conn.db.vw_character_v1.iter()].find(
@@ -85,6 +84,7 @@ export class GameScene extends Phaser.Scene {
     this.stats = { ...character, id: character.id.toString() };
     try {
       this.level = loadLevel(conn, this.levelId);
+      this.buildBackdrop();
     } catch (error) {
       this.failToMenu(error instanceof Error ? error.message : String(error));
       return;
@@ -115,7 +115,7 @@ export class GameScene extends Phaser.Scene {
       built = buildLevel(this, this.level);
       this.player = createPlayerBody(
         this,
-        characterSpriteKey(this.stats.style),
+        characterBodyKey(this.characterId),
         built.spawn,
         {
           density: this.stats.density,
@@ -157,7 +157,7 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch('hud', {
       levelName: this.level.name,
       rollerName: this.stats.name,
-      style: this.stats.style,
+      characterId: this.characterId,
     });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
       this.scene.stop('hud'),
@@ -264,7 +264,7 @@ export class GameScene extends Phaser.Scene {
     const width = PLAYER_FACE_BODY_PX * FACE_WIDTH_RATIO;
     this.expression = 'determined';
     this.face = this.add
-      .image(spawn.x, spawn.y, faceTextureKey(this.expression))
+      .image(spawn.x, spawn.y, faceKey(this.expression))
       .setDisplaySize(width, width * FACE_ASPECT)
       .setDepth(DEPTH.FACE);
   }
@@ -272,7 +272,7 @@ export class GameScene extends Phaser.Scene {
   private setFace(expression: FaceName): void {
     if (!this.face || this.expression === expression) return;
     this.expression = expression;
-    this.face.setTexture(faceTextureKey(expression));
+    this.face.setTexture(faceKey(expression));
     const width = PLAYER_FACE_BODY_PX * FACE_WIDTH_RATIO;
     this.face.setDisplaySize(width, width * FACE_ASPECT);
   }
@@ -300,20 +300,22 @@ export class GameScene extends Phaser.Scene {
    * scrollFactor 0, which misplaces objects under the DPR camera zoom.
    */
   private buildBackdrop(): void {
-    ensureBackdropTextures(this);
+    const backdrop = backdropById(this.level.backdropId);
     // Below the deepest background plane (placement z bottoms out at -128).
     this.sky = this.add
-      .image(0, 0, 'dusk-sky')
+      .image(0, 0, backdrop.sky.key)
       .setDisplaySize(VIEW_W, VIEW_H)
       .setDepth(-200);
+    // Strips raster at BACKDROP_RASTER_SCALE× their natural size; the tile
+    // scale maps them back to logical pixels.
     this.hillFar = this.add
-      .tileSprite(0, 0, VIEW_W, 150, 'hill-far')
-      .setTileScale(1 / DPR)
+      .tileSprite(0, 0, VIEW_W, backdrop.far.height, backdrop.far.key)
+      .setTileScale(1 / BACKDROP_RASTER_SCALE)
       .setDepth(-190)
       .setAlpha(0.9);
     this.hillMid = this.add
-      .tileSprite(0, 0, VIEW_W, 110, 'hill-mid')
-      .setTileScale(1 / DPR)
+      .tileSprite(0, 0, VIEW_W, backdrop.mid.height, backdrop.mid.key)
+      .setTileScale(1 / BACKDROP_RASTER_SCALE)
       .setDepth(-180);
     this.trackBackdrop();
   }
@@ -323,11 +325,13 @@ export class GameScene extends Phaser.Scene {
     this.sky?.setPosition(view.centerX, view.centerY);
     if (this.hillFar) {
       this.hillFar.setPosition(view.centerX, view.bottom - 70);
-      this.hillFar.tilePositionX = view.x * 0.1 * DPR;
+      this.hillFar.tilePositionX =
+        view.x * TUNING.BACKDROP_FAR_PARALLAX * BACKDROP_RASTER_SCALE;
     }
     if (this.hillMid) {
       this.hillMid.setPosition(view.centerX, view.bottom - 40);
-      this.hillMid.tilePositionX = view.x * 0.25 * DPR;
+      this.hillMid.tilePositionX =
+        view.x * TUNING.BACKDROP_MID_PARALLAX * BACKDROP_RASTER_SCALE;
     }
   }
 

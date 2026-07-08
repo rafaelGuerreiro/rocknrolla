@@ -1,15 +1,15 @@
 import Phaser from 'phaser';
 import type { Uuid } from 'spacetimedb';
-import { characterSpriteKey } from '../assets';
 import {
-  FACE_ASPECT,
-  FACE_WIDTH_RATIO,
-  addRoller,
-  faceTextureKey,
-} from '../rollers';
+  backdropBySlug,
+  characterBodyKey,
+  DEFAULT_BACKDROP_SLUG,
+  faceKey,
+} from '../content';
+import { FACE_ASPECT, FACE_WIDTH_RATIO, addRoller } from '../rollers';
 import { db } from '../db';
 import { openLootboxAndAwaitPiece } from '../lootbox';
-import { ensureBackdropTextures } from '../textures';
+import { ensureChromeTextures } from '../textures';
 import {
   BODY_FONT,
   button,
@@ -66,13 +66,13 @@ export class ResultScene extends Phaser.Scene {
 
   create(): void {
     setupCamera(this);
-    ensureBackdropTextures(this);
+    ensureChromeTextures(this);
     if (this.result.outcome === 'defeat') this.defeatBeat();
     else this.successBeat();
   }
 
-  /** Style of the roller the player just ran with. */
-  private heroStyle(): string {
+  /** The roller the player just ran with; content is imported, so one exists. */
+  private heroCharacterId(): string {
     const conn = db();
     const me = [...conn.db.vw_me_v1.iter()][0];
     const selected = me?.selectedCharacterId
@@ -80,9 +80,11 @@ export class ResultScene extends Phaser.Scene {
           (row) => row.id.toString() === me.selectedCharacterId?.toString(),
         )
       : undefined;
-    return (
-      (selected ?? [...conn.db.vw_character_v1.iter()][0])?.style ?? 'rock'
-    );
+    const character = selected ?? [...conn.db.vw_character_v1.iter()][0];
+    if (!character) {
+      throw new Error('no characters are available for the result scene');
+    }
+    return character.id.toString();
   }
 
   // -- Success ---------------------------------------------------------------
@@ -90,12 +92,13 @@ export class ResultScene extends Phaser.Scene {
   private successBeat(): void {
     const width = VIEW_W;
     const height = VIEW_H;
+    const backdrop = backdropBySlug(DEFAULT_BACKDROP_SLUG);
     this.add
       .image(width / 2, height / 2, 'spotlight')
       .setDisplaySize(width, height);
     this.add
-      .image(width / 2, height - 40, 'hill-mid')
-      .setDisplaySize(width, 110)
+      .image(width / 2, height - 40, backdrop.mid.key)
+      .setDisplaySize(width, backdrop.mid.height)
       .setAlpha(0.5);
     this.confetti(14);
 
@@ -189,7 +192,7 @@ export class ResultScene extends Phaser.Scene {
     if (this.textures.exists(flagKey)) {
       this.add.image(x + 56, 296, flagKey).setDisplaySize(56, 56);
     }
-    const hero = addRoller(this, x - 24, 292, 76, this.heroStyle());
+    const hero = addRoller(this, x - 24, 292, 76, this.heroCharacterId());
     this.tweens.add({
       targets: hero,
       y: hero.y - 9,
@@ -314,7 +317,7 @@ export class ResultScene extends Phaser.Scene {
     card.fillRoundedRect(-58, -66, 112, 132, 18);
     token.add(card);
     if (character) {
-      token.add(addRoller(this, -2, -18, 84, character.style));
+      token.add(addRoller(this, -2, -18, 84, character.id.toString()));
     }
     token.add(
       this.add
@@ -431,23 +434,24 @@ export class ResultScene extends Phaser.Scene {
   private defeatBeat(): void {
     const width = VIEW_W;
     const height = VIEW_H;
+    const backdrop = backdropBySlug(DEFAULT_BACKDROP_SLUG);
     this.add
-      .image(width / 2, height / 2, 'dusk-sky')
+      .image(width / 2, height / 2, backdrop.sky.key)
       .setDisplaySize(width, height);
     this.add
-      .image(width / 2, height - 40, 'hill-mid')
-      .setDisplaySize(width, 110)
+      .image(width / 2, height - 40, backdrop.mid.key)
+      .setDisplaySize(width, backdrop.mid.height)
       .setAlpha(0.8);
     this.add.rectangle(width / 2, height / 2, width, height, 0x241d16, 0.55);
 
     // Tumbled body with an upright dizzy face — only the body rocks.
     const body = this.add
-      .image(width / 2, 250, characterSpriteKey(this.heroStyle()))
+      .image(width / 2, 250, characterBodyKey(this.heroCharacterId()))
       .setDisplaySize(110, 110)
       .setRotation(-0.7);
     const faceWidth = 110 * FACE_WIDTH_RATIO;
     this.add
-      .image(width / 2, 254, faceTextureKey('dizzy'))
+      .image(width / 2, 254, faceKey('dizzy'))
       .setDisplaySize(faceWidth, faceWidth * FACE_ASPECT);
     this.tweens.add({
       targets: body,

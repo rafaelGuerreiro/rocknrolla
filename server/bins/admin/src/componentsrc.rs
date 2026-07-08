@@ -1,6 +1,6 @@
 //! Authored component loading for the RocknRolla importer.
 //!
-//! Components are committed as standalone SVG files (`levels/components/
+//! Components are committed as standalone SVG files (`content/components/
 //! <slug>.svg`); the filename is the slug and the root tag's `width`/
 //! `height` attributes are the natural pixel size. Loading validates each
 //! file with the same shared checks the module applies on import.

@@ -10,6 +10,90 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
+export const Backdrop = __t.object("Backdrop", {
+  id: __t.uuid(),
+  slug: __t.string(),
+  get sky() {
+    return BackdropLayerV1;
+  },
+  get far() {
+    return BackdropLayerV1;
+  },
+  get mid() {
+    return BackdropLayerV1;
+  },
+});
+export type Backdrop = __Infer<typeof Backdrop>;
+
+export const BackdropImportV1 = __t.object("BackdropImportV1", {
+  slug: __t.string(),
+  get sky() {
+    return BackdropLayerV1;
+  },
+  get far() {
+    return BackdropLayerV1;
+  },
+  get mid() {
+    return BackdropLayerV1;
+  },
+});
+export type BackdropImportV1 = __Infer<typeof BackdropImportV1>;
+
+export const BackdropLayerV1 = __t.object("BackdropLayerV1", {
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type BackdropLayerV1 = __Infer<typeof BackdropLayerV1>;
+
+export const BackdropViewV1 = __t.object("BackdropViewV1", {
+  id: __t.uuid(),
+  slug: __t.string(),
+  get sky() {
+    return BackdropLayerV1;
+  },
+  get far() {
+    return BackdropLayerV1;
+  },
+  get mid() {
+    return BackdropLayerV1;
+  },
+});
+export type BackdropViewV1 = __Infer<typeof BackdropViewV1>;
+
+export const CharacterArt = __t.object("CharacterArt", {
+  id: __t.uuid(),
+  characterId: __t.uuid(),
+  kind: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type CharacterArt = __Infer<typeof CharacterArt>;
+
+export const CharacterArtImportV1 = __t.object("CharacterArtImportV1", {
+  characterId: __t.uuid(),
+  kind: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type CharacterArtImportV1 = __Infer<typeof CharacterArtImportV1>;
+
+export const CharacterArtViewV1 = __t.object("CharacterArtViewV1", {
+  id: __t.uuid(),
+  characterId: __t.uuid(),
+  kind: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type CharacterArtViewV1 = __Infer<typeof CharacterArtViewV1>;
+
 export const CharacterDef = __t.object("CharacterDef", {
   id: __t.uuid(),
   name: __t.string(),
@@ -27,7 +111,6 @@ export type CharacterDef = __Infer<typeof CharacterDef>;
 export const CharacterViewV1 = __t.object("CharacterViewV1", {
   id: __t.uuid(),
   name: __t.string(),
-  style: __t.string(),
   density: __t.f32(),
   jumpSpeed: __t.f32(),
   flightTimeMs: __t.u32(),
@@ -71,6 +154,35 @@ export const DropImportV1 = __t.object("DropImportV1", {
 });
 export type DropImportV1 = __Infer<typeof DropImportV1>;
 
+export const Face = __t.object("Face", {
+  id: __t.uuid(),
+  slug: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type Face = __Infer<typeof Face>;
+
+export const FaceImportV1 = __t.object("FaceImportV1", {
+  slug: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type FaceImportV1 = __Infer<typeof FaceImportV1>;
+
+export const FaceViewV1 = __t.object("FaceViewV1", {
+  id: __t.uuid(),
+  slug: __t.string(),
+  widthPx: __t.u32(),
+  heightPx: __t.u32(),
+  contentHash: __t.string(),
+  data: __t.byteArray(),
+});
+export type FaceViewV1 = __Infer<typeof FaceViewV1>;
+
 export const Level = __t.object("Level", {
   id: __t.uuid(),
   slug: __t.string(),
@@ -78,6 +190,7 @@ export const Level = __t.object("Level", {
   isStarting: __t.bool(),
   active: __t.bool(),
   rewardLootboxId: __t.option(__t.uuid()),
+  backdropId: __t.uuid(),
   get spawn() {
     return Vec2;
   },
@@ -123,6 +236,7 @@ export const LevelViewV1 = __t.object("LevelViewV1", {
   id: __t.uuid(),
   slug: __t.string(),
   name: __t.string(),
+  backdropId: __t.uuid(),
   get spawn() {
     return Vec2;
   },

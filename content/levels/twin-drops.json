@@ -1,0 +1,170 @@
+{
+  "id": "2d0ee582-2e70-5c49-a084-a02bce943c9b",
+  "slug": "twin-drops",
+  "name": "Twin Drops",
+  "backdrop": "dusk",
+  "starting": false,
+  "active": true,
+  "reward_lootbox_id": "122789c5-1e95-429e-bd29-442219cf3c8c",
+  "successors": [
+    "61cd0083-bc99-5bb8-8e3a-6b586fb930ee"
+  ],
+  "spawn": {
+    "x": 544,
+    "y": 160
+  },
+  "finish": {
+    "x": 4216,
+    "y": 1248
+  },
+  "placements": [
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "ground-flat",
+      "x": 0,
+      "y": 256
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 384
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 640
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 896
+    },
+    {
+      "component": "slope-down-45",
+      "x": 512,
+      "y": 256
+    },
+    {
+      "component": "bank",
+      "x": 1024,
+      "y": 768,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 1024,
+      "y": 768
+    },
+    {
+      "component": "dirt-slab",
+      "x": 1024,
+      "y": 832
+    },
+    {
+      "component": "bank",
+      "x": 1216,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 1280,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 1792,
+      "y": 768
+    },
+    {
+      "component": "dirt-fill",
+      "x": 1792,
+      "y": 896
+    },
+    {
+      "component": "slope-down-45",
+      "x": 2304,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 2816,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 3328,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 3840,
+      "y": 1280
+    },
+    {
+      "component": "spikes",
+      "x": 4064,
+      "y": 1216
+    },
+    {
+      "component": "ground-flat",
+      "x": 4352,
+      "y": 1280
+    },
+    {
+      "component": "bush-cluster",
+      "x": 1459,
+      "y": 688,
+      "z": 40,
+      "scale": 2
+    },
+    {
+      "component": "bush-cluster",
+      "x": 2918,
+      "y": 1200,
+      "z": 40,
+      "scale": 2
+    },
+    {
+      "component": "bush-cluster",
+      "x": 4134,
+      "y": 1200,
+      "z": 40,
+      "scale": 2
+    }
+  ]
+}

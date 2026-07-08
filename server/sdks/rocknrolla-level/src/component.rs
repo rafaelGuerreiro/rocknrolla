@@ -5,8 +5,7 @@
 //! in component-local coordinates. Validation is substring-based — no XML
 //! dependency — so the reducer stays dependency-free and deterministic.
 
-use crate::hash::content_hash;
-use rocknrolla_error::{ServiceError, ServiceResult};
+use rocknrolla_error::ServiceResult;
 
 /// Upper bound on one component document; generated components are tens of KB.
 pub const MAX_SVG_BYTES: usize = 512 * 1024;
@@ -24,36 +23,20 @@ pub struct ComponentFacts {
 /// Validate one component: non-zero natural size, size cap, standalone
 /// `<svg>` document, and a matching content hash.
 pub fn validate_component(component: &ComponentFacts) -> ServiceResult<()> {
-    let slug = &component.slug;
-    if component.width_px == 0 || component.height_px == 0 {
-        return Err(ServiceError::validation(format!("component '{slug}': zero pixel dimensions")));
-    }
-    if component.data.len() > MAX_SVG_BYTES {
-        return Err(ServiceError::validation(format!(
-            "component '{slug}': SVG document exceeds {MAX_SVG_BYTES} bytes"
-        )));
-    }
-    let svg = std::str::from_utf8(&component.data)
-        .map_err(|_| ServiceError::validation(format!("component '{slug}': SVG is not valid UTF-8")))?;
-    let trimmed = svg.trim();
-    if !trimmed.starts_with("<svg") || !trimmed.ends_with("</svg>") {
-        return Err(ServiceError::validation(format!(
-            "component '{slug}': data is not a standalone <svg> document"
-        )));
-    }
-    let hash = content_hash(component.width_px, component.height_px, &component.data);
-    if hash != component.content_hash {
-        return Err(ServiceError::validation(format!(
-            "component '{slug}': content hash mismatch (computed {hash}, declared {})",
-            component.content_hash
-        )));
-    }
-    Ok(())
+    crate::asset::validate_svg_asset(
+        "component",
+        &component.slug,
+        component.width_px,
+        component.height_px,
+        &component.content_hash,
+        &component.data,
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::hash::content_hash;
 
     fn sample() -> ComponentFacts {
         let data = b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"128\" height=\"64\"></svg>".to_vec();

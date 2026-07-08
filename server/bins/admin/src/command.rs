@@ -13,10 +13,16 @@ pub enum Command {
     SetServer(String),
     ValidateLevels(Option<String>),
     ValidateComponents(Option<String>),
+    ValidateCharacters(Option<String>),
+    ValidateFaces(Option<String>),
+    ValidateBackdrops(Option<String>),
     ValidateSeed(Option<String>),
     ValidateAll,
     ImportLevels(Option<String>),
     ImportComponents(Option<String>),
+    ImportCharacters(Option<String>),
+    ImportFaces(Option<String>),
+    ImportBackdrops(Option<String>),
     ExportComponents(String),
     ImportSeed(Option<String>),
     ImportAll,
@@ -29,13 +35,19 @@ commands:
   set server <name>        change the target server
   set database <name>      change the target database
   validate components [path]  validate authored components (no mutation)
+  validate characters [path]  validate authored character art (no mutation)
+  validate faces [path]    validate authored face expressions (no mutation)
+  validate backdrops [path]   validate authored backdrops (no mutation)
   validate levels [path]   validate authored level sources (no mutation)
   validate seed [path]     validate seed content (no mutation)
-  validate all             validate components, levels, and seed (no mutation)
+  validate all             validate every authored content type (no mutation)
   import components [path] import components after confirmation
+  import characters [path] import character art after confirmation
+  import faces [path]      import face expressions after confirmation
+  import backdrops [path]  import backdrops after confirmation
   import levels [path]     import levels after confirmation
   import seed [path]       import seed content after confirmation
-  import all               import seed, components, then levels after confirmation
+  import all               import seed, components, character art, faces, backdrops, then levels after confirmation
   export components <dir>  render the starter component library to SVG files
   quit | exit              leave the shell (EOF also exits)";
 
@@ -54,10 +66,16 @@ pub fn parse_line(line: &str) -> Result<Option<Command>> {
         },
         ["validate", "levels", rest @ ..] => Command::ValidateLevels(optional_path(rest)?),
         ["validate", "components", rest @ ..] => Command::ValidateComponents(optional_path(rest)?),
+        ["validate", "characters", rest @ ..] => Command::ValidateCharacters(optional_path(rest)?),
+        ["validate", "faces", rest @ ..] => Command::ValidateFaces(optional_path(rest)?),
+        ["validate", "backdrops", rest @ ..] => Command::ValidateBackdrops(optional_path(rest)?),
         ["validate", "seed", rest @ ..] => Command::ValidateSeed(optional_path(rest)?),
         ["validate", "all"] => Command::ValidateAll,
         ["import", "levels", rest @ ..] => Command::ImportLevels(optional_path(rest)?),
         ["import", "components", rest @ ..] => Command::ImportComponents(optional_path(rest)?),
+        ["import", "characters", rest @ ..] => Command::ImportCharacters(optional_path(rest)?),
+        ["import", "faces", rest @ ..] => Command::ImportFaces(optional_path(rest)?),
+        ["import", "backdrops", rest @ ..] => Command::ImportBackdrops(optional_path(rest)?),
         ["import", "seed", rest @ ..] => Command::ImportSeed(optional_path(rest)?),
         ["import", "all"] => Command::ImportAll,
         ["export", "components", dir] => Command::ExportComponents(dir.to_string()),
@@ -86,8 +104,8 @@ mod tests {
         assert_eq!(parse_line("validate all").unwrap(), Some(Command::ValidateAll));
         assert_eq!(parse_line("validate levels").unwrap(), Some(Command::ValidateLevels(None)));
         assert_eq!(
-            parse_line("import levels ../levels/generated").unwrap(),
-            Some(Command::ImportLevels(Some("../levels/generated".into())))
+            parse_line("import levels ../content/generated").unwrap(),
+            Some(Command::ImportLevels(Some("../content/generated".into())))
         );
         assert_eq!(
             parse_line("import seed custom/seed.json").unwrap(),
@@ -95,8 +113,8 @@ mod tests {
         );
         assert_eq!(parse_line("import all").unwrap(), Some(Command::ImportAll));
         assert_eq!(
-            parse_line("validate components ../levels/components").unwrap(),
-            Some(Command::ValidateComponents(Some("../levels/components".into())))
+            parse_line("validate components ../content/components").unwrap(),
+            Some(Command::ValidateComponents(Some("../content/components".into())))
         );
         assert_eq!(
             parse_line("import components").unwrap(),
@@ -106,6 +124,28 @@ mod tests {
             parse_line("export components /tmp/out").unwrap(),
             Some(Command::ExportComponents("/tmp/out".into()))
         );
+    }
+
+    #[test]
+    fn parses_new_content_commands() {
+        assert_eq!(
+            parse_line("validate characters").unwrap(),
+            Some(Command::ValidateCharacters(None))
+        );
+        assert_eq!(parse_line("validate faces").unwrap(), Some(Command::ValidateFaces(None)));
+        assert_eq!(
+            parse_line("validate backdrops ../content/backdrops").unwrap(),
+            Some(Command::ValidateBackdrops(Some("../content/backdrops".into())))
+        );
+        assert_eq!(
+            parse_line("import characters").unwrap(),
+            Some(Command::ImportCharacters(None))
+        );
+        assert_eq!(
+            parse_line("import faces custom/faces").unwrap(),
+            Some(Command::ImportFaces(Some("custom/faces".into())))
+        );
+        assert_eq!(parse_line("import backdrops").unwrap(), Some(Command::ImportBackdrops(None)));
     }
 
     #[test]
@@ -134,6 +174,7 @@ mod tests {
         assert!(parse_line("set server").is_err());
         assert!(parse_line("set database").is_err());
         assert!(parse_line("validate levels a b").is_err());
+        assert!(parse_line("validate characters a b").is_err());
         assert!(parse_line("frobnicate").is_err());
         assert!(parse_line("export components").is_err());
         assert!(parse_line("export levels /tmp/out").is_err());

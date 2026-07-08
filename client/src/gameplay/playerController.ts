@@ -6,7 +6,6 @@ import { PLAYER_DISPLAY_PX } from './playerBody';
 export interface CharacterStats {
   id: string;
   name: string;
-  style: string;
   density: number;
   jumpSpeed: number;
   flightTimeMs: number;

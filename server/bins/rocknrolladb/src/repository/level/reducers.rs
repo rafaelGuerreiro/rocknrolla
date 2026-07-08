@@ -26,6 +26,7 @@ pub fn import_level_v1(
     active: bool,
     reward_lootbox_id: Option<Uuid>,
     successors: Vec<Uuid>,
+    backdrop_slug: String,
     spawn: Vec2,
     finish: Vec2,
     placements: Vec<PlacementImportV1>,
@@ -33,6 +34,7 @@ pub fn import_level_v1(
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&slug, "slug", 64)?;
     validate_required_str(&name, "name", 128)?;
+    validate_required_str(&backdrop_slug, "backdrop_slug", 64)?;
     ctx.level_services().import_level(LevelImport {
         id,
         slug,
@@ -41,6 +43,7 @@ pub fn import_level_v1(
         active,
         reward_lootbox_id,
         successors,
+        backdrop_slug,
         spawn,
         finish,
         placements,

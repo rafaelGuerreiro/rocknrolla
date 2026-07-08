@@ -33,6 +33,24 @@ The single start and single goal position of a level. Owned by the level
 itself, never embedded inside a component — so components stay freely
 reusable and every level trivially has exactly one of each.
 
+### Backdrop
+A named scenery theme rendered behind every placement of a level: a sky
+plus two distant parallax strips (far, mid). Referenced by the level as a
+whole — never placed, never collides. Every level names exactly one
+backdrop. Not to be confused with Phaser "scenes", which are UI screens.
+
+### Character
+A playable roller: a name, physical stats (density, jump, flight time,
+buoyancy, fire resistance), body art, and a silhouette shown while the
+character is locked. The silhouette is always derived from the body, never
+authored separately. "Style" is the character's stable slug linking its
+seed entry to its authored art file.
+
+### Face
+One of a shared set of expressions (happy, determined, surprised, nervous,
+dizzy) layered upright on any character's body and swapped by gameplay
+events. Faces belong to the game, not to any one character.
+
 ### Gameplay plane
 The depth (z = 0, the center of the signed depth range) where physics
 happens. Only placements on the gameplay plane produce collider bodies. All

@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { Uuid } from 'spacetimedb';
+import { backdropBySlug, DEFAULT_BACKDROP_SLUG } from '../content';
 import { addRoller } from '../rollers';
 import { db } from '../db';
-import { ensureBackdropTextures } from '../textures';
 import {
   INK,
   MONO_FONT,
@@ -26,17 +26,17 @@ export class LevelSelectScene extends Phaser.Scene {
     const width = VIEW_W;
     const height = VIEW_H;
     setupCamera(this);
-    ensureBackdropTextures(this);
+    const backdrop = backdropBySlug(DEFAULT_BACKDROP_SLUG);
     this.add
-      .image(width / 2, height / 2, 'dusk-sky')
+      .image(width / 2, height / 2, backdrop.sky.key)
       .setDisplaySize(width, height);
     this.add
-      .image(width / 2, height - 50, 'hill-far')
-      .setDisplaySize(width, 150)
+      .image(width / 2, height - 50, backdrop.far.key)
+      .setDisplaySize(width, backdrop.far.height)
       .setAlpha(0.85);
     this.add
-      .image(width / 2, height - 22, 'hill-mid')
-      .setDisplaySize(width, 110);
+      .image(width / 2, height - 22, backdrop.mid.key)
+      .setDisplaySize(width, backdrop.mid.height);
 
     const conn = db();
     pill(this, 190, 48, 260, 44, 'Choose your hill');
@@ -242,12 +242,12 @@ export class LevelSelectScene extends Phaser.Scene {
           (row) => row.id.toString() === me.selectedCharacterId?.toString(),
         )
       : undefined;
-    const style = (selected ?? [...conn.db.vw_character_v1.iter()][0])?.style;
+    const character = selected ?? [...conn.db.vw_character_v1.iter()][0];
 
     const x = VIEW_W - 110;
     const container = pill(this, x, 48, 150, 44);
-    if (style) {
-      container.add(addRoller(this, -48, 0, 34, style));
+    if (character) {
+      container.add(addRoller(this, -48, 0, 34, character.id.toString()));
     }
     container.add(
       this.add

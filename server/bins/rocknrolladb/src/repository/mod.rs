@@ -10,6 +10,7 @@ use crate::{
 use spacetimedb::ReducerContext;
 
 pub mod access;
+pub mod backdrop;
 pub mod character;
 pub mod component;
 pub mod level;

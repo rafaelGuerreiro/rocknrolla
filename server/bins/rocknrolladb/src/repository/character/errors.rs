@@ -10,6 +10,8 @@ pub enum CharacterError {
     UnknownCharacterForPiece { character_id: Uuid },
     #[error("unknown piece '{piece_id}'")]
     UnknownPiece { piece_id: Uuid },
+    #[error("art references unknown character '{character_id}'")]
+    UnknownCharacterForArt { character_id: Uuid },
 }
 
 impl CharacterError {
@@ -19,6 +21,10 @@ impl CharacterError {
 
     pub fn unknown_piece(piece_id: Uuid) -> ServiceError {
         CharacterError::UnknownPiece { piece_id }.into()
+    }
+
+    pub fn unknown_character_for_art(character_id: Uuid) -> ServiceError {
+        CharacterError::UnknownCharacterForArt { character_id }.into()
     }
 }
 

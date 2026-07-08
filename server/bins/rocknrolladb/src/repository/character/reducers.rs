@@ -1,13 +1,18 @@
 //! Character reducers: parameter/caller validation plus one service delegation.
 
 use crate::{
-    error::ServiceResult,
+    error::{ServiceError, ServiceResult},
     extend::validate::{validate_f32_range, validate_positive_u32, validate_required_str},
     repository::{
         access,
-        character::{CharacterDef, PieceDef, services::CharacterServicesTrait},
+        character::{
+            ART_KIND_BODY, ART_KIND_SILHOUETTE, CharacterDef, PieceDef,
+            services::CharacterServicesTrait,
+            types::{CharacterArtImportV1, FaceImportV1},
+        },
     },
 };
+use rocknrolla_level::validate_svg_asset;
 use spacetimedb::{ReducerContext, Uuid};
 
 #[spacetimedb::reducer(name = "import_character_v1")]
@@ -52,4 +57,39 @@ pub fn import_piece_v1(ctx: &ReducerContext, id: Uuid, name: String, character_i
     access::require_module_owner(ctx, ctx.sender())?;
     validate_required_str(&name, "name", 128)?;
     ctx.character_services().import_piece(PieceDef { id, name, character_id })
+}
+
+#[spacetimedb::reducer(name = "import_character_art_v1")]
+pub fn import_character_art_v1(ctx: &ReducerContext, art: CharacterArtImportV1) -> ServiceResult<()> {
+    access::require_module_owner(ctx, ctx.sender())?;
+    if art.kind != ART_KIND_BODY && art.kind != ART_KIND_SILHOUETTE {
+        return Err(ServiceError::validation(format!(
+            "character art kind must be '{ART_KIND_BODY}' or '{ART_KIND_SILHOUETTE}', got '{}'",
+            art.kind
+        )));
+    }
+    validate_svg_asset(
+        "character art",
+        &format!("{}/{}", art.character_id, art.kind),
+        art.width_px,
+        art.height_px,
+        &art.content_hash,
+        &art.data,
+    )?;
+    ctx.character_services().import_character_art(art)
+}
+
+#[spacetimedb::reducer(name = "import_face_v1")]
+pub fn import_face_v1(ctx: &ReducerContext, face: FaceImportV1) -> ServiceResult<()> {
+    access::require_module_owner(ctx, ctx.sender())?;
+    validate_required_str(&face.slug, "slug", 64)?;
+    validate_svg_asset(
+        "face",
+        &face.slug,
+        face.width_px,
+        face.height_px,
+        &face.content_hash,
+        &face.data,
+    )?;
+    ctx.character_services().import_face(face)
 }

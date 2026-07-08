@@ -4,7 +4,7 @@ export default defineConfig({
   base: './',
   server: {
     fs: {
-      // The Kenney sprites are shared with Tiled and live at the repo root.
+      // The dev gallery globs repo-root content/ SVGs (see gallery.ts).
       allow: ['..'],
     },
   },

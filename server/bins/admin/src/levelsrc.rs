@@ -1,20 +1,24 @@
 //! Authored level source parsing for the RocknRolla level importer.
 //!
-//! Levels are committed as compact JSON documents (`levels/src/*.json`):
-//! a placement list over the component library plus a level-owned spawn
-//! and finish. Geometry is validated against the loaded component files
-//! with the same shared checks the module applies on import.
+//! Levels are committed as compact JSON documents (`content/levels/*.json`):
+//! a placement list over the component library, a level-owned spawn and
+//! finish, and a required backdrop slug. Geometry is validated against the
+//! loaded component files with the same shared checks the module applies
+//! on import.
 
 use anyhow::{Context, Result, bail};
 use rocknrolla_level::{ComponentFacts, PlacementFacts, Vec2, Vec3, validate_level_geometry};
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Deserialize)]
 struct SourceLevel {
     id: String,
     slug: String,
     name: String,
+    /// Required: the level's scenery theme, resolved against the authored
+    /// backdrop library. No default — a missing assignment must fail.
+    backdrop: String,
     #[serde(default)]
     starting: bool,
     #[serde(default = "default_true")]
@@ -76,14 +80,16 @@ pub struct ImportedLevel {
     pub active: bool,
     pub reward_lootbox_id: Option<String>,
     pub successors: Vec<String>,
+    /// The backdrop's authored identity; the module resolves it to a UUID.
+    pub backdrop_slug: String,
     pub spawn: Vec2,
     pub finish: Vec2,
     pub placements: Vec<ImportedPlacement>,
 }
 
 /// Parse and validate one authored level document against the component
-/// library.
-pub fn parse_level(source: &str, components: &[ComponentFacts]) -> Result<ImportedLevel> {
+/// library and the authored backdrop slugs.
+pub fn parse_level(source: &str, components: &[ComponentFacts], backdrops: &HashSet<String>) -> Result<ImportedLevel> {
     let level: SourceLevel = serde_json::from_str(source).context("invalid JSON")?;
     if level.id.is_empty() {
         bail!("level is missing the 'id' property");
@@ -94,6 +100,12 @@ pub fn parse_level(source: &str, components: &[ComponentFacts]) -> Result<Import
     }
     if level.name.is_empty() {
         bail!("level is missing the 'name' property");
+    }
+    if level.backdrop.is_empty() {
+        bail!("level '{}' is missing the 'backdrop' property", level.slug);
+    }
+    if !backdrops.contains(&level.backdrop) {
+        bail!("level '{}' references unknown backdrop '{}'", level.slug, level.backdrop);
     }
     let reward_lootbox_id = level
         .reward_lootbox_id
@@ -157,6 +169,7 @@ pub fn parse_level(source: &str, components: &[ComponentFacts]) -> Result<Import
         active: level.active,
         reward_lootbox_id,
         successors: level.successors,
+        backdrop_slug: level.backdrop,
         spawn,
         finish,
         placements,
@@ -174,11 +187,16 @@ mod tests {
         crate::svggen::starter_library()
     }
 
+    fn backdrops() -> HashSet<String> {
+        HashSet::from(["dusk".to_string()])
+    }
+
     fn sample() -> String {
         serde_json::json!({
             "id": LEVEL_ID,
             "slug": "test-level",
             "name": "Test Level",
+            "backdrop": "dusk",
             "starting": true,
             "successors": [NEXT_ID],
             "spawn": { "x": 64, "y": 32 },
@@ -194,11 +212,12 @@ mod tests {
 
     #[test]
     fn parses_a_valid_level() {
-        let level = parse_level(&sample(), &components()).unwrap();
+        let level = parse_level(&sample(), &components(), &backdrops()).unwrap();
         assert_eq!(level.id, LEVEL_ID);
         assert_eq!(level.slug, "test-level");
         assert!(level.is_starting);
         assert_eq!(level.successors, vec![NEXT_ID]);
+        assert_eq!(level.backdrop_slug, "dusk");
         assert_eq!(level.spawn, Vec2 { x: 64, y: 32 });
         assert_eq!(level.placements.len(), 3);
         let decor = &level.placements[2];
@@ -209,15 +228,34 @@ mod tests {
 
     #[test]
     fn rejects_unknown_components_and_bad_ids() {
-        let err = parse_level(&sample().replace(LEVEL_ID, "tutorial-hill"), &components())
+        let err = parse_level(&sample().replace(LEVEL_ID, "tutorial-hill"), &components(), &backdrops())
             .unwrap_err()
             .to_string();
         assert!(err.contains("not a valid UUID"), "{err}");
 
-        let err = parse_level(&sample().replace("ground-flat", "no-such"), &components())
+        let err = parse_level(&sample().replace("ground-flat", "no-such"), &components(), &backdrops())
             .unwrap_err()
             .to_string();
         assert!(err.contains("unknown component"), "{err}");
+    }
+
+    #[test]
+    fn rejects_missing_and_unknown_backdrops() {
+        // Serde surfaces the missing required field inside the JSON context.
+        let err = format!(
+            "{:#}",
+            parse_level(&sample().replace(r#""backdrop":"dusk","#, ""), &components(), &backdrops()).unwrap_err()
+        );
+        assert!(err.contains("backdrop"), "{err}");
+
+        let err = parse_level(
+            &sample().replace(r#""backdrop":"dusk""#, r#""backdrop":"noon""#),
+            &components(),
+            &backdrops(),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("unknown backdrop 'noon'"), "{err}");
     }
 
     #[test]
@@ -225,12 +263,13 @@ mod tests {
         let err = parse_level(
             &sample().replace(r#""spawn":{"x":64,"y":32}"#, r#""spawn":{"x":5000,"y":32}"#),
             &components(),
+            &backdrops(),
         )
         .unwrap_err()
         .to_string();
         assert!(err.contains("spawn"), "{err}");
 
-        let err = parse_level(&sample().replace(NEXT_ID, LEVEL_ID), &components())
+        let err = parse_level(&sample().replace(NEXT_ID, LEVEL_ID), &components(), &backdrops())
             .unwrap_err()
             .to_string();
         assert!(err.contains("itself"), "{err}");

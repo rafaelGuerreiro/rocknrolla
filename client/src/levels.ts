@@ -93,6 +93,7 @@ export interface RenderPlacement {
 export interface DecodedLevel {
   id: string;
   name: string;
+  backdropId: string;
   spawn: { x: number; y: number };
   finish: { x: number; y: number };
   renderPlacements: RenderPlacement[];
@@ -365,6 +366,7 @@ export function loadLevel(conn: DbConnection, levelId: string): DecodedLevel {
   const level: DecodedLevel = {
     id: meta.id.toString(),
     name: meta.name,
+    backdropId: meta.backdropId.toString(),
     spawn: { x: meta.spawn.x, y: meta.spawn.y },
     finish: { x: meta.finish.x, y: meta.finish.y },
     renderPlacements,

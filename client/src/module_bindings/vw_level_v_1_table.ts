@@ -18,6 +18,7 @@ export default __t.row({
   id: __t.uuid(),
   slug: __t.string(),
   name: __t.string(),
+  backdropId: __t.uuid().name("backdrop_id"),
   get spawn() {
     return Vec2;
   },

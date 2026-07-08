@@ -1,17 +1,43 @@
 /**
- * Dev-only asset gallery (components.html). Renders every SVG in
- * `levels/components/` straight from disk so saving a file in the IDE
- * live-reloads the page, plus the roller character bodies from
- * `rollers.ts`. A viewer, not an editor.
+ * Dev-only asset gallery (components.html). Renders every authored SVG in
+ * `content/` straight from disk so saving a file in the IDE live-reloads
+ * the page: components (with collider overlays), character bodies (plus
+ * their import-derived silhouettes), faces, and backdrops (layers plus a
+ * composed preview). A viewer, not an editor.
  */
 import { TILE, contentHash } from './levels';
-import { ROLLER_BODY_SVG } from './rollers';
 
-const files = import.meta.glob('../../levels/components/*.svg', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
+const glob = (files: Record<string, unknown>) =>
+  files as Record<string, string>;
+
+const componentFiles = glob(
+  import.meta.glob('../../content/components/*.svg', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+);
+const characterFiles = glob(
+  import.meta.glob('../../content/characters/*.svg', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+);
+const faceFiles = glob(
+  import.meta.glob('../../content/faces/*.svg', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+);
+const backdropFiles = glob(
+  import.meta.glob('../../content/backdrops/*.svg', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+);
 
 const TILE_NAMES = new Map<number, string>(
   Object.entries(TILE).map(([name, id]) => [id, name.toLowerCase()]),
@@ -44,13 +70,30 @@ function slugOf(path: string): string {
     .replace(/\.svg$/, '');
 }
 
-/** Component SVGs carry explicit width/height; roller bodies only have a viewBox. */
+/** Every authored content file carries explicit width/height; the viewBox
+ * fallback keeps malformed files visible instead of zero-sized. */
 function dimensionsOf(root: SVGSVGElement): { width: number; height: number } {
   const width = Number(root.getAttribute('width'));
   const height = Number(root.getAttribute('height'));
   if (width && height) return { width, height };
   const viewBox = root.getAttribute('viewBox')?.split(/\s+/).map(Number);
-  return viewBox ? { width: viewBox[2], height: viewBox[3] } : { width: 0, height: 0 };
+  return viewBox
+    ? { width: viewBox[2], height: viewBox[3] }
+    : { width: 0, height: 0 };
+}
+
+/**
+ * The importer's silhouette derivation (see admin `charactersrc.rs`), so
+ * the gallery previews exactly what will be imported for locked cards.
+ */
+const SILHOUETTE_FILTER =
+  '<filter id="sil"><feColorMatrix type="matrix" values="0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.07 0 0 0 1 0"/></filter>';
+
+function deriveSilhouette(bodySvg: string): string {
+  return bodySvg
+    .replace('<defs>', `<defs>${SILHOUETTE_FILTER}`)
+    .replace('</defs>', '</defs><g filter="url(#sil)">')
+    .replace('</svg>', '</g></svg>');
 }
 
 function buildOverlay(svg: SVGSVGElement): SVGGElement {
@@ -127,17 +170,89 @@ function applyColliders(visible: boolean): void {
   }
 }
 
-const gallery = document.querySelector<HTMLElement>('#gallery')!;
-const paths = Object.keys(files).sort();
-if (paths.length === 0) {
-  gallery.innerHTML = `<div class="empty">No components found in <code>levels/components/</code>.</div>`;
+function renderSection(
+  selector: string,
+  files: Record<string, string>,
+  emptyLabel: string,
+): void {
+  const section = document.querySelector<HTMLElement>(selector)!;
+  const paths = Object.keys(files).sort();
+  if (paths.length === 0) {
+    section.innerHTML = `<div class="empty">No SVG files found in <code>${emptyLabel}</code>.</div>`;
+    return;
+  }
+  for (const path of paths) addCard(section, path, files[path]);
 }
-for (const path of paths) addCard(gallery, path, files[path]);
 
+renderSection('#gallery', componentFiles, 'content/components/');
+renderSection('#faces', faceFiles, 'content/faces/');
+
+// Characters: each body next to the silhouette the importer will derive.
 const characters = document.querySelector<HTMLElement>('#characters')!;
-for (const style of Object.keys(ROLLER_BODY_SVG).sort()) {
-  addCard(characters, `characters/${style}.svg`, ROLLER_BODY_SVG[style]);
+const characterPaths = Object.keys(characterFiles).sort();
+if (characterPaths.length === 0) {
+  characters.innerHTML = `<div class="empty">No SVG files found in <code>content/characters/</code>.</div>`;
 }
+for (const path of characterPaths) {
+  addCard(characters, path, characterFiles[path]);
+  addCard(
+    characters,
+    path.replace(/\.svg$/, '.silhouette.svg'),
+    deriveSilhouette(characterFiles[path]),
+  );
+}
+
+// Backdrops: the three layer cards plus a composed preview per slug.
+const backdrops = document.querySelector<HTMLElement>('#backdrops')!;
+const backdropPaths = Object.keys(backdropFiles).sort();
+if (backdropPaths.length === 0) {
+  backdrops.innerHTML = `<div class="empty">No SVG files found in <code>content/backdrops/</code>.</div>`;
+}
+for (const path of backdropPaths) addCard(backdrops, path, backdropFiles[path]);
+
+function composedBackdropCard(slug: string, layers: Map<string, string>): void {
+  const sky = layers.get('sky');
+  const far = layers.get('far');
+  const mid = layers.get('mid');
+  if (!sky || !far || !mid) return; // incomplete: layer cards already show it
+  const dataUrl = (svg: string) => `data:image/svg+xml;base64,${btoa(svg)}`;
+  const card = document.createElement('div');
+  card.className = 'card';
+  const stage = document.createElement('div');
+  stage.className = 'stage composed';
+  stage.style.width = '480px';
+  const skyImg = document.createElement('img');
+  skyImg.src = dataUrl(sky);
+  skyImg.style.width = '100%';
+  skyImg.height = 270;
+  const strip = (svg: string, bottom: number, opacity: string) => {
+    const img = document.createElement('img');
+    img.className = 'strip';
+    img.src = dataUrl(svg);
+    img.style.bottom = `${bottom}px`;
+    img.style.opacity = opacity;
+    return img;
+  };
+  stage.append(skyImg, strip(far, 20, '0.9'), strip(mid, 0, '1'));
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.innerHTML = `<span class="slug"></span><span>composed</span>`;
+  meta.querySelector('.slug')!.textContent = slug;
+  card.append(stage, meta);
+  backdrops.appendChild(card);
+}
+
+const backdropLayers = new Map<string, Map<string, string>>();
+for (const path of backdropPaths) {
+  const stem = slugOf(path);
+  const dot = stem.lastIndexOf('.');
+  if (dot < 0) continue;
+  const slug = stem.slice(0, dot);
+  const role = stem.slice(dot + 1);
+  if (!backdropLayers.has(slug)) backdropLayers.set(slug, new Map());
+  backdropLayers.get(slug)!.set(role, backdropFiles[path]);
+}
+for (const [slug, layers] of backdropLayers) composedBackdropCard(slug, layers);
 
 const zoom = document.querySelector<HTMLSelectElement>('#zoom')!;
 zoom.addEventListener('change', () => applyZoom(Number(zoom.value)));
