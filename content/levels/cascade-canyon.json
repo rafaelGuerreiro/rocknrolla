@@ -1,0 +1,246 @@
+{
+  "id": "61cd0083-bc99-5bb8-8e3a-6b586fb930ee",
+  "slug": "cascade-canyon",
+  "name": "Cascade Canyon",
+  "backdrop": "dusk",
+  "starting": false,
+  "active": true,
+  "reward_lootbox_id": "122789c5-1e95-429e-bd29-442219cf3c8c",
+  "successors": [
+    "09232ab1-7f8a-5848-a4e1-2d24bbe79e4f"
+  ],
+  "spawn": {
+    "x": 544,
+    "y": 160
+  },
+  "finish": {
+    "x": 6936,
+    "y": 1760
+  },
+  "placements": [
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 384,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 896,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 0,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 2048,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 4096,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "dirt-band",
+      "x": 6144,
+      "y": 1408,
+      "z": -120
+    },
+    {
+      "component": "ground-flat",
+      "x": 0,
+      "y": 256
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 384
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 640
+    },
+    {
+      "component": "dirt-fill",
+      "x": 0,
+      "y": 896
+    },
+    {
+      "component": "slope-down-30",
+      "x": 512,
+      "y": 256
+    },
+    {
+      "component": "bank",
+      "x": 1408,
+      "y": 768,
+      "flip_x": true
+    },
+    {
+      "component": "water",
+      "x": 1408,
+      "y": 768
+    },
+    {
+      "component": "dirt-slab",
+      "x": 1408,
+      "y": 832
+    },
+    {
+      "component": "bank",
+      "x": 1600,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 1664,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 2176,
+      "y": 768
+    },
+    {
+      "component": "fire",
+      "x": 2400,
+      "y": 704
+    },
+    {
+      "component": "dirt-fill",
+      "x": 2176,
+      "y": 896
+    },
+    {
+      "component": "slope-down-60",
+      "x": 2688,
+      "y": 768
+    },
+    {
+      "component": "ground-flat",
+      "x": 2976,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 3488,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 4000,
+      "y": 1280
+    },
+    {
+      "component": "spikes",
+      "x": 4224,
+      "y": 1216
+    },
+    {
+      "component": "ground-flat",
+      "x": 4512,
+      "y": 1280
+    },
+    {
+      "component": "dirt-fill",
+      "x": 4512,
+      "y": 1408
+    },
+    {
+      "component": "slope-down-45",
+      "x": 5024,
+      "y": 1280
+    },
+    {
+      "component": "ground-flat",
+      "x": 5536,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 6048,
+      "y": 1792
+    },
+    {
+      "component": "bush-cluster",
+      "x": 6272,
+      "y": 1728
+    },
+    {
+      "component": "ground-flat",
+      "x": 6560,
+      "y": 1792
+    },
+    {
+      "component": "ground-flat",
+      "x": 7072,
+      "y": 1792
+    },
+    {
+      "component": "bush-cluster",
+      "x": 2275,
+      "y": 688,
+      "z": 40,
+      "scale": 2
+    },
+    {
+      "component": "bush-cluster",
+      "x": 4550,
+      "y": 1200,
+      "z": 40,
+      "scale": 2
+    },
+    {
+      "component": "bush-cluster",
+      "x": 6446,
+      "y": 1712,
+      "z": 40,
+      "scale": 2
+    }
+  ]
+}

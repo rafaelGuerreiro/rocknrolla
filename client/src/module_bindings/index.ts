@@ -34,19 +34,155 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
+import CompleteLevelV1Reducer from "./complete_level_v_1_reducer";
+import ImportBackdropV1Reducer from "./import_backdrop_v_1_reducer";
+import ImportCharacterArtV1Reducer from "./import_character_art_v_1_reducer";
+import ImportCharacterV1Reducer from "./import_character_v_1_reducer";
+import ImportComponentV1Reducer from "./import_component_v_1_reducer";
+import ImportFaceV1Reducer from "./import_face_v_1_reducer";
+import ImportLevelV1Reducer from "./import_level_v_1_reducer";
+import ImportLootboxV1Reducer from "./import_lootbox_v_1_reducer";
+import ImportPieceV1Reducer from "./import_piece_v_1_reducer";
+import OpenLootboxV1Reducer from "./open_lootbox_v_1_reducer";
+import SelectCharacterV1Reducer from "./select_character_v_1_reducer";
+import SelectLevelV1Reducer from "./select_level_v_1_reducer";
 
 // Import all procedure arg schemas
 
 // Import all table schema definitions
+import VwBackdropV1Row from "./vw_backdrop_v_1_table";
+import VwCharacterArtV1Row from "./vw_character_art_v_1_table";
+import VwCharacterV1Row from "./vw_character_v_1_table";
+import VwComponentV1Row from "./vw_component_v_1_table";
+import VwFaceV1Row from "./vw_face_v_1_table";
+import VwLevelPlacementV1Row from "./vw_level_placement_v_1_table";
+import VwLevelV1Row from "./vw_level_v_1_table";
+import VwMeV1Row from "./vw_me_v_1_table";
+import VwMyCompletedLevelV1Row from "./vw_my_completed_level_v_1_table";
+import VwMyEnabledLevelV1Row from "./vw_my_enabled_level_v_1_table";
+import VwMyLootboxV1Row from "./vw_my_lootbox_v_1_table";
+import VwMyPieceV1Row from "./vw_my_piece_v_1_table";
+import VwMyUnlockedCharacterV1Row from "./vw_my_unlocked_character_v_1_table";
+import VwPieceV1Row from "./vw_piece_v_1_table";
 
 /** Type-only namespace exports for generated type groups. */
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
+  vw_backdrop_v1: __table({
+    name: 'vw_backdrop_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwBackdropV1Row),
+  vw_character_art_v1: __table({
+    name: 'vw_character_art_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwCharacterArtV1Row),
+  vw_character_v1: __table({
+    name: 'vw_character_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwCharacterV1Row),
+  vw_component_v1: __table({
+    name: 'vw_component_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwComponentV1Row),
+  vw_face_v1: __table({
+    name: 'vw_face_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwFaceV1Row),
+  vw_level_placement_v1: __table({
+    name: 'vw_level_placement_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwLevelPlacementV1Row),
+  vw_level_v1: __table({
+    name: 'vw_level_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwLevelV1Row),
+  vw_me_v1: __table({
+    name: 'vw_me_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwMeV1Row),
+  vw_my_completed_level_v1: __table({
+    name: 'vw_my_completed_level_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwMyCompletedLevelV1Row),
+  vw_my_enabled_level_v1: __table({
+    name: 'vw_my_enabled_level_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwMyEnabledLevelV1Row),
+  vw_my_lootbox_v1: __table({
+    name: 'vw_my_lootbox_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwMyLootboxV1Row),
+  vw_my_piece_v1: __table({
+    name: 'vw_my_piece_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwMyPieceV1Row),
+  vw_my_unlocked_character_v1: __table({
+    name: 'vw_my_unlocked_character_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwMyUnlockedCharacterV1Row),
+  vw_piece_v1: __table({
+    name: 'vw_piece_v1',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VwPieceV1Row),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
+  __reducerSchema("complete_level_v1", CompleteLevelV1Reducer),
+  __reducerSchema("import_backdrop_v1", ImportBackdropV1Reducer),
+  __reducerSchema("import_character_art_v1", ImportCharacterArtV1Reducer),
+  __reducerSchema("import_character_v1", ImportCharacterV1Reducer),
+  __reducerSchema("import_component_v1", ImportComponentV1Reducer),
+  __reducerSchema("import_face_v1", ImportFaceV1Reducer),
+  __reducerSchema("import_level_v1", ImportLevelV1Reducer),
+  __reducerSchema("import_lootbox_v1", ImportLootboxV1Reducer),
+  __reducerSchema("import_piece_v1", ImportPieceV1Reducer),
+  __reducerSchema("open_lootbox_v1", OpenLootboxV1Reducer),
+  __reducerSchema("select_character_v1", SelectCharacterV1Reducer),
+  __reducerSchema("select_level_v1", SelectLevelV1Reducer),
 );
 
 /** The schema information for all procedures in this module. This is defined the same way as the procedures would have been defined in the server. */

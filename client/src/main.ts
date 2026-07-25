@@ -1,60 +1,47 @@
 import Phaser from 'phaser';
 import './style.css';
+import { TUNING } from './tuning';
+import { DPR, VIEW_H, VIEW_W } from './ui';
+import { BootScene } from './scenes/BootScene';
+import { CharacterSelectScene } from './scenes/CharacterSelectScene';
+import { CollectionScene } from './scenes/CollectionScene';
+import { GameHudScene } from './scenes/GameHudScene';
+import { GameScene } from './scenes/GameScene';
+import { LevelSelectScene } from './scenes/LevelSelectScene';
+import { ResultScene } from './scenes/ResultScene';
 
-class GameScene extends Phaser.Scene {
-  private player!: Phaser.Physics.Matter.Image;
-
-  create(): void {
-    this.cameras.main.setBackgroundColor('#10141f');
-
-    const texture = this.add.graphics();
-    texture.fillStyle(0xf5c451).fillCircle(24, 24, 24);
-    texture.lineStyle(4, 0x5b4516).lineBetween(24, 24, 44, 24);
-    texture.generateTexture('rocknrolla', 48, 48);
-    texture.destroy();
-
-    this.player = this.matter.add.image(150, 180, 'rocknrolla', undefined, {
-      shape: 'circle',
-      friction: 0.8,
-      frictionAir: 0.01,
-      restitution: 0.1,
-    });
-
-    this.matter.add.rectangle(480, 360, 900, 40, {
-      isStatic: true,
-      angle: Phaser.Math.DegToRad(12),
-    });
-    this.matter.add.rectangle(610, 285, 28, 100, {
-      isStatic: true,
-      angle: Phaser.Math.DegToRad(12),
-    });
-
-    this.add.text(24, 24, 'Press or tap to escape the obstacle', {
-      color: '#ffffff',
-      fontSize: '20px',
-    });
-
-    this.input.on('pointerdown', () => {
-      this.player.applyForce(new Phaser.Math.Vector2(0.003, -0.025));
-    });
+declare global {
+  interface Window {
+    /** Exposed for debugging and headless drive scripts. */
+    game: Phaser.Game;
   }
 }
 
-new Phaser.Game({
+window.game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
-  width: 960,
-  height: 540,
-  backgroundColor: '#10141f',
+  // Backing store at device resolution; scenes lay out in 960×540 via a
+  // per-scene camera zoom (ui.setupCamera). Phaser 4 has no DPR support.
+  width: VIEW_W * DPR,
+  height: VIEW_H * DPR,
+  backgroundColor: '#33203c',
   physics: {
     default: 'matter',
     matter: {
-      gravity: { x: 0, y: 1 },
+      gravity: { x: 0, y: TUNING.GRAVITY_Y },
     },
   },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: GameScene,
+  scene: [
+    BootScene,
+    LevelSelectScene,
+    CharacterSelectScene,
+    GameScene,
+    GameHudScene,
+    ResultScene,
+    CollectionScene,
+  ],
 });

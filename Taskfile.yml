@@ -9,6 +9,18 @@ includes:
     dir: client
 
 tasks:
+  fmt:
+    desc: Format all projects
+    cmds:
+      - task server:fmt
+      - task client:fmt
+
+  lint:
+    desc: Lint all projects
+    cmds:
+      - task server:lint
+      - task client:lint
+
   check:
     desc: Check all projects
     cmds:
@@ -20,12 +32,18 @@ tasks:
     deps: [check]
     cmds:
       - task server:test
+      - task client:test
 
   build:
     desc: Build all projects
     cmds:
       - task server:build
       - task client:build
+
+  dev:
+    desc: Start the client dev server to play in the browser
+    cmds:
+      - task client:dev
 
   login:
     desc: Login to SpacetimeDB using server/.env
@@ -43,6 +61,6 @@ tasks:
       - task server:publish-prod
 
   unsafe-overwrite:
-    desc: Publish rocknrolladb-dev and delete existing data
+    desc: Publish rocknrolladb-dev, delete existing data, and reseed content
     cmds:
       - task server:unsafe-overwrite

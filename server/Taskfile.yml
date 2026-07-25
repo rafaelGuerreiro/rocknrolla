@@ -1,10 +1,15 @@
 version: '3'
 
 tasks:
-  check:
-    desc: Format and check all targets
+  fmt:
+    desc: Format all Rust code
     cmds:
       - cargo fmt
+
+  check:
+    desc: Format and check all targets
+    deps: [fmt]
+    cmds:
       - cargo check --all-targets
 
   sdk-ts:
@@ -17,21 +22,21 @@ tasks:
       - mv client_module_bindings/* ../client/src/module_bindings/
       - rm -rf client_module_bindings
 
-  clippy:
-    desc: Format and lint all targets
+  lint:
+    desc: Format and lint all targets, denying warnings
     deps: [check]
     cmds:
-      - cargo clippy --all-targets
+      - cargo clippy --all-targets --all-features -- -D warnings
 
   test:
     desc: Format, lint, and test
-    deps: [clippy]
+    deps: [lint]
     cmds:
       - cargo test
 
   build:
     desc: Generate bindings and build the WASM module
-    deps: [sdk-ts, clippy]
+    deps: [sdk-ts, lint]
     cmds:
       - cargo build -p rocknrolladb --target wasm32-unknown-unknown
 
@@ -39,6 +44,12 @@ tasks:
     desc: Login to SpacetimeDB using .env token
     cmds:
       - bash tools/spacetime_login.sh
+
+  admin:
+    desc: Open the interactive content administration shell
+    interactive: true
+    cmds:
+      - cargo run -q -p admin
 
   publish:
     desc: Publish rocknrolladb-dev to Maincloud
@@ -53,7 +64,8 @@ tasks:
       - spacetime publish -p bins/rocknrolladb -s maincloud -y rocknrolladb
 
   unsafe-overwrite:
-    desc: Publish rocknrolladb-dev and delete existing data
+    desc: Publish rocknrolladb-dev, delete existing data, and reseed content
     deps: [login, build]
     cmds:
       - spacetime publish -p bins/rocknrolladb -s maincloud -y rocknrolladb-dev --delete-data
+      - printf 'import all\nyes\nquit\n' | cargo run -q -p admin
