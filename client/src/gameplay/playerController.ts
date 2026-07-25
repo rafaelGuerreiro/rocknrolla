@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { FIRE_RESISTANCE_THRESHOLD } from '../levels';
+import { FIRE_RESISTANCE_THRESHOLD, collisionRoot } from '../levels';
 import { TUNING } from '../tuning';
 import { PLAYER_DISPLAY_PX } from './playerBody';
 
@@ -191,12 +191,10 @@ export class PlayerController {
   ): void => {
     const playerBody = this.player.body as MatterJS.BodyType;
     for (const pair of event.pairs) {
+      const rootA = collisionRoot(pair.bodyA);
+      const rootB = collisionRoot(pair.bodyB);
       const other =
-        pair.bodyA === playerBody
-          ? pair.bodyB
-          : pair.bodyB === playerBody
-            ? pair.bodyA
-            : null;
+        rootA === playerBody ? rootB : rootB === playerBody ? rootA : null;
       if (!other || other.isSensor) continue;
       for (const support of pair.collision.supports) {
         if (support && support.y > this.player.y + 6) {

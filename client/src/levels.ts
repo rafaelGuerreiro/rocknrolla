@@ -46,6 +46,19 @@ export function planeParallax(z: number): number {
   return Math.min(Math.max(parallax, 0.05), 4);
 }
 
+/**
+ * Resolve a Matter body to its collision root. Concave character hulls
+ * decompose into compound bodies and Matter reports collision pairs against
+ * the *parts*, never the compound parent — comparing a pair body to the
+ * player body by identity silently fails then. Top-level bodies are their
+ * own parent.
+ */
+export function collisionRoot<T extends { parent: T }>(body: T): T {
+  let root = body;
+  while (root.parent !== root) root = root.parent;
+  return root;
+}
+
 /** One collider marker in component-local or world coordinates. */
 export interface LevelMarker {
   t: number;
@@ -229,6 +242,60 @@ interface DecodedPlacement {
 }
 
 const cache = new Map<string, { key: string; level: DecodedLevel }>();
+
+/** How long to wait for the selected level's placements to arrive. */
+const PLACEMENTS_TIMEOUT_MS = 6000;
+
+interface PlacementRowLike {
+  levelId: { toString(): string };
+}
+
+/** Structural table shape so the wait is `node --test`-able. */
+interface PlacementTableLike {
+  iter(): Iterable<PlacementRowLike>;
+  onInsert(cb: (ctx: unknown, row: PlacementRowLike) => void): void;
+  removeOnInsert(cb: (ctx: unknown, row: PlacementRowLike) => void): void;
+}
+
+/**
+ * Resolve once `vw_level_placement_v1` holds rows for `levelId`. The view is
+ * gated by the server-side level selection, so the first play of a level
+ * races `selectLevelV1` against the subscription update — the rows only
+ * arrive a moment after the reducer commits.
+ */
+export function awaitLevelPlacements(
+  table: PlacementTableLike,
+  levelId: string,
+  timeoutMs = PLACEMENTS_TIMEOUT_MS,
+): Promise<void> {
+  const present = [...table.iter()].some(
+    (row) => row.levelId.toString() === levelId,
+  );
+  if (present) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const settle = (fn: () => void) => {
+      table.removeOnInsert(onInsert);
+      clearTimeout(timer);
+      fn();
+    };
+    const onInsert = (_ctx: unknown, row: PlacementRowLike) => {
+      if (row.levelId.toString() !== levelId) return;
+      settle(resolve);
+    };
+    const timer = setTimeout(
+      () =>
+        settle(() =>
+          reject(
+            new Error(
+              `level '${levelId}': placements did not arrive — check the connection`,
+            ),
+          ),
+        ),
+      timeoutMs,
+    );
+    table.onInsert(onInsert);
+  });
+}
 
 /**
  * Decode the level from subscribed rows: verify component hashes, map

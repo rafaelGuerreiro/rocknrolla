@@ -7,7 +7,14 @@ import {
   type FaceName,
 } from '../content';
 import { db } from '../db';
-import { DEPTH, loadLevel, type DecodedLevel } from '../levels';
+import type { DbConnection } from '../module_bindings';
+import {
+  DEPTH,
+  awaitLevelPlacements,
+  collisionRoot,
+  loadLevel,
+  type DecodedLevel,
+} from '../levels';
 import { FACE_ASPECT, FACE_OFFSET_Y_RATIO, FACE_WIDTH_RATIO } from '../rollers';
 import { svgDataUrl } from '../tiles';
 import { TUNING } from '../tuning';
@@ -20,7 +27,7 @@ import {
 } from '../gameplay/playerController';
 import { RunOutcome } from '../gameplay/runOutcome';
 import { ensureParticleTextures } from '../textures';
-import { UI_FONT, VIEW_H, VIEW_W, setupCamera } from '../ui';
+import { UI_FONT, VIEW_H, VIEW_W, note, setupCamera } from '../ui';
 
 /** Falling this far below the level ends the run in defeat. */
 const FALL_MARGIN_PX = 90;
@@ -82,6 +89,19 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     this.stats = { ...character, id: character.id.toString() };
+    // The placement view is gated by the server-side level selection, so the
+    // first play of a level races selectLevelV1 against the subscription
+    // update — wait for the rows instead of failing the run.
+    const loading = note(this, VIEW_H / 2, 'Rolling the hill in…');
+    awaitLevelPlacements(conn.db.vw_level_placement_v1, this.levelId)
+      .then(() => {
+        loading.destroy();
+        this.loadArtAndBuild(conn);
+      })
+      .catch((error: Error) => this.failToMenu(error.message));
+  }
+
+  private loadArtAndBuild(conn: DbConnection): void {
     try {
       this.level = loadLevel(conn, this.levelId);
       this.buildBackdrop();
@@ -194,12 +214,10 @@ export class GameScene extends Phaser.Scene {
       const playerBody = this.player?.body as MatterJS.BodyType | undefined;
       if (!playerBody || this.outcome.settled) return;
       for (const pair of event.pairs) {
+        const rootA = collisionRoot(pair.bodyA);
+        const rootB = collisionRoot(pair.bodyB);
         const other =
-          pair.bodyA === playerBody
-            ? pair.bodyB
-            : pair.bodyB === playerBody
-              ? pair.bodyA
-              : null;
+          rootA === playerBody ? rootB : rootB === playerBody ? rootA : null;
         if (!other) continue;
         if (other.label === 'lethal')
           this.outcome.defeat('Wrecked by a hazard.');

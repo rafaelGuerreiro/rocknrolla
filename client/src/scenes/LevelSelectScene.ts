@@ -17,6 +17,14 @@ import {
 
 const NODE_SIZE = 72;
 
+// Trail layout: level 1 at the bottom, later hills zigzag upward.
+const SPACING_Y = 130;
+const ZIGZAG_X = 160;
+const TOP_MARGIN = 150;
+const BOTTOM_MARGIN = 120;
+/** Pointer travel past this cancels the tap — it was a scroll drag. */
+const DRAG_CANCEL_PX = 10;
+
 export class LevelSelectScene extends Phaser.Scene {
   constructor() {
     super('level-select');
@@ -39,7 +47,8 @@ export class LevelSelectScene extends Phaser.Scene {
       .setDisplaySize(width, backdrop.mid.height);
 
     const conn = db();
-    pill(this, 190, 48, 260, 44, 'Choose your hill');
+    // Chrome floats above the scrolling trail.
+    pill(this, 190, 48, 260, 44, 'Choose your hill').setDepth(1);
     this.collectionPill();
 
     const enabledIds = new Set(
@@ -77,29 +86,40 @@ export class LevelSelectScene extends Phaser.Scene {
       return;
     }
 
-    // Downhill trail: nodes descend left→right with a gentle zigzag.
-    const points = levels.map((_, i) => {
-      const t = levels.length === 1 ? 0 : i / (levels.length - 1);
-      return new Phaser.Math.Vector2(
-        150 + t * (width - 300),
-        168 + t * (height - 330) + (i % 2 === 0 ? 0 : -34),
-      );
-    });
-    this.drawTrailDots(points);
+    // The trail climbs: level 1 sits at the bottom and later hills zigzag
+    // upward, scrolling in a container while the chrome stays put.
+    const worldHeight = Math.max(
+      height,
+      TOP_MARGIN + (levels.length - 1) * SPACING_Y + BOTTOM_MARGIN,
+    );
+    const points = levels.map(
+      (_, i) =>
+        new Phaser.Math.Vector2(
+          width / 2 + (i % 2 === 0 ? -ZIGZAG_X : ZIGZAG_X),
+          worldHeight - BOTTOM_MARGIN - i * SPACING_Y,
+        ),
+    );
+    const trail = this.add.container(0, height - worldHeight);
+    this.drawTrailDots(trail, points);
 
-    let currentMarked = false;
+    let currentIndex = -1;
     levels.forEach((level, index) => {
       const id = level.id.toString();
       const completed = completedIds.has(id);
       const enabled = enabledIds.has(id);
-      const isCurrent = enabled && !completed && !currentMarked;
-      if (isCurrent) currentMarked = true;
-      this.levelNode(points[index], index + 1, level, {
+      const isCurrent = enabled && !completed && currentIndex === -1;
+      if (isCurrent) currentIndex = index;
+      this.levelNode(trail, points[index], index + 1, level, {
         completed,
         enabled,
         isCurrent,
       });
     });
+    this.enableScroll(
+      trail,
+      worldHeight,
+      currentIndex >= 0 ? points[currentIndex] : undefined,
+    );
 
     this.add
       .text(width / 2, height - 26, 'TAP A HILL TO ROLL IN ▸', {
@@ -108,11 +128,46 @@ export class LevelSelectScene extends Phaser.Scene {
         color: '#ffe0a3',
       })
       .setOrigin(0.5)
-      .setLetterSpacing(3);
+      .setLetterSpacing(3)
+      .setDepth(1);
   }
 
-  private drawTrailDots(points: Phaser.Math.Vector2[]): void {
+  /** Drag (touch) or wheel to scroll; starts focused on the current hill. */
+  private enableScroll(
+    trail: Phaser.GameObjects.Container,
+    worldHeight: number,
+    focus?: Phaser.Math.Vector2,
+  ): void {
+    const clampY = (y: number) => Phaser.Math.Clamp(y, VIEW_H - worldHeight, 0);
+    if (focus) trail.y = clampY(VIEW_H / 2 - focus.y);
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!pointer.isDown) return;
+      // Pointer deltas are in canvas pixels; the camera zooms by DPR.
+      trail.y = clampY(
+        trail.y +
+          (pointer.position.y - pointer.prevPosition.y) /
+            this.cameras.main.zoom,
+      );
+    });
+    this.input.on(
+      'wheel',
+      (
+        _pointer: Phaser.Input.Pointer,
+        _over: unknown,
+        _dx: number,
+        dy: number,
+      ) => {
+        trail.y = clampY(trail.y - dy);
+      },
+    );
+  }
+
+  private drawTrailDots(
+    trail: Phaser.GameObjects.Container,
+    points: Phaser.Math.Vector2[],
+  ): void {
     const g = this.add.graphics();
+    trail.add(g);
     g.fillStyle(0xf5ecd8, 0.45);
     for (let i = 0; i < points.length - 1; i++) {
       const from = points[i];
@@ -126,12 +181,14 @@ export class LevelSelectScene extends Phaser.Scene {
   }
 
   private levelNode(
+    trail: Phaser.GameObjects.Container,
     at: Phaser.Math.Vector2,
     number: number,
     level: { id: { toString(): string }; name: string },
     state: { completed: boolean; enabled: boolean; isCurrent: boolean },
   ): void {
     const g = this.add.graphics();
+    trail.add(g);
     const half = NODE_SIZE / 2;
     const radius = 20;
 
@@ -181,48 +238,64 @@ export class LevelSelectScene extends Phaser.Scene {
     }
 
     const label = state.enabled || state.completed ? `${number}` : '?';
-    this.add
-      .text(at.x, at.y, label, {
-        fontFamily: UI_FONT,
-        fontSize: '30px',
-        fontStyle: '700',
-        color: state.completed ? '#5a2f14' : state.enabled ? INK : '#c9b8a4',
-      })
-      .setOrigin(0.5);
+    trail.add(
+      this.add
+        .text(at.x, at.y, label, {
+          fontFamily: UI_FONT,
+          fontSize: '30px',
+          fontStyle: '700',
+          color: state.completed ? '#5a2f14' : state.enabled ? INK : '#c9b8a4',
+        })
+        .setOrigin(0.5),
+    );
 
     if (state.completed) {
       // ponytail: no per-level score exists — completion always shows 3 stars
-      this.add
-        .text(at.x, at.y - half - 16, '★★★', {
-          fontFamily: UI_FONT,
-          fontSize: '18px',
-          color: STAR_GOLD,
-        })
-        .setOrigin(0.5)
-        .setShadow(0, 2, 'rgba(36,29,22,0.5)', 3);
+      trail.add(
+        this.add
+          .text(at.x, at.y - half - 16, '★★★', {
+            fontFamily: UI_FONT,
+            fontSize: '18px',
+            color: STAR_GOLD,
+          })
+          .setOrigin(0.5)
+          .setShadow(0, 2, 'rgba(36,29,22,0.5)', 3),
+      );
     }
     if (state.isCurrent) {
-      this.add
-        .text(at.x, at.y + half + 16, 'PLAY', {
-          fontFamily: MONO_FONT,
-          fontSize: '11px',
-          color: '#ffe0a3',
-        })
-        .setOrigin(0.5)
-        .setLetterSpacing(3);
+      trail.add(
+        this.add
+          .text(at.x, at.y + half + 16, 'PLAY', {
+            fontFamily: MONO_FONT,
+            fontSize: '11px',
+            color: '#ffe0a3',
+          })
+          .setOrigin(0.5)
+          .setLetterSpacing(3),
+      );
     }
 
     if (state.enabled || state.completed) {
       const levelId = level.id.toString();
-      this.add
-        .rectangle(at.x, at.y, NODE_SIZE + 12, NODE_SIZE + 12, 0xffffff, 0.0001)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerup', () => {
-          db()
-            .reducers.selectLevelV1({ levelId: Uuid.parse(levelId) })
-            .catch((error) => console.error('selectLevelV1 failed:', error));
-          this.scene.start('character-select', { levelId });
-        });
+      trail.add(
+        this.add
+          .rectangle(
+            at.x,
+            at.y,
+            NODE_SIZE + 12,
+            NODE_SIZE + 12,
+            0xffffff,
+            0.0001,
+          )
+          .setInteractive({ useHandCursor: true })
+          .on('pointerup', (pointer: Phaser.Input.Pointer) => {
+            if (pointer.getDistance() > DRAG_CANCEL_PX) return;
+            db()
+              .reducers.selectLevelV1({ levelId: Uuid.parse(levelId) })
+              .catch((error) => console.error('selectLevelV1 failed:', error));
+            this.scene.start('character-select', { levelId });
+          }),
+      );
     }
   }
 
@@ -245,7 +318,7 @@ export class LevelSelectScene extends Phaser.Scene {
     const character = selected ?? [...conn.db.vw_character_v1.iter()][0];
 
     const x = VIEW_W - 110;
-    const container = pill(this, x, 48, 150, 44);
+    const container = pill(this, x, 48, 150, 44).setDepth(1);
     if (character) {
       container.add(addRoller(this, -48, 0, 34, character.id.toString()));
     }
@@ -279,7 +352,10 @@ export class LevelSelectScene extends Phaser.Scene {
       this.add
         .rectangle(0, 0, 150, 48, 0xffffff, 0.0001)
         .setInteractive({ useHandCursor: true })
-        .on('pointerup', () => this.scene.start('collection')),
+        .on('pointerup', (pointer: Phaser.Input.Pointer) => {
+          if (pointer.getDistance() > DRAG_CANCEL_PX) return;
+          this.scene.start('collection');
+        }),
     );
   }
 }

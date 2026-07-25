@@ -33,7 +33,7 @@ export const TUNING = {
    * (1 = wheel-perfect rolling, 0 = the body never visually rolls).
    * Contact friction is zero, so this is the only source of spin.
    */
-  ROLL_SPIN: 1.0,
+  ROLL_SPIN: 0.65,
   /** Air drag per step: momentum bleed on flats and in flight. Keep tiny. */
   BODY_FRICTION_AIR: 0.0025,
   /** Bounciness on impact (0..1). */
